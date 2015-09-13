@@ -55,17 +55,41 @@ fm_code_t parse_xml_msg(char * sdata, int len)
 
     char * pdata = NULL;
     pdata = strstr_cb(sdata+0x22b0, len-0x22b0);
+
+    unsigned long long ltime =  atoll(pdata);
+    printf("%ld\n" , ltime);
     return result;
 
 }
 fm_code_t send_xml_request(const char * url)
 {
-    HTTP http = {0};
-    http.server_url = url;
-    http.http_method = HTTP_GET;
-    char new_app_path[256]  = "";
-    sprintf(new_app_path, "time");
-    HttpCode resp = http_download_file(&http, NULL, 0,  new_app_path);
+    char   *pbody = http_buf;
+    char   *header_lines[1] = {header_line};
+    HTTP   http;
+
+    memset(pbody, 0 , sizeof(http_buf));
+    memset(&http, 0 , sizeof(http));
+    http.http_method = HTTP_POST;
+    http.server_url  = url;
+    http.body_length = strlen(pbody);
+
+    memset(header_line, 0, sizeof(header_line));
+    sprintf(header_line,
+            "Host: open.baidu.com\r\n"\
+            "Connection: keep-alive\r\n"\
+            "Referer: http://open.baidu.com/special/time\r\n"\
+            "Accept-Language: zh-CN,zh;q=0.8"\
+            );
+
+    HttpCode httpcode = http_request_w_body(&http, header_lines, 1, pbody);
+    if(httpcode == HTTP_OK)
+    {
+        if( (http.content_length > 0) && (http.content != NULL) )
+        {
+            parse_xml_msg(http.content, http.content_length );
+        }
+    }
+
     return FM_OK;
 }
 //window.baidu_time(
@@ -74,7 +98,7 @@ int main(int argc, char **argv)
     //set_server_url("http://58.135.78.168:8088/mifi_device_system/report");
     //set_server_url("http://192.168.100.80:8080/serverReq");
 
-    send_xml_request("http://open.baidu.com/special/time");
+    send_xml_request("http://open.baidu.com/special/time/");
 
     return 0;
 }

@@ -242,21 +242,12 @@ static HttpCode parse_http_field(char *data, HTTP *http)
     http->http_status = atoi(content);
     content = strchr(content + 1, ' ') + 1;
 
-    content = strstr(content, "Content-Length:");
+    content = strstr(content, "\r\n\r\n");
     if( NULL == content ){
         return HTTP_PARSE_ERR;
     }
-    http->content_length = strtol(content+15, NULL, 10);
-    //长度不能超过xml的最大值:RCV_OR_XML_MAX_LEN，http头取200的限值
-    if(  http->content_length <= 0 &&
-         http->content_length > (RCV_OR_XML_MAX_LEN-200) )
-    {
-        LogFile(FMPROCLOG,"http内容的长度非法[%d].",http->content_length);
-        return HTTP_BODY_LEN_ERR;
-    }
-
-    content = strstr(content, "\r\n\r\n");
-    content += 4;//body与head的分界线
+    content += 4;
+    http->content_length = strlen(content);
     http->content = content;
 
     return result;
