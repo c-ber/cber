@@ -31,9 +31,10 @@
 
 #include    "httpclient.h"
 #include    "er_string.h"
+#include    "cb_time.h"
 
 
-#define    DEBUG                           //调试日志，条件编译变量
+//#define    DEBUG                           //调试日志，条件编译变量
 
 
 //下载到本地的临时压缩包名

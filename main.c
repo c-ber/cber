@@ -56,8 +56,11 @@ fm_code_t parse_xml_msg(char * sdata, int len)
     char * pdata = NULL;
     pdata = strstr_cb(sdata+0x22b0, len-0x22b0);
 
-    unsigned long long ltime =  atoll(pdata);
-    printf("%ld\n" , ltime);
+    unsigned long int ltime =  atoll(pdata);
+    Time  time = {};
+    msecond_to_time(ltime, 8, &time);
+    printf("beijing time: %s\n",time.str_tm);
+
     return result;
 
 }
