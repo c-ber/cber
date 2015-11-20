@@ -28,6 +28,7 @@
 #include    <errno.h>
 #include    <dirent.h>
 #include    <unistd.h>
+#include    <stdbool.h>
 
 #include    "httpclient.h"
 #include    "er_string.h"

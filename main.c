@@ -29,7 +29,7 @@
 //slen 是用于对于存在'\0'的字符串的处理
 char * strstr_cb(const char *s1, int slen)
 {
-    size_t len;
+    int len;
     int i = 0;
 
     const char *p = s1;
@@ -58,8 +58,16 @@ fm_code_t parse_xml_msg(char * sdata, int len)
 
     unsigned long int ltime =  atoll(pdata);
     Time  time = {};
-    msecond_to_time(ltime, 8, &time);
+    msecond_to_time(ltime, 0, &time);
     printf("beijing time: %s\n",time.str_tm);
+    char cmd[64] = {0};
+    sprintf(cmd, "date -s \"%s\"",time.str_tm);
+
+    if( 0 != pox_system(cmd) )
+    {
+        LogFile(FMPROCLOG,"设置系统时间出错");
+        return -4;
+    }
 
     return result;
 
@@ -95,13 +103,57 @@ fm_code_t send_xml_request(const char * url)
 
     return FM_OK;
 }
-//window.baidu_time(
+bool need_get_time()
+{
+    static int cycle = 0;
+    if( cycle < 1 )
+    {
+        sleep(1);
+        cycle++;
+        return false;
+    }
+    else
+    {
+        cycle = 0;
+        return true;
+    }
+}
+bool need_update_code_compile()
+{
+    BYTE ucBuf[6];
+    GetCurTime(ucBuf, 6);
+    if( ucBuf[3] == 0x14 )
+    {
+        return true;
+    }
+    return false;
+}
+int exec_shell_compile_code()
+{
+    if( 0 != pox_system("/mnt/hgfs/share/git/cber/shell/login_svn.sh") )
+    {
+        //LogFile(FMPROCLOG,"调用shell脚本出错");
+        return -4;
+    }
+    return 0;
+}
 int main(int argc, char **argv)
 {
     //set_server_url("http://58.135.78.168:8088/mifi_device_system/report");
     //set_server_url("http://192.168.100.80:8080/serverReq");
 
-    send_xml_request("http://open.baidu.com/special/time/");
+    while(1)
+    {
+        if( need_get_time() )
+        {
+            send_xml_request("http://open.baidu.com/special/time/");
+        }
+        if( need_update_code_compile() )
+        {
+            exec_shell_compile_code();
+        }
+        break;
+    }
 
     return 0;
 }
