@@ -27,6 +27,8 @@
 #include "packet_gtpv2c.h"
 #include "hash_alg.h"
 
+#include "cb_pcap.h"
+
 
 //lte_imsi_t imsi_base =  {0x44,0x50,0x14,0x09,0x17,0x02,0x00,0xf8};  /*IMSI*/
   lte_imsi_t imsi_base =  {0x64,0x00,0x78,0x59,0x32,0x50,0x07,0xf6};  /*IMSI*/
@@ -301,6 +303,7 @@ static inline uint64_t cvmx_read_csr(uint64_t csr_addr)
 int main(int argc,char * argv[])
 {
 	printf("test start\n");
+	pcap_search();
 //	uint64_t data = 0;
 //	lte_imsi_t  rlt_imsi = {0x44, 0x50, 0x14, 0x09, 0x17, 0x02, 0x00, 0xf8};
 //	data = *(uint64_t*)(( &(rlt_imsi[0])));
@@ -313,8 +316,8 @@ int main(int argc,char * argv[])
 //    pthread_t pid = -1;
 //    pthread_create(&pid, NULL, npcp_update_cell_timer, (void *)NULL);
 
-    dataplane_lte_relate_init();
-    test();
+//    dataplane_lte_relate_init();
+//    test();
     //pthread_join(pid,NULL);
 
     return 0;
