@@ -225,7 +225,8 @@ mp_code_t check_TBCD_encode(uint16_t ie_len, uint8_t *ie_buf)
     }
     return MP_OK;
 }
-
+lte_guti_t guti_base =  {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0x05};
+lte_tai_t tai_base =  {0x01,0x02,0x3,0x4,0x5};
 /* 建立imsi表，建立 s11-mme表 */
 mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
 {
@@ -277,6 +278,10 @@ mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
     memcpy(imsi_search_d.imsi, gtpc->imsi, sizeof(lte_imsi_t));
     memcpy(imsi_search_d.imei, gtpc->imei, sizeof(lte_imei_t));
     memcpy(imsi_search_d.msisdn, gtpc->msisdn, sizeof(lte_msisdn_t));
+
+    memcpy(imsi_search_d.guti, guti_base, sizeof(lte_guti_t));
+    memcpy(imsi_search_d.tai,  tai_base,  sizeof(lte_tai_t));
+
     imsi_search_d.ex_field.msisdn_len = gtpc->msisdn_len;
 
     PRINTF_IMSI(imsi_search_d.imsi);
@@ -719,8 +724,7 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
         memcpy(s1u_search_d.imsi , table_imsi_e->imsi, sizeof(lte_imsi_t));
         memcpy(s1u_search_d.imei , table_imsi_e->imei, sizeof(lte_imei_t));
         memcpy(s1u_search_d.msisdn , table_imsi_e->msisdn, sizeof(lte_msisdn_t));
-        memcpy(s1u_search_d.guti, table_imsi_e->guti, sizeof(lte_guti_t));
-        memcpy(s1u_search_d.tai,  table_imsi_e->tai,  sizeof(lte_tai_t));
+
         s1u_search_d.ex_field.msisdn_len = table_imsi_e->ex_field.msisdn_len;
 
         s1u_control.compare_enable  =  ENABLE;
@@ -1093,6 +1097,17 @@ int npcp_clear_relate_stat( uint16_t  ilen, void *idata,
     return ret;
 }
 
+uint8_t asc_to_hex(uint8_t ch)
+{
+    if( ch >= '0' && ch <= '9')
+        ch -= '0';
+    else if( ch >= 'A' && ch <= 'Z' )//大写字母
+        ch -= 0x37;
+    else if( ch >= 'a' && ch <= 'z' )//小写字母
+        ch -= 0x57;
+    else ch = 0xff;
+    return ch;
+}
 mp_code_t ip_to_string(uint32_t ip, unsigned char *dst )
 {
     uint8_t * static_str_ip = NULL;
@@ -1137,6 +1152,49 @@ mp_code_t hex_to_string_reverse(uint8_t *src, int len, uint8_t *dst)
         {
             movlen = sprintf((char *)(dst + pos), "%x%x",low, high);
         }
+        pos += movlen;
+    }
+    return MP_OK;
+}
+mp_code_t hex_string_to_array(const uint8_t *src, int slen, uint8_t *dst)
+{
+    int i = 0;
+    int byte_len = 0;
+    uint8_t low  = 0;
+    uint8_t high = 0;
+
+    if( NULL == dst || NULL == src || slen > 126)
+    {
+        return MP_NULL_POINT;
+    }
+
+    if( (slen % 2) !=  0  ||  *src != '0' ||
+        ((*(src+1) != 'x' ) && ( *(src+1) != 'X') ))
+    {
+        return MP_FAIL;
+    }
+    src += 2;
+    byte_len = strlen((char *)src) / 2;
+    for ( i = 0; i < byte_len; i++ )
+    {
+        high  = asc_to_hex( *(src + 2*i) );
+        low = asc_to_hex( *(src + 2*i + 1) );
+        *(dst + i) = (high << 4) + low;
+    }
+    return MP_OK;
+}
+mp_code_t hex_to_string(uint8_t *src, int len, uint8_t *dst)
+{
+    int pos    = 0;
+    int movlen = 0;
+    int i      = 0;
+    if( NULL == dst || NULL == src )
+    {
+        return MP_NULL_POINT;
+    }
+    for( i = 0 ; i < len; i++ )
+    {
+        movlen = sprintf((char *)(dst + pos), "%02x", src[i]);
         pos += movlen;
     }
     return MP_OK;
@@ -1259,6 +1317,8 @@ mp_code_t npcp_show_relate_info(lte_imsi_t cb_imsi)
     uint8_t str_imsi[STR_LOCAL_MAX_LEN]   = {0};
     uint8_t str_imei[STR_LOCAL_MAX_LEN]   = {0};
     uint8_t str_msisdn[STR_LOCAL_MAX_LEN] = {0};
+    uint8_t str_guti[STR_LOCAL_MAX_LEN]   = {0};
+    uint8_t str_tai[STR_LOCAL_MAX_LEN]    = {0};
     hex_to_string_reverse(t_relate_info.imsi, LTE_IMSI_LEN, str_imsi);
     hex_to_string_reverse(t_relate_info.imei, LTE_IMEI_LEN, str_imei);
     hex_to_string_reverse(t_relate_info.msisdn, t_relate_info.msisdn_len, str_msisdn);
@@ -1285,6 +1345,11 @@ mp_code_t npcp_show_relate_info(lte_imsi_t cb_imsi)
 
      (ip_to_string(t_relate_info.ue_ip, str_ip));
     printf("UE IP          : %-16s\n",str_ip);
+
+    (hex_to_string(t_relate_info.guti, LTE_GUTI_LEN, str_guti));
+    (hex_to_string(t_relate_info.tai, LTE_TAI_MAX_LEN, str_tai));
+    printf( "GUTI           : %s\n",str_guti);
+    printf( "TAI            : %s\n",str_tai);
 
     return MP_OK;
 }

@@ -94,7 +94,7 @@ mp_code_t imsi_table_hash(hash_key_t *key, uint32_t *hash_result)
   返回          : 返回值为MP_OK
   其他          : 
 **********************************************************************************************/
-
+int havetest = 0;
 mp_code_t imsi_table_update(void *table, void *update)
 {
     
@@ -104,16 +104,23 @@ mp_code_t imsi_table_update(void *table, void *update)
     memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
     memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
     memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
+
+    if(havetest == 0)
+    {
+    memcpy(entry->guti,   up_d->guti, sizeof(lte_guti_t));
     memcpy(entry->tai,    up_d->tai, sizeof(lte_tai_t));
+    havetest++;
+    }
+
     entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
 #ifdef RELATE_AGING
-    entry->aging = g_aging_timer_max;
+    entry->aging = (uint16_t)g_aging_timer_max;
 #endif
 
     return MP_OK;
 }
 #ifdef RELATE_AGING
-uint8_t imsi_cell_set_timer(void *cell, timer_opera_t opera, uint8_t value)
+uint16_t imsi_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
     lte_table_imsi_t *entry =  (lte_table_imsi_t *)cell;
     LTE_DEBUG_PRINTF("imsi: aging = %d\n", entry->aging);
@@ -226,13 +233,13 @@ mp_code_t s11_mme_table_update_entry(void *table, void *update)
     entry->pos_imsi.index     = up_d->pos_imsi.index;
     entry->pos_imsi.node       = up_d->pos_imsi.node;
 #ifdef RELATE_AGING
-    entry->aging = g_aging_timer_max;
+    entry->aging = (uint16_t)g_aging_timer_max;
 #endif
 
     return MP_OK;
 }
 #ifdef RELATE_AGING
-uint8_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint8_t value)
+uint16_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
     lte_table_ctrl_mme_t *entry =  (lte_table_ctrl_mme_t *)cell;
     LTE_DEBUG_PRINTF("mme: aging = %d\n", entry->aging);
@@ -335,13 +342,13 @@ mp_code_t s11_sgw_table_update_entry(void *table, void *update)
     memcpy(&(entry->pos_mme), &(up_d->pos_mme), 
                                             sizeof(hash_table_index_t));
 #ifdef RELATE_AGING
-    entry->aging = g_aging_timer_max;
+    entry->aging = (uint16_t)g_aging_timer_max;
 #endif
 
     return MP_OK;
 }
 #ifdef RELATE_AGING
-uint8_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint8_t value)
+uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
     lte_table_ctrl_sgw_t *entry =  (lte_table_ctrl_sgw_t *)cell;
     LTE_DEBUG_PRINTF("sgw: aging = %d\n", entry->aging);
@@ -409,16 +416,20 @@ mp_code_t s1u_table_update_entry(void *table, void *update)
     memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
     memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
     memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
+
+    memcpy(entry->guti,   up_d->guti, sizeof(lte_guti_t));
+    memcpy(entry->tai,    up_d->tai, sizeof(lte_tai_t));
+
     entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
 #ifdef RELATE_AGING
-    entry->aging = g_aging_timer_max;
+    entry->aging = (uint16_t)g_aging_timer_max;
 #endif
 
     return MP_OK;
 }
 
 #ifdef RELATE_AGING
-uint8_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint8_t value)
+uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
     lte_table_s1u_t *entry =  (lte_table_s1u_t *)cell;
     LTE_DEBUG_PRINTF("s1u: aging = %d\n", entry->aging);

@@ -661,6 +661,86 @@ mp_code_t hash_cell_get_by_hash( hash_table_t *table,
     return ret;
 
 }
+/******************************************************************************
+ * 函数名称    : hash_cell_delete_by_hash
+ * 功能        : 根据哈希删除cell值
+ * 参数        : table:哈希表结构体，带了表头基址
+ *               key  :哈希关键字,可定位到桶子偏移,即行号
+ *                     遍历双向链表，比较cell中key是否一致,即确定列
+ * 说明        : key限定为表项结构中第一个字段
+ * 返回        : 错误码，删除成功返回MP_OK,失败返回MP_FAIL
+******************************************************************************/
+mp_code_t hash_cell_delete_by_hash( hash_table_t *table,
+                                    hash_key_t   *key )
+{
+    mp_code_t ret = MP_OK;
+    struct list_head *pos  = NULL;
+    struct list_head *next = NULL;
+
+    hash_bucket_t  *bucket     = NULL;
+    hash_cell_t    *src_cell   = NULL;
+    hash_cmp_em_t  cmp_rlt     = HASH_CMP_DIFF;
+    uint32_t       hash_result = 0;
+    uint8_t        entry[TABLE_CELL_MAX_LEN] = {0};
+
+    if (cvmx_unlikely(NULL == table || NULL == key ))
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+
+    if( BYTE_GET_UINT64(key->size) > sizeof(entry) )
+    {
+        LTE_DEBUG_PRINTF("Error: The key size exceeds the entry size.\n");
+        return MP_SPACE_NOT_ENOUGH;
+    }
+    memcpy(entry, key, BYTE_GET_UINT64(key->size) );
+
+    /* 哈希运算获取桶偏移值 */
+
+    if(NULL == table->hash)
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+    MP_ERR_PRT(table->hash(key, &hash_result));
+    hash_result = hash_result % table->max_bucket;
+
+    bucket = table->first_bucket + hash_result;
+    if(cvmx_unlikely(NULL == bucket ))
+    {
+        LTE_DEBUG_PRINTF("%s: bucket=NULL\n", table->name);
+        return MP_NULL_POINT;
+    }
+
+    /*遍历双向链表，比较cell中key是否一致,即确定列*/
+    LTE_HASH_TABLE_LOCK(bucket);
+    list_for_each_safe(pos, next, &(bucket->head))
+    {
+        src_cell = list_entry(pos, hash_cell_t, node);
+        MP_POINT_CHECK(src_cell);
+
+        if(NULL == table->compare)
+        {
+            ret = MP_NULL_POINT;
+            break;
+        }
+        ret = table->compare((void *)src_cell->entry, entry, &cmp_rlt);
+        if (ret != MP_OK)
+        {
+            break;
+        }
+        if(HASH_CMP_SAME == cmp_rlt)
+        {
+            __list_del( pos->prev, pos->next);
+            memset(src_cell, 0x0, sizeof(hash_cell_t));
+            HASH_CELL_FREE( table->pool, src_cell);
+            bucket->bucket_depth--;
+            LTE_HASH_TABLE_UNLOCK(bucket);
+            return MP_OK;
+        }
+    }
+    LTE_HASH_TABLE_UNLOCK(bucket);
+    return MP_FAIL;
+}
 
 
 /******************************************************************************

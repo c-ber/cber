@@ -21,7 +21,6 @@
 #include "semp_hydra_lte.h"
 
 
-
 /*******************  函数调用返回错误的宏  ******************************/
 #ifndef MP_ERR_PRT
 #define MP_ERR_PRT(f)                                       \
@@ -279,6 +278,19 @@ typedef union
         uint16_t     msisdn_len;
     }im;
 
+    struct
+    {
+        uint32_t        enode_ip;
+        uint32_t        enode_ue_s1ap_id;
+        lte_imsi_t      imsi;
+        uint32_t        mme_ip;
+        uint64_t        mme_ue_s1ap_id;
+        lte_rand_t      rand;
+        lte_guti_t      old_guti;
+        uint32_t        cipher_alg_type;
+        uint32_t        guti_flag;
+    }id;
+
     it_cell_t it;            /* 通过ip和teid哈希查询的可共用 */
 
 }cell_data_t;
@@ -351,27 +363,48 @@ typedef enum
     INT32_AGING_TIME                    /* 设定的老化时间 */
 }lte_aging_param_t;
 
+/*-----------------------------日志结构-------------------------------------*/
+/* 日志等级 */
+typedef enum
+{
+    LV_INFO = (1 << 0), /* 可能刷屏，主要写一些关联流程的节点，用于少量报文测试 */
+    LV_WARN = (1 << 1), /* 警告信息，比如有bcd格式的报文什么，
+                         * 或者一些异常返回的提示信息 */
+    LV_ERROR= (1 << 2), /* 严重问题，比如遇到空指针了，
+                         * 本该找到的cell找不到了等严重的逻辑错误和系统错误 */
+}log_level_t;
+
+
+/* 对内使用 */
+#define MODULE_LTE_AGING            0x0000001
+#define MODULE_LTE_S11              0x0000002
+#define MODULE_LTE_S1               0x0000004
+#define MODULE_LTE_S6A              0x0000008
+#define MODULE_LTE_TRNSF            0x0000010
+
 /* 模块ID */
 typedef enum
 {
-    MODULE_RELATE,
-    MODULE_AGING,
-    MID_COUNT
-}lte_module_id_t;
+    M_AGING = MODULE_LTE_AGING,       /* 老化模块       */
+    M_S11   = MODULE_LTE_S11,         /* s11关联模块    */
+    M_S1    = MODULE_LTE_S1,          /* s1关联模块     */
+    M_S6A   = MODULE_LTE_S6A,         /* s6a关联模块    */
+    M_TRNSF = MODULE_LTE_TRNSF        /* 转发模块       */
+}log_module_t;
 
-/* 日志开关定义 */
+/* 日志开关 */
 typedef enum
 {
-    LTE_LOG_ON,
-    LTE_LOG_OFF
-}lte_log_t;
+    LTE_LOG_OFF,
+    LTE_LOG_ON
+}log_en_t;
 
 /* 日志设置 */
-typedef struct
+typedef struct _lte_log
 {
-    lte_module_id_t mid;                /* 模块ID */
-    lte_log_t log;                      /* 打开或关闭 */
-}lte_log_set_t;
-
+    log_module_t mid;                /* 模块ID */
+    log_level_t  lv;                 /* 日志等级 */
+    log_en_t     en;                 /* 打开或关闭 */
+}lte_log_t, *plte_log_t;
 
 #endif /* SEMP_HYDRA_RELATE_H_ */

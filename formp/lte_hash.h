@@ -71,7 +71,7 @@ typedef struct
     mp_code_t (*update)(void *src, void*dst);
     mp_code_t (*get_bucket)(uint32_t *buck);
 #ifdef RELATE_AGING
-    uint8_t (*set_timer)(void *src, timer_opera_t opera, uint8_t value);
+    uint16_t (*set_timer)(void *src, timer_opera_t opera, uint16_t value);
 #endif
 }hash_table_t;
 
@@ -161,6 +161,8 @@ mp_code_t hash_cell_get_by_index( hash_table_t *table, hash_table_index_t *hti,
 
 mp_code_t hash_cell_get_by_hash( hash_table_t *table, hash_key_t *key,
                                  void *dst_data, uint32_t dst_len );
+mp_code_t hash_cell_delete_by_hash( hash_table_t *table,
+                                    hash_key_t   *key );
 
 mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
                                           hash_table_index_t *index,

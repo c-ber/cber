@@ -26,8 +26,7 @@
 #include "packet_entry.h"
 #include "packet_gtpv2c.h"
 #include "hash_alg.h"
-
-#include "cb_pcap.h"
+#include "lte_log.h"
 
 
 //lte_imsi_t imsi_base =  {0x44,0x50,0x14,0x09,0x17,0x02,0x00,0xf8};  /*IMSI*/
@@ -244,6 +243,13 @@ void add_data()
     s1u_sgw_teid++;
 }
 
+//lte_table_imsi_t     imsi_cell = {};
+//hash_key_t key={};
+///* 调用哈希查询接口，查询imsi表 */
+//memcpy(imsi_cell.imsi, imsi_base, sizeof(lte_table_imsi_t));
+//update_imsi_hash_key(imsi_base, &(key));
+//hash_cell_delete_by_hash(LTE_GET_TABLE_PTR(TABLE_IMSI),&(key));
+
 void test()
 {
     int i = 0;
@@ -256,7 +262,7 @@ void test()
         printf("*******************************\n");
 
         test32();
-        //lte_aging_process_check(&ag);
+        test32();
         show_memory();
 
         test33();
@@ -267,15 +273,15 @@ void test()
 
         npcp_show_relate_info(imsi_base);
 
-        //test_gtp_u();
-
-        test_delete();
-        /*递增数据*/
-        add_data();
+        test_gtp_u();
+//
+//        test_delete();
+//        /*递增数据*/
+//        add_data();
 
     }
-    printf("Debug---->%s , %s: %d\n",__FILE__,__FUNCTION__ , __LINE__);
-    npcp_update_cell_timer(NULL);
+//    printf("Debug---->%s , %s: %d\n",__FILE__,__FUNCTION__ , __LINE__);
+//    npcp_update_cell_timer(NULL);
 
     //test_delete();
     show_memory();
@@ -300,10 +306,41 @@ static inline uint64_t cvmx_read_csr(uint64_t csr_addr)
     return *((volatile uint64_t *)(long)(csr_addr));
 }
 
+inline bool not_empty_array(uint8_t *src, int len)
+{
+    int i = 0;
+    for( i = 0; i < len; i++ )
+    {
+        if( 0x00 != *(src+i) )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// LV_INFO = (1 << 0),
+// LV_WARN = (1 << 1),
+// LV_ERROR = (1 << 2),
+
+//#define M_AGING        MODULE_LTE_AGING       /* 老化模块       */
+//#define M_S11          MODULE_LTE_S11         /* s11关联模块    */
+//#define M_S1           MODULE_LTE_S1          /* s1关联模块     */
+//#define M_S6A          MODULE_LTE_S6A         /* s6a关联模块    */
+//#define M_TRNSF        MODULE_LTE_TRNSF       /* 转发模块       */
 int main(int argc,char * argv[])
 {
-	printf("test start\n");
-	pcap_search();
+    write_lte_log_flag(M_AGING, LV_INFO, true);
+    write_lte_log_flag(M_AGING, LV_WARN, true);
+    write_lte_log_flag(M_AGING, LV_ERROR, true);
+    write_lte_log_flag(M_AGING, LV_ERROR, false);
+    write_lte_log_flag(M_AGING, LV_INFO, false);
+    write_lte_log_flag(M_AGING, LV_WARN, false);
+    LOG_PRINT(M_AGING, LV_INFO, "aging, info\n");
+    LOG_PRINT(M_AGING, LV_WARN, "aging, warnning\n");
+    LOG_PRINT(M_AGING, LV_ERROR, "aging, error\n");
+
+
 //	uint64_t data = 0;
 //	lte_imsi_t  rlt_imsi = {0x44, 0x50, 0x14, 0x09, 0x17, 0x02, 0x00, 0xf8};
 //	data = *(uint64_t*)(( &(rlt_imsi[0])));

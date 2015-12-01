@@ -49,7 +49,6 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
     /* 调用哈希查询接口，查询imsi表 */
     memcpy(imsi_cell.imsi, imsi, sizeof(lte_table_imsi_t));
     update_imsi_hash_key(imsi, &(key));
-
     LTE_IMSI_TABLE_DELETE_LOCK;
     ret = hash_cell_get_by_hash( LTE_GET_TABLE_PTR(TABLE_IMSI),
                                  &(key), entry, sizeof(entry) );
@@ -64,30 +63,26 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
     ret = hash_cell_get_by_index( LTE_GET_TABLE_PTR(TABLE_S11_SGW),
                                   &(imsi_cell.pos_sgw),entry, sizeof(entry));
     memcpy(&sgw_cell, entry, sizeof(lte_table_ctrl_sgw_t));
-    if(MP_CELL_FOUND != ret)
+    if(MP_CELL_FOUND == ret)
     {
-        LTE_IMSI_TABLE_DELETE_UNLOCK;
-        return MP_FAIL;
+        lte_sgw_delete_s1u(&sgw_cell, 0);
     }
-    lte_sgw_delete_s1u(&sgw_cell, 0);
 
     /* 调用索引查询接口，查询s11-mme表，删除其下s1u表 */
     ret = hash_cell_get_by_index(LTE_GET_TABLE_PTR(TABLE_S11_MME),
                                   &(imsi_cell.pos_mme),entry, sizeof(entry));
     memcpy(&mme_cell, entry, sizeof(lte_table_ctrl_mme_t));
-    if(MP_CELL_FOUND != ret)
+    if(MP_CELL_FOUND == ret)
     {
-        LTE_IMSI_TABLE_DELETE_UNLOCK;
-        return MP_FAIL;
+        lte_mme_delete_s1u(&mme_cell, 0);
     }
-    lte_mme_delete_s1u(&mme_cell, 0);
 
-    /* 删除s11-sgw,s11-mme,imsi表项，删除其下s1u表 */
-    memcpy(&imsi_pos, &(sgw_cell.pos_imsi), sizeof(hash_table_index_t) );
+    /* 删除s11-sgw,s11-mme，删除其下s1u表 */
     hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S11_SGW), &(imsi_cell.pos_sgw));
     hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S11_MME), &(imsi_cell.pos_mme));
-    //hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S1_ENODEB_MME), &(imsi_cell.s1_mme));
-    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_IMSI), &(imsi_pos));
+
+    /*采用哈希方式删除imsi总表*/
+    hash_cell_delete_by_hash(LTE_GET_TABLE_PTR(TABLE_IMSI),&(key));
     LTE_IMSI_TABLE_DELETE_UNLOCK;
     LTE_DEBUG_PRINTF("Delete table according by imsi finish!!!!\n");
     return MP_OK;
