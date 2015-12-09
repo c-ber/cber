@@ -481,7 +481,7 @@ mp_code_t lte_gtpu_process(parse_gtpu_t *gtpu)
         case MP_NOT_FOUND:
             hydra_stat_inc(stat_pkts_s1u_table_incompelte);
             break;
-        case MP_OK:
+        case MP_RELATE_SUCCESS:
             hydra_stat_inc(stat_pkts_gtpu_related);
             break;
         default:

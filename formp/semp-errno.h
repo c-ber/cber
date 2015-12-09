@@ -19,6 +19,9 @@ typedef enum {
     MP_NULL_POINT           = 42,         /* 空指针错误 */
     MP_SPACE_NOT_ENOUGH     = 43,         /* 指针指向的地址空间不够 */
     MP_NON_BCD_FORMAT       = 44,         /* 非TBCD格式 */
+    MP_NO_LOG_READ          = 45,         /* 当前没有可读日志 */
+    MP_NO_MEMERY            = 46,         /* 没有空间可用 */
+    MP_RELATE_SUCCESS       = 47,         /* gtpu关联成功 */
     MP_FAIL                 = 0xff        /* 正常处理中的错误返回 */
 }mp_code_t;
 

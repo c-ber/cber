@@ -10,7 +10,13 @@
 #define LTE_DEBUG 1
 #if LTE_DEBUG
 
-    #define LTE_DEBUG_PRINTF(fmt, _arg...)   printf(fmt, ##_arg)
+    #define LTE_DEBUG_PRINTF(fmt, _arg...)   printf("(%s) +%d " fmt ,__func__, __LINE__, ##_arg )
+
+    #define  PRINTF_TAI(_tai)  do {\
+        printf("TAI=%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
+        (int)_tai[0],_tai[1],(int)_tai[2],(int)_tai[3],(int)_tai[4],\
+        __func__, __LINE__);\
+        }while(0)
 
     #define  PRINTF_S_TMSI(_stmsi)  do {\
         printf("S-TMSI=%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
@@ -77,6 +83,7 @@
 #else /*LTE_DEBUG*/
 
     #define  LTE_DEBUG_PRINTF(_arg...)
+    #define  PRINTF_TAI(_tai)
     #define  PRINTF_S_TMSI(_stmsi)
     #define  PRINTF_KASME(_kasme)
     #define  PRINTF_GUTI(_guti)
@@ -124,7 +131,7 @@ typedef   uint8_t    lte_guti_t[LTE_GUTI_LEN] ;
 typedef   uint8_t   lte_tai_t[LTE_TAI_MAX_LEN];
 
 #define LTE_STMSI_LEN  5
-#define LTE_STMSI_OFFSET 7
+#define LTE_STMSI_OFFSET 5
 typedef   uint8_t    lte_s_tmsi_t[LTE_STMSI_LEN] ;
 
 
@@ -248,6 +255,7 @@ typedef struct {
 }ip_hbh_t;
 
 typedef struct{
+    uint8_t valid_flag:1;
     uint32_t hss_ip;
     uint32_t mme_ip;
     uint32_t hop_by_hop;

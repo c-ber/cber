@@ -30,7 +30,7 @@
 #define cvmx_spinlock_unlock(t) pthread_mutex_unlock(t)
 #define cvmx_spinlock_init(t)   pthread_mutex_init(t,NULL)
 
-
+#define semp_named_shared_memblock_get(t) ((void*)NULL)
 
 typedef pthread_mutex_t cvmx_spinlock_t;
 

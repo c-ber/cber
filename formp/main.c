@@ -27,6 +27,7 @@
 #include "packet_gtpv2c.h"
 #include "hash_alg.h"
 #include "lte_log.h"
+#include "kfifo.h"
 
 
 //lte_imsi_t imsi_base =  {0x44,0x50,0x14,0x09,0x17,0x02,0x00,0xf8};  /*IMSI*/
@@ -84,7 +85,7 @@ void test_gtp_u()
 
     //pktinfo.gtpu.message_type = GTP_MSG_PDU;
     pktinfo.gtpu.ot_dstip = s1u_enode_ip;
-    pktinfo.gtpu.teid     = s1u_enode_teid;
+    pktinfo.gtpu.teid     = 0x00000045;//s1u_enode_teid;
     pktinfo.gtpu.in_dstip = ue_ip;
 
 
@@ -262,11 +263,11 @@ void test()
         printf("*******************************\n");
 
         test32();
-        test32();
         show_memory();
 
         test33();
         show_memory();
+
 
         test34();
         show_memory();
@@ -299,13 +300,6 @@ void test()
 
 }
 
-static inline uint64_t cvmx_read_csr(uint64_t csr_addr)
-{
-    //return cvmx_read64_uint64(csr_addr);
-    //printf("test----->%016lx,   %p\n",csr_addr, (volatile uint64_t *)(long)(csr_addr));
-    return *((volatile uint64_t *)(long)(csr_addr));
-}
-
 inline bool not_empty_array(uint8_t *src, int len)
 {
     int i = 0;
@@ -318,29 +312,160 @@ inline bool not_empty_array(uint8_t *src, int len)
     }
     return false;
 }
+#define THREAD_NUM 2
 
-// LV_INFO = (1 << 0),
-// LV_WARN = (1 << 1),
-// LV_ERROR = (1 << 2),
+//日志文件
+#define    MPPROCLOG             "/var/log/mp/mp.log"
+void LogFile(char *pFileName, char *data)
+{
+    long int size = 0;
+    FILE *fp = NULL;
 
-//#define M_AGING        MODULE_LTE_AGING       /* 老化模块       */
-//#define M_S11          MODULE_LTE_S11         /* s11关联模块    */
-//#define M_S1           MODULE_LTE_S1          /* s1关联模块     */
-//#define M_S6A          MODULE_LTE_S6A         /* s6a关联模块    */
-//#define M_TRNSF        MODULE_LTE_TRNSF       /* 转发模块       */
+    if(access("/var/log/mp",  F_OK) != 0)
+    {
+        mkdir("/var/log/mp", S_IRWXU | S_IRWXG | S_IRWXO);
+    }
+
+    fp = fopen(pFileName, "a+");
+    if(fp)
+    {
+        fseek(fp,0,SEEK_END);
+        size=ftell(fp);
+        fclose(fp);
+    }
+    else
+    {
+        return;
+    }
+
+    if (1024*200 <= size)//200k
+    {
+        system("tar zcf /var/log/mp/mplog.tgz  /var/log/mp/mp.log");
+        fp = fopen(pFileName, "w+");
+    }
+    else
+    {
+        fp = fopen(pFileName, "a+");
+    }
+    if( fp == NULL ){
+        return;
+    }
+
+    time_t tmptime;
+    struct tm stm;
+    struct tm *ptm = &stm;
+    tmptime = time(NULL);
+    localtime_r( &tmptime, ptm );
+    fprintf(fp, "[%04d-%02d-%02d %02d:%02d:%02d] : ",
+           ptm->tm_year +1900 , ptm->tm_mon +1, ptm->tm_mday,
+           ptm->tm_hour, ptm->tm_min,ptm->tm_sec);
+    fprintf( fp, "%s\n", data );
+    fclose(fp);
+}
+void * log_test(void *thread_data)
+{
+    //    lte_log_init();
+    //    lte_log_flag_write(M_AGING, LV_INFO, true);
+    //    lte_log_flag_write(M_AGING, LV_WARN, true);
+    //    lte_log_flag_write(M_AGING, LV_ERROR, true);
+    //
+    //    log_test(NULL);
+
+        //lte_log_destory();
+
+    log_data_t data;
+    int acl_len = 0;
+    int i = 0;
+    int x = 11-LTE_TOTAL_SIZE;
+
+    for( i = 0 ; i < LTE_TOTAL_SIZE+x; i++)
+    LOG_PRINT(M_AGING, LV_INFO, "aging, info,%d\n", i);
+//    LOG_PRINT(M_AGING, LV_WARN, "aging, warnning\n");
+//    LOG_PRINT(M_AGING, LV_ERROR, "aging, error\n");
+
+    for( i = 0 ; i < LTE_TOTAL_SIZE+x; i++)
+    {
+        if( MP_OK == lte_log_read(data, sizeof(data), &acl_len))
+        {
+            printf("%s", data);
+        }
+    }
+    return NULL;
+}
+
+#define TMP_SIZE 1500
+static struct kfifo *fifo;
+
+void printf_arr(uint8_t *a, int len)
+{
+    int i = 0 ;
+    for(i = 0 ; i < len ; i++)
+    {
+        if(i % 8 == 0 && i > 0)
+            printf("\n");
+        printf("%02x ", a[i]);
+
+    }
+    printf("\n");
+}
+void thread_reader(void * param)
+{
+    int read_len=0;
+    int i = 0;
+    uint8_t buffer[TMP_SIZE]={0};
+    int pkt_len = 0;
+    while(1)
+    {
+        kfifo_get(fifo, (uint8_t*)(&pkt_len), sizeof(uint16_t));
+        read_len = kfifo_get( fifo, buffer, pkt_len );
+        if(read_len > 0)
+        {
+            printf("Read len[%d] :\n",read_len);
+            printf_arr(buffer, read_len);
+        }
+        sleep(2);
+    }
+}
+char peer0_0[] = {
+0x48, 0x20, 0x00, 0xf9, 0x00, 0x00, 0x00, 0x00,
+0x41, 0x06, 0x28, 0x00, 0x01, 0x00, 0x08, 0x00};
+
+void thread_writer(void * param)
+{
+    uint32_t write_len = 0;
+    uint32_t i = 0;
+    uint16_t pkt_len = sizeof(peer0_0);
+
+    for(i = 0; i < 10; i++)
+    {
+        write_len = kfifo_put(fifo, (uint8_t*)(&pkt_len), sizeof(uint16_t));
+        write_len = kfifo_put(fifo, peer0_0, sizeof(peer0_0));
+        peer0_0[0xf] = i+1;
+        sleep(1);
+    }
+}
+
+void test_kfifo()
+{
+    pthread_t pidr;
+    pthread_t pidw;
+
+    cvmx_spinlock_t fifo_lock;
+    fifo = kfifo_alloc(18, &fifo_lock);
+
+    pthread_create(&pidw, NULL, (void *)thread_writer, fifo);
+    pthread_create(&pidr, NULL, (void *)thread_reader, fifo);
+
+    pthread_join(pidr,NULL);
+    pthread_join(pidw,NULL);
+
+    kfifo_free(fifo);
+    printf("test end !\n");
+    return ;
+}
 int main(int argc,char * argv[])
 {
-    write_lte_log_flag(M_AGING, LV_INFO, true);
-    write_lte_log_flag(M_AGING, LV_WARN, true);
-    write_lte_log_flag(M_AGING, LV_ERROR, true);
-    write_lte_log_flag(M_AGING, LV_ERROR, false);
-    write_lte_log_flag(M_AGING, LV_INFO, false);
-    write_lte_log_flag(M_AGING, LV_WARN, false);
-    LOG_PRINT(M_AGING, LV_INFO, "aging, info\n");
-    LOG_PRINT(M_AGING, LV_WARN, "aging, warnning\n");
-    LOG_PRINT(M_AGING, LV_ERROR, "aging, error\n");
-
-
+    test_kfifo();
 //	uint64_t data = 0;
 //	lte_imsi_t  rlt_imsi = {0x44, 0x50, 0x14, 0x09, 0x17, 0x02, 0x00, 0xf8};
 //	data = *(uint64_t*)(( &(rlt_imsi[0])));
