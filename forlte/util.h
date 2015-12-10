@@ -32,6 +32,7 @@
 #include    <stdbool.h>
 #include    <stdint.h>
 #include    <cb_code.h>
+#include    <alg_kmp.h>
 
 uint8_t asc_to_hex(uint8_t ch);
 cb_code_t str_to_proto(const uint8_t *src, int slen, uint8_t *dst);

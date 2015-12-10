@@ -12,8 +12,8 @@ typedef enum {
     CB_PARSE_RLT            =  1,         /* 协议解析结果错误 */
     CB_TABLE_EMPTY          =  2,         /* 空表操作 */
     CB_TABLE_FULL           =  3,         /* 表项已满 */
-    CB_NOT_FOUND            =  4,         /* 表项未找到 */
-    CB_CELL_FOUND           =  5,         /* 表项已找到 */
+    CB_NOT_FOUND            =  4,         /* 未找到 */
+    CB_FOUND                =  5,         /* 已找到 */
     CB_SPACE_NOT_ENOUGH     =  6,         /* 指针指向的地址空间不够 */
     CB_NON_BCD_FORMAT       =  7,         /* 非TBCD格式 */
     CB_C_DEFALLT            =  0xff       /* 默认处理码 */
