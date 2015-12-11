@@ -55,4 +55,20 @@ cb_code_t str_to_proto(const uint8_t *src, int slen, uint8_t *dst)
     return CB_OK;
 }
 
+/* 用于大小端转换 */
+cb_code_t exchange(uint8_t * buf, int n)
+{
+    int i = 0 ;
+    uint8_t tmp[16] = {0};
+    if( n < 1 || n > 16)
+    {
+        return CB_FUN_PARAM_ERR;
+    }
+    memcpy(tmp, buf, n);
+    for(i = 0 ; i < n ; i++)
+    {
+        buf[i] = tmp[n-i-1];
+    }
+    return CB_OK;
+}
 #endif /* UTIL_C_ */

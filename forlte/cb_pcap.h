@@ -66,7 +66,7 @@
 #define    DATA_HEADER_LEN    16
 #define    ACL_LEN_OFFSET     8
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define LOG_DEBUG(fmt, _arg...)   printf(fmt, ##_arg)
@@ -80,7 +80,16 @@
     (int)_imsi[4],(int)_imsi[5],(int)_imsi[6],(int)_imsi[7],__func__, __LINE__);\
     }while(0)
 
+
 void pcap_search();
+
+
+typedef struct  {
+        uint32_t     tv_sec;         /* seconds (XXX should be time_t) */
+        uint32_t     tv_usec;        /* and microseconds */
+        uint32_t caplen;     /* length of portion present */
+        uint32_t len;        /* length this packet (off wire) */
+}pcap_pkthdr;
 
 
 #endif /* FORMP_CB_PCAP_H_ */

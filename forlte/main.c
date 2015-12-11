@@ -27,7 +27,8 @@
 #include "cb_pcap.h"
 
 //#define PILIAN  // 批量处理
-#define DEL_CRC // 删除crc
+//#define DEL_CRC // 删除crc
+#define ADD_PCAP  // 将原始报文封装为pcap格式
 
 int pox_system(const char *format, ...);
 
@@ -45,6 +46,14 @@ int main(int argc,char * argv[])
 	{
 	    strcpy(input_file, FILE_PATH);
 	}
+
+
+#ifdef ADD_PCAP
+	pcap_add("lte_pkt.log");
+#else
+
+
+
 #ifdef DEL_CRC
     int i = 0;
     for( i = 1 ; i < 11; i++)
@@ -62,9 +71,13 @@ int main(int argc,char * argv[])
             pcap_search(input_file);
             pox_system("mv gtpc_output.pcap s1ap/op%d.pcap", i);
         }
+
     #else
         pcap_search(input_file);
     #endif
+
+
+        #endif
 #endif
     return 0;
 } 

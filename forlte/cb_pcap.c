@@ -339,3 +339,95 @@ void pcap_delete_crc4(char *input_file)
     printf("Packet search  finished!\n");
 }
 
+void pcap_add(char *input_file)
+{
+    FILE *fp = NULL;
+    FILE *fout = NULL;
+
+    uint16_t data_acl_len = 0;//源数据是用的大端，这里要转下
+    uint8_t data[2048] = {0};
+
+    uint8_t pcap_header[PCAP_HEADER_LEN] = {
+            0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0xFF, 0xFF, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
+        };
+    pcap_pkthdr head_data = {};
+
+    printf("------------------------> sizeof pcap_pkthdr = %d\n", sizeof(pcap_pkthdr));
+    head_data.tv_sec = 0x4fb59524;
+    head_data.tv_usec = 0x0006b861;
+
+    printf("Start   to open file [%s]\n", input_file);
+
+    if(( fp = fopen( input_file, "r" ) ) == NULL )
+    {
+       printf("source pcap file cann't open!\n");
+       return;
+    }
+    if(( fout = fopen( FILE_OUT_PATH, "wb" ) ) == NULL )
+    {
+       printf("dst pcap file cann't create!\n");
+       return;
+    }
+
+    printf("Open file Success.\n\n");
+    printf("Analyzing packet now, please wait....... \n");
+
+    //写入头
+    fwrite(pcap_header, PCAP_HEADER_LEN, 1, fout);
+    //fseek(fp, PCAP_HEADER_LEN, SEEK_SET);
+    //fseek(fp, PCAP_HEADER_LEN, SEEK_CUR);
+
+
+    long int tell_last = 0;
+    long int tell_cur = 0;
+    while( 1 )
+    {
+       LOG_DEBUG("the %d packet\n",p_id);
+       LOG_DEBUG("------------------------------------\n");
+       LOG_DEBUG("cur offset = 0x%x\n", ftell(fp));
+       LOG_DEBUG("cur fout offset = 0x%x\n", ftell(fout));
+       data_acl_len = 0;
+
+//       if( p_id == 3348)
+//       {
+//           printf("parse\n");
+//       }
+
+       /*将长度和数据分别取出来*/
+       fread(&data_acl_len, sizeof(uint16_t), 1, fp);
+       if( 0 == data_acl_len )
+       {
+           break;
+       }
+       exchange((uint8_t*)(&data_acl_len), sizeof(uint16_t));
+
+       LOG_DEBUG("cur offset = 0x%x, data_acl_len = 0x%x\n", ftell(fp), data_acl_len);
+       if( data_acl_len > 2048 )
+       {
+           LOG_DEBUG("too long data length [%d]\n", data_acl_len);
+           break;
+       }
+       fread(data, data_acl_len, 1, fp);
+       LOG_DEBUG("cur offset = 0x%x\n", ftell(fp));
+
+       if( feof(fp) )
+       {
+           break;
+       }
+
+       /*保存数据*/
+       have_found++;
+       head_data.len = head_data.caplen = data_acl_len;
+       head_data.tv_usec += 1;
+       fwrite(&head_data, sizeof(pcap_pkthdr), 1, fout);
+       fwrite(data, data_acl_len, 1, fout);
+
+       p_id++;
+       LOG_DEBUG("\n\n");
+    }
+    fclose( fout );
+    fclose( fp );
+    printf("%d packets have finded.",have_found);
+    printf("Packet search  finished!\n");
+}
