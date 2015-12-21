@@ -97,9 +97,9 @@ void test_gtp_u()
     }
     else
     {
-    PRINTF_IMSI( (pktinfo.gtpu.imsi));
-    PRINTF_IMEI( (pktinfo.gtpu.imei));
-    PRINTF_MSISDN((pktinfo.gtpu.msisdn));
+//        PRINTF_IMSI( (pktinfo.gtpu.imsi));
+//        PRINTF_IMEI( (pktinfo.gtpu.imei));
+//        PRINTF_MSISDN((pktinfo.gtpu.msisdn));
     }
 }
 void test34()
@@ -180,6 +180,29 @@ void test32()
     }
 }
 
+
+void test_s6a_request()
+{
+    mp_code_t ret;
+    parse_diameter_t diameter;
+    uint8_t imsi[8] =  {0x53,0x61,0x20,0x00,0x31,0x16,0x12,0x00};  /*IMEI*/;
+    diameter.valid_kasme_rand_pair_num = 1;
+    diameter.hop_by_hop = 0x0d700959;
+    diameter.valid_mask = ~0;
+    diameter.hss_ip     = 0x0a471a3a;
+    diameter.s6a_mme_ip = 0x0a471b04;
+    memcpy( diameter.user_name , imsi, 8);
+
+    diameter.dmt_type = DMT_REQ_PKT;
+
+    ret = lte_dmt_relevance_process(&diameter);
+    if( MP_OK != ret )
+    {
+        printf("step 1 ,code[%d]\n", ret);
+    }
+}
+
+
 char * tablename[]={
 "TABLE_IMSI",
 "TABLE_S11_MME",
@@ -253,10 +276,10 @@ void add_data()
 
 void test()
 {
-    int i = 0;
+    int i = 0, j = 0;
     lte_aging_t ag;
     ag.rt_min_time = 0;
-    for( i = 0 ; i < 1; i++)
+    for( i = 0 ; i < 2; i++)
     {
         printf("*******************************\n");
         printf("cell[%02d]:\n",i);
@@ -275,17 +298,20 @@ void test()
         npcp_show_relate_info(imsi_base);
 
         test_gtp_u();
+
+//            test_s6a_request();
+//            show_memory();
 //
 //        test_delete();
-//        /*递增数据*/
-//        add_data();
+        /*递增数据*/
+        add_data();
 
     }
-//    printf("Debug---->%s , %s: %d\n",__FILE__,__FUNCTION__ , __LINE__);
-//    npcp_update_cell_timer(NULL);
+    printf("Debug---->%s , %s: %d\n",__FILE__,__FUNCTION__ , __LINE__);
+    npcp_update_cell_timer(NULL);
 
     //test_delete();
-    show_memory();
+    //show_memory();
 
 //    hash_key_t key={};
 //    uint64_t entry[ENTRY_CELL_DATA_SIZE] = {0};
@@ -300,18 +326,7 @@ void test()
 
 }
 
-inline bool not_empty_array(uint8_t *src, int len)
-{
-    int i = 0;
-    for( i = 0; i < len; i++ )
-    {
-        if( 0x00 != *(src+i) )
-        {
-            return true;
-        }
-    }
-    return false;
-}
+
 #define THREAD_NUM 2
 
 //日志文件
@@ -465,7 +480,7 @@ void test_kfifo()
 }
 int main(int argc,char * argv[])
 {
-    test_kfifo();
+//    test_kfifo();
 //	uint64_t data = 0;
 //	lte_imsi_t  rlt_imsi = {0x44, 0x50, 0x14, 0x09, 0x17, 0x02, 0x00, 0xf8};
 //	data = *(uint64_t*)(( &(rlt_imsi[0])));
@@ -478,8 +493,8 @@ int main(int argc,char * argv[])
 //    pthread_t pid = -1;
 //    pthread_create(&pid, NULL, npcp_update_cell_timer, (void *)NULL);
 
-//    dataplane_lte_relate_init();
-//    test();
+    dataplane_lte_relate_init();
+    test();
     //pthread_join(pid,NULL);
 
     return 0;

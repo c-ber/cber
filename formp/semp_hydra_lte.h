@@ -12,11 +12,6 @@
 
     #define LTE_DEBUG_PRINTF(fmt, _arg...)   printf("(%s) +%d " fmt ,__func__, __LINE__, ##_arg )
 
-    #define  PRINTF_TAI(_tai)  do {\
-        printf("TAI=%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
-        (int)_tai[0],_tai[1],(int)_tai[2],(int)_tai[3],(int)_tai[4],\
-        __func__, __LINE__);\
-        }while(0)
 
     #define  PRINTF_S_TMSI(_stmsi)  do {\
         printf("S-TMSI=%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
@@ -37,6 +32,11 @@
         printf("GUTI=%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
         (int)_guti[0],_guti[1],(int)_guti[2],(int)_guti[3],\
         (int)_guti[4],(int)_guti[5],(int)_guti[6],(int)_guti[7],(int)_guti[8],(int)_guti[9],__func__, __LINE__);\
+        }while(0)
+    #define PRINTF_TAI(_tai)    do {\
+        printf("TAI=%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
+        (int)_tai[0],(int)_tai[1],(int)_tai[2],(int)_tai[3],\
+        (int)_tai[4],__func__, __LINE__);\
         }while(0)
 
     #define  PRINTF_RAND(_rand)  do {\
@@ -79,19 +79,38 @@
                                     }\
                                     printf("KEY=%s\n",print_buf);\
                                   }while(0);
+    #define PRINTF_BUF(buf,len)   {\
+                                    uint32_t i = 0;\
+                                    uint8_t *ptr = NULL;\
+                                    ptr = (uint8_t *)buf;\
+                                    printf("%s.%d:\n",__FUNCTION__,__LINE__);\
+                                    for(i = 0;i<len;i++)\
+                                    {\
+                                      if(i%8 == 7)\
+                                      {\
+                                        printf("%x\n",ptr[i]);\
+                                      }\
+                                      else\
+                                      {\
+                                        printf("%x ",ptr[i]);\
+                                      }\
+                                    }\
+                                  }
+                                    
                                     
 #else /*LTE_DEBUG*/
 
     #define  LTE_DEBUG_PRINTF(_arg...)
-    #define  PRINTF_TAI(_tai)
     #define  PRINTF_S_TMSI(_stmsi)
     #define  PRINTF_KASME(_kasme)
     #define  PRINTF_GUTI(_guti)
+    #define  PRINTF_TAI(_tai) 
     #define  PRINTF_RAND(_rand)
     #define  PRINTF_IMSI(_imsi)
     #define  PRINTF_IMEI(_imei)
     #define  PRINTF_MSISDN(_msisdn)
     #define  PRINTF_KEY(key)
+    #define  PRINTF_BUF(buf,len)
 #endif /*LTE_DEBUG*/
 
 
@@ -214,7 +233,7 @@ typedef struct hydra_lte_port_set
     uint16_t port;
 }HYDRA_LTE_PORT_SET;
 
-extern CVMX_SHARED LTE_ATTR_T *pGtpAttr;/* gtp module config data pointer */
+
 
 #define GET_ATTR_BY_PRO(_pro) (pGtpAttr + _pro)
 
@@ -228,7 +247,7 @@ extern CVMX_SHARED LTE_ATTR_T *pGtpAttr;/* gtp module config data pointer */
 #define DMT_AUTN_LEN                (16)
 #define DMT_KASME_LEN               (32)
 #define MAX_KASME_RAND_PAIR         (4)
-extern CVMX_SHARED LTE_ATTR_T *pdmt_attr;   //保存lte的配置信息，在各个模块都可能用上
+
 typedef struct
 {
     lte_rand_t rand;

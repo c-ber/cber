@@ -11,10 +11,9 @@
 CVMX_SHARED  hash_bucket_t *lte_tables = NULL;
 CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX] = {};
 CVMX_SHARED  cvmx_spinlock_t imsi_delete_lock;
+volatile CVMX_SHARED  bool g_lte_start_flag = false; /* lte模块启动标志 */
 
-//extern CVMX_SHARED uint64_t g_scan_interval;
 extern CVMX_SHARED uint64_t g_aging_timer_max;
-//extern CVMX_SHARED uint64_t g_max_relate_lifetime;
 
 
 /***************************imsi************************/
@@ -94,7 +93,7 @@ mp_code_t imsi_table_hash(hash_key_t *key, uint32_t *hash_result)
   返回          : 返回值为MP_OK
   其他          : 
 **********************************************************************************************/
-int havetest = 0;
+
 mp_code_t imsi_table_update(void *table, void *update)
 {
     
@@ -104,14 +103,6 @@ mp_code_t imsi_table_update(void *table, void *update)
     memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
     memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
     memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
-
-    if(havetest == 0)
-    {
-    memcpy(entry->guti,   up_d->guti, sizeof(lte_guti_t));
-    memcpy(entry->tai,    up_d->tai, sizeof(lte_tai_t));
-    havetest++;
-    }
-
     entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
 #ifdef RELATE_AGING
     entry->aging = (uint16_t)g_aging_timer_max;
@@ -139,258 +130,36 @@ uint16_t imsi_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 }
 #endif
 
-/***************************s11-mme************************/
-/**********************************************************************************************
-  函数名称      : s11_mme_table_compare
-  描述          : imsi table 表项的比较函数
-  调用          : 
-  被调用        : dataplane_lte_init
-                  hash_table_search_update  
-  被访问的表    : 
-  被修改的表    : 
-  输入          : void *table, void *update
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          : 
-**********************************************************************************************/
 
 
-mp_code_t s11_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
-{
-   
-
-    if(NULL == src || NULL == dst || NULL == cmp) 
-        return MP_NULL_POINT;
-    
-    lte_table_ctrl_mme_t * sentry = (lte_table_ctrl_mme_t *)src;
-    lte_table_ctrl_mme_t * dentry = (lte_table_ctrl_mme_t *)dst;     
-
-
-    if(sentry->fteid.teid== dentry->fteid.teid 
-            && sentry->fteid.ip == dentry->fteid.ip)
-    {
-         *cmp = HASH_CMP_SAME; 
-    }
-    else
-    {
-        LTE_DEBUG_PRINTF("Compare: Src:<0x%x,0x%x>, Dst<0x%x,0x%x>\n",
-                    sentry->fteid.ip,sentry->fteid.teid,
-                    dentry->fteid.ip,dentry->fteid.teid);  
-         *cmp = HASH_CMP_DIFF;              
-    }
-    
-    return MP_OK;
-}
-
-/**********************************************************************************************
-  函数名称      : s11_mme_table_hash
-  描述          : imsi table 表项的hash函数
-  调用          : 
-  被调用        : dataplane_lte_init
-                  hash_table_search_update  
-  被访问的表    : 
-  被修改的表    : 
-  输入          : hash_key_t *key, uint32_t *hash_result
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          : 
-**********************************************************************************************/
-
-
-mp_code_t s11_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
-{
-    if(NULL == key || NULL == hash_result)
-        return MP_NULL_POINT;
-
-    uint32_t index = 0;
-    index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
-    *hash_result = index;
-    return MP_OK;
-}
-/**********************************************************************************************
-  函数名称      : s11_mme_table_update_entry
-  描述          : imsi table 表项更新函数
-  调用          : 
-  被调用        : dataplane_lte_init
-                  hash_table_search_update  
-  被访问的表    : 
-  被修改的表    : 
-  输入          : void *table, void *update
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          : 
-**********************************************************************************************/
-
-
-mp_code_t s11_mme_table_update_entry(void *table, void *update)
-{
-    
-    lte_table_ctrl_mme_t *entry =  (lte_table_ctrl_mme_t *)table;
-    lte_table_ctrl_mme_t *up_d =  (lte_table_ctrl_mme_t *)update; 
-    
-    entry->fteid.teid = up_d->fteid.teid;
-    entry->fteid.ip   = up_d->fteid.ip; 
-    entry->pos_imsi.index     = up_d->pos_imsi.index;
-    entry->pos_imsi.node       = up_d->pos_imsi.node;
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
-
-    return MP_OK;
-}
-#ifdef RELATE_AGING
-uint16_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
-{
-    lte_table_ctrl_mme_t *entry =  (lte_table_ctrl_mme_t *)cell;
-    LTE_DEBUG_PRINTF("mme: aging = %d\n", entry->aging);
-    switch( opera )
-    {
-        case TIMER_REPLACE:
-            entry->aging = value;
-            break;
-        case TIMER_REDUCE:
-            entry->aging = entry->aging?entry->aging - value:entry->aging;
-            break;
-        default:
-            break;
-    }
-    return entry->aging;
-}
-#endif
-/**********************************************************************************************
-  函数名称      : s11_sgw_table_compare
-  描述          : imsi table 表项更新函数
-  调用          : 
-  被调用        : dataplane_lte_init
-                  hash_table_search_update  
-  被访问的表    : 
-  被修改的表    : 
-  输入          : void *src, void* dst, hash_cmp_em_t *cmp
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          : 
-**********************************************************************************************/
-
-
-/***************************s11-sgw************************/
-mp_code_t s11_sgw_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
-{ 
-
-    if(NULL == src || NULL == dst || NULL == cmp) 
-        return MP_FUN_PARAM_ERR;
-    
-    lte_table_ctrl_sgw_t * sentry = (lte_table_ctrl_sgw_t *)src;
-    lte_table_ctrl_sgw_t * dentry = (lte_table_ctrl_sgw_t *)dst;     
-
-
-
-    if(sentry->fteid.teid== dentry->fteid.teid 
-            && sentry->fteid.ip == dentry->fteid.ip)
-    {
-         *cmp = HASH_CMP_SAME; 
-    }
-    else
-    {
-        LTE_DEBUG_PRINTF("Compare: Src:<0x%x,0x%x>, Dst<0x%x,0x%x>\n",
-                    sentry->fteid.ip,sentry->fteid.teid,
-                    dentry->fteid.ip,dentry->fteid.teid);           
-         *cmp = HASH_CMP_DIFF;              
-    }
-    
-    return MP_OK;
-}
-
-/**********************************************************************************************
-  函数名称      : s11_sgw_table_hash
-  描述          : imsi table 表项hash函数
-  调用          : 
-  被调用        : dataplane_lte_init
-                  hash_table_search_update  
-  被访问的表    : 
-  被修改的表    : 
-  输入          : void *src, void* dst, hash_cmp_em_t *cmp
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          : 
-**********************************************************************************************/
-
-mp_code_t s11_sgw_table_hash(hash_key_t *key, uint32_t *hash_result)
-{
-    if(NULL == key || NULL == hash_result)
-        return MP_FUN_PARAM_ERR;
-
-    uint32_t index = 0;
-    index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
-    *hash_result = index;
-    return MP_OK;
-}
-
-mp_code_t s11_sgw_table_update_entry(void *table, void *update)
-{
-    
-    lte_table_ctrl_sgw_t *entry =  (lte_table_ctrl_sgw_t *)table;
-    lte_table_ctrl_sgw_t *up_d =  (lte_table_ctrl_sgw_t *)update; 
-    
-    entry->fteid.teid = up_d->fteid.teid;
-    entry->fteid.ip   = up_d->fteid.ip; 
-
- //   entry->pos_imsi.index     = up_d->pos_imsi.index;
-//    entry->pos_imsi.node       = up_d->pos_imsi.node; 
-
-    memcpy(&(entry->pos_imsi), &(up_d->pos_imsi), 
-                                            sizeof(hash_table_index_t)); 
-    memcpy(&(entry->pos_mme), &(up_d->pos_mme), 
-                                            sizeof(hash_table_index_t));
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
-
-    return MP_OK;
-}
-#ifdef RELATE_AGING
-uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
-{
-    lte_table_ctrl_sgw_t *entry =  (lte_table_ctrl_sgw_t *)cell;
-    LTE_DEBUG_PRINTF("sgw: aging = %d\n", entry->aging);
-    switch( opera )
-    {
-        case TIMER_REPLACE:
-            entry->aging = value;
-            break;
-        case TIMER_REDUCE:
-            entry->aging = entry->aging?entry->aging - value:entry->aging;
-            break;
-        default:
-            break;
-    }
-    return entry->aging;
-}
-#endif
-
-/***************************s1u************************/
-mp_code_t s1u_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
+/***************************s1-mme************************/
+mp_code_t s1_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 {  
 
     if(NULL == src || NULL == dst || NULL == cmp) 
         return MP_FUN_PARAM_ERR;
     
-    lte_table_s1u_t * sentry = (lte_table_s1u_t *)src;
-    lte_table_s1u_t * dentry = (lte_table_s1u_t *)dst;     
+    lte_table_s1_mme_enodeb_t * sentry = (lte_table_s1_mme_enodeb_t *)src;
+    lte_table_s1_mme_enodeb_t * dentry = (lte_table_s1_mme_enodeb_t *)dst;     
 
-    if(sentry->fteid.teid== dentry->fteid.teid 
-            && sentry->fteid.ip == dentry->fteid.ip)
+    if(sentry->enode_ip == dentry->enode_ip 
+            && sentry->enode_ue_s1ap_id == dentry->enode_ue_s1ap_id)
     {
+        LTE_DEBUG_PRINTF("HASH_CMP_SAME: sentry->enode_ip = %d, dentry->enode_ip = %d !\n", sentry->enode_ip,dentry->enode_ip );
+        LTE_DEBUG_PRINTF("HASH_CMP_SAME: sentry->enode_ue_s1ap_id = %d, dentry->enode_ue_s1ap_id = %d !\n", sentry->enode_ue_s1ap_id,dentry->enode_ue_s1ap_id );
          *cmp = HASH_CMP_SAME;  
     }
     else
     {
+        LTE_DEBUG_PRINTF("sentry->enode_ip = %d, dentry->enode_ip = %d !\n", sentry->enode_ip,dentry->enode_ip );
+        LTE_DEBUG_PRINTF("sentry->enode_ue_s1ap_id = %d, dentry->enode_ue_s1ap_id = %d !\n", sentry->enode_ue_s1ap_id,dentry->enode_ue_s1ap_id );
          *cmp = HASH_CMP_DIFF;              
     }
     
     return MP_OK;
 }
 
-mp_code_t s1u_table_hash(hash_key_t *key, uint32_t *hash_result)
+mp_code_t s1_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
 {
     if(NULL == key || NULL == hash_result)
         return MP_FUN_PARAM_ERR;
@@ -401,38 +170,31 @@ mp_code_t s1u_table_hash(hash_key_t *key, uint32_t *hash_result)
     return MP_OK;
 }
 
-mp_code_t s1u_table_update_entry(void *table, void *update)
+mp_code_t s1_mme_table_update_entry(void *table, void *update)
 {
     
-    lte_table_s1u_t *entry =  (lte_table_s1u_t *)table;
-    lte_table_s1u_t *up_d =  (lte_table_s1u_t *)update; 
+    LTE_DEBUG_PRINTF("s1_mme_table_update_entry called !\n" );
+
+    lte_table_s1_mme_enodeb_t *entry =  (lte_table_s1_mme_enodeb_t *)table;
+    lte_table_s1_mme_enodeb_t *up_d =  (lte_table_s1_mme_enodeb_t *)update; 
     
-    entry->fteid.teid = up_d->fteid.teid;
-    entry->fteid.ip   = up_d->fteid.ip;
-    entry->ue_ip      = up_d->ue_ip;
-//    entry->bucket     = up_d->bucket;
-//    entry->node       = up_d->node;
+    entry->enode_ip              = up_d->enode_ip;
+    entry->enode_ue_s1ap_id      = up_d->enode_ue_s1ap_id;
+    entry->mme_ip                = up_d->mme_ip;
+    entry->mme_ue_s1ap_id        = up_d->mme_ue_s1ap_id;
 
     memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
-    memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
-    memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
-
-    memcpy(entry->guti,   up_d->guti, sizeof(lte_guti_t));
-    memcpy(entry->tai,    up_d->tai, sizeof(lte_tai_t));
-
-    entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
+    memcpy(entry->rand,   up_d->rand, sizeof(lte_rand_t));
+    memcpy(entry->old_guti, up_d->old_guti, sizeof(lte_guti_t));
 
     return MP_OK;
 }
 
 #ifdef RELATE_AGING
-uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
+uint16_t s1_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
-    lte_table_s1u_t *entry =  (lte_table_s1u_t *)cell;
-    LTE_DEBUG_PRINTF("s1u: aging = %d\n", entry->aging);
+    lte_table_s1_mme_enodeb_t *entry =  (lte_table_s1_mme_enodeb_t *)cell;
+    LTE_DEBUG_PRINTF("s1 mme: aging = %d\n", entry->aging);
     switch( opera )
     {
         case TIMER_REPLACE:
@@ -447,17 +209,66 @@ uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
     return entry->aging;
 }
 #endif
+/***************************s1-mme end************************/
 
-/***************************s1u-end************************/
+/***************************S-TMSI************************/
+mp_code_t s_tmsi_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
+{  
 
+    if(NULL == src || NULL == dst || NULL == cmp) 
+        return MP_FUN_PARAM_ERR;
+    
+    lte_table_s_tmsi_t * sentry = (lte_table_s_tmsi_t *)src;
+    lte_table_s_tmsi_t * dentry = (lte_table_s_tmsi_t *)dst;     
+
+    int rv= 0;
+
+    rv = memcmp(sentry->s_tmsi, dentry->s_tmsi, sizeof(lte_s_tmsi_t));
+
+    if(0 == rv)   
+    {
+        *cmp = HASH_CMP_SAME;
+    }
+    else
+    {
+        PRINTF_S_TMSI(sentry->s_tmsi);
+        PRINTF_S_TMSI(dentry->s_tmsi);
+        PRINTF_IMSI(sentry->imsi);
+        PRINTF_IMSI(dentry->imsi);
+        *cmp = HASH_CMP_DIFF;
+    }
+
+    return MP_OK;
+}
+
+mp_code_t s_tmsi_table_hash(hash_key_t *key, uint32_t *hash_result)
+{
+    if(NULL == key || NULL == hash_result)
+        return MP_FUN_PARAM_ERR;
+
+    uint32_t index = 0;
+    index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
+    *hash_result = index;
+    return MP_OK;
+}
+
+mp_code_t s_tmsi_table_update_entry(void *table, void *update)
+{
+    
+    lte_table_s_tmsi_t *entry =  (lte_table_s_tmsi_t *)table;
+    lte_table_s_tmsi_t *up_d =  (lte_table_s_tmsi_t *)update; 
+    
+    memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
+    memcpy(entry->s_tmsi, up_d->s_tmsi, sizeof(lte_guti_t));
+
+    return MP_OK;
+}
+/***************************S-TMSI end************************/
 
 inline void update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *key)
 {
     key->size = 1;
-    //大小端的差异在这里要处理 这里就改为小端吧
-    //key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);//原大端
-    key->data[0] = ((uint64_t)teid<<32) | (uint64_t)(ip);
-
+    key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);
     return ;
 }
 
@@ -469,6 +280,47 @@ inline void update_imsi_hash_key(lte_imsi_t imsi,  hash_key_t *key)
     key->data[0] = *(uint64_t*)(( &(imsi[0])));
     return ;
 }
+
+inline void update_s1_mme_hash_key(uint32_t enodeip, uint32_t enode_ueid, hash_key_t *key)
+{
+    key->size = 1;
+    key->data[0] = ((uint64_t)enodeip<<32) | (uint64_t)(enode_ueid);
+    return ;
+}
+
+inline void update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key)
+{
+    uint8_t tmp[8] = {0};
+    memcpy(tmp, s_tmsi, sizeof(lte_s_tmsi_t));
+    key->size = 1;
+    key->data[0] = *(uint64_t*)(( &(tmp[0])));
+    return ;
+}
+
+int inline update_imsi_s6a_index(void *table_item,void *update )
+{
+    if(NULL == table_item\
+       ||NULL == update)
+    {
+        return MP_E_PARAM;
+    }
+    lte_table_imsi_t *p_table = (lte_table_imsi_t *)table_item;
+    lte_table_imsi_t *p_update = (lte_table_imsi_t *)update;
+    memcpy(p_table->imsi,p_update->imsi,sizeof(p_table->imsi));
+    p_table->pos_s6a.index = p_update->pos_s6a.index;
+    LTE_DEBUG_PRINTF("s6a index:%x\n",p_table->pos_s6a.index);
+    p_table->pos_s6a.en = p_update->pos_s6a.en;
+    LTE_DEBUG_PRINTF("s6a en:%x\n",p_table->pos_s6a.en);
+    p_table->pos_s6a.node = p_update->pos_s6a.node;
+    LTE_DEBUG_PRINTF("s6a addr:%p\n",p_table->pos_s6a.node);
+
+#ifdef RELATE_AGING
+    p_table->aging = (uint16_t)g_aging_timer_max;
+#endif
+    return MP_E_NONE;
+}
+
+
 /* 数据报文关联 根据TEID和IP匹配关联 */
 mp_code_t lte_gtpu_process(parse_gtpu_t *gtpu)
 {
@@ -485,7 +337,7 @@ mp_code_t lte_gtpu_process(parse_gtpu_t *gtpu)
             hydra_stat_inc(stat_pkts_gtpu_related);
             break;
         default:
-            hydra_stat_inc(stat_pkts_s1u_table_failed);
+            hydra_stat_inc(stat_pkts_s1u_table_failed_gtpu);
             break;
     }
     return MP_OK;
@@ -494,10 +346,11 @@ mp_code_t lte_gtpu_process(parse_gtpu_t *gtpu)
 mp_code_t lte_gtpc_process(parse_gtpc_t *gtpc)
 {
 
-    LTE_DEBUG_PRINTF1("Message Type=%d\n", gtpc->message_type);
+    LTE_DEBUG_PRINTF("Message Type=%d\n", gtpc->message_type);
     GET_MSG_SWITCH_RETURN(gtpc->message_type);
     mp_code_t rv = MP_OK;
 
+    g_lte_start_flag = true; /* 后面再考虑下怎么优化 */
 
     switch(gtpc->message_type)
     {
@@ -539,6 +392,69 @@ mp_code_t lte_gtpc_process(parse_gtpc_t *gtpc)
     return MP_OK;
 }
 
+mp_error_t lte_s1ap_relate_process(void *packet_ptr, parse_s1ap_t *s1ap)
+{
+    if(( NULL == packet_ptr ) || ( NULL == s1ap ))
+    {
+        return MP_E_PARAM;
+    }
+    LTE_DEBUG_PRINTF("Procedure Code=%d\n", s1ap->procecode);
+    mp_error_t rv = MP_E_NONE; 
+
+    switch(s1ap->procecode)
+    {
+        case  id_initialUEMessage:
+            rv = lte_s1ap_initialUEMessage(s1ap); //parse imsi or old_guti, create imsiT and S1-MME table
+            break;
+        case  id_InitialContextSetup:
+            hydra_stat_inc(stat_pkts_InitialContextSetup);
+            rv =  lte_s1ap_InitialContextSetup(packet_ptr, s1ap);//parse GUTI , put into imsi table
+            if(MP_E_NONE != rv)
+            {
+                hydra_stat_inc(stat_pkts_InitialContextSetup_failed);        /*InitialContextSetup relate failed*/
+            }
+            break;
+        case  id_uplinkNASTransport:
+            rv = lte_s1ap_uplinkNASTransport(s1ap); //parse identity response packet, 
+            break;
+        case  id_downlinkNASTransport:
+            rv = lte_s1ap_downlinkNASTransport(s1ap); //parse imsi or old_guti, create imsiT or S1-MME table
+            break;
+        case  id_UEContextRelease:
+            if ( UP_LINK_DIRECTION == s1ap->direction ) // UEContextRelease that from eNodeB to MME is the successfullOutcome
+            {
+                rv = lte_s1ap_UEContextRelease(s1ap); //delete imsi table and related tables
+            }
+            break;
+         default:            
+            break;
+    }
+
+    if(MP_E_NONE != rv)
+    {
+        hydra_stat_inc(stat_pkts_lte_relate_failed);        /*s1ap relate failed*/
+    }
+
+    return MP_E_NONE;
+}
+
+mp_error_t lte_dmt_relevance_process(parse_diameter_t *diameter)
+{
+    mp_error_t rv = MP_E_NONE;
+    switch(diameter->dmt_type)
+    {
+        case DMT_REQ_PKT:
+        rv = lte_s6a_dmt_auth_request(diameter);
+        break;
+        case DMT_RES_PKT:
+        rv = lte_s6a_dmt_auth_response(diameter);
+        break;
+        default:
+        break;
+    }
+    return rv;
+}
+
 /**********************************************************************************************
   函数名称      : lte_relevance_process
   描述          : imsi table 表项hash函数
@@ -575,6 +491,12 @@ mp_code_t lte_relevance_process(cvmx_wqe_t *work, mpp_control_st *mpp)
         case PARSE_PROTOCOL_GTPU:
              ret = lte_gtpu_process(&(mpp->pktinfo.gtpu));
             break;
+        case PARSE_PROTOCOL_S1AP:
+            ret = lte_s1ap_relate_process(mpp->packet, &(mpp->pktinfo.s1ap));
+            break;
+        case PARSE_PROTOCOL_DIAMETER:
+            ret = lte_dmt_relevance_process(&(mpp->pktinfo.diameter));
+            break;
          default :
             break;
     }
@@ -602,7 +524,6 @@ mp_code_t dataplane_lte_relate_init()
     hash_bucket_t *bucket = NULL; /*hash table ptr*/
     int rv = 0; /*ret*/
 
-    char imsiname[11] = "TABLE_IMSI";
     
     /*create Hash table*/
     //char * P1 = (char *)malloc(88);
@@ -622,7 +543,7 @@ mp_code_t dataplane_lte_relate_init()
     }
 
 
-    memset(lte_tables, 0x00, sizeof(hash_bucket_t)*LTE_HASH_TABLE_SIZE);
+    memset(lte_tables, 0x00, sizeof(hash_bucket_t)*LTE_TABLE_SIZE_TOTAL);
     
     for(i=IMSI_TABLE_START; i<IMSI_TABLE_END; i++)
     {
@@ -639,7 +560,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_IMSI].update       = imsi_table_update;
 //    lte_tables_info[TABLE_IMSI].pool         = CVMX_FPA_LTE_RELATE256_POOL;
     lte_tables_info[TABLE_IMSI].cell_size    = HASH_ENTRY_VALID_SIZE_128;
-    memcpy(lte_tables_info[TABLE_IMSI].name ,imsiname, sizeof(imsiname));
+    strcpy(lte_tables_info[TABLE_IMSI].name, "TABLE_IMSI");
 #ifdef RELATE_AGING
     lte_tables_info[TABLE_IMSI].set_timer    = imsi_cell_set_timer;
 #endif
@@ -693,17 +614,84 @@ mp_code_t dataplane_lte_relate_init()
           INIT_LIST_HEAD(&bucket->head);
     }
     
-    lte_tables_info[TABLE_S1].first_bucket = lte_tables+S1_U_TABLE_START;
-    lte_tables_info[TABLE_S1].max_bucket   = S1_U_TABLE_SIZE;
-    lte_tables_info[TABLE_S1].compare      = s1u_table_compare;
-    lte_tables_info[TABLE_S1].hash         = s1u_table_hash;
-    lte_tables_info[TABLE_S1].update       = s1u_table_update_entry;
+    lte_tables_info[TABLE_S1U].first_bucket = lte_tables+S1_U_TABLE_START;
+    lte_tables_info[TABLE_S1U].max_bucket   = S1_U_TABLE_SIZE;
+    lte_tables_info[TABLE_S1U].compare      = s1u_table_compare;
+    lte_tables_info[TABLE_S1U].hash         = s1u_table_hash;
+    lte_tables_info[TABLE_S1U].update       = s1u_table_update_entry;
 //    lte_tables_info[TABLE_S1].pool         = CVMX_FPA_LTE_GTPU_POOL;
-    lte_tables_info[TABLE_S1].cell_size    = HASH_ENTRY_VALID_SIZE_128;
-    strcpy(lte_tables_info[TABLE_S1].name, "TABLE_S1");
+    lte_tables_info[TABLE_S1U].cell_size    = HASH_ENTRY_VALID_SIZE_128;
+    strcpy(lte_tables_info[TABLE_S1U].name, "TABLE_S1U");
 #ifdef RELATE_AGING
-    lte_tables_info[TABLE_S1].set_timer    = s1u_cell_set_timer;
+    lte_tables_info[TABLE_S1U].set_timer    = s1u_cell_set_timer;
 #endif
+
+#define V14
+#ifdef V14
+
+    for(i=S6A_TABLE_START; i<S6A_TABLE_END; i++)
+    {
+          bucket = lte_tables + i; 
+          cvmx_spinlock_init(&(bucket->lock));
+          bucket->index = i -  S6A_TABLE_START;
+          INIT_LIST_HEAD(&bucket->head);
+    }
+    
+    lte_tables_info[TABLE_S6A].first_bucket = lte_tables+S6A_TABLE_START;
+    lte_tables_info[TABLE_S6A].max_bucket =  S6A_TABLE_SIZE;  
+    lte_tables_info[TABLE_S6A].compare = s6a_table_compare;
+    lte_tables_info[TABLE_S6A].hash    = s6a_table_hash;
+    lte_tables_info[TABLE_S6A].update  = s6a_table_update_entry;  
+//    lte_tables_info[TABLE_S6A].pool =  CVMX_FPA_LTE_RELATE256_POOL;
+    lte_tables_info[TABLE_S6A].cell_size = HASH_ENTRY_VALID_SIZE_256;
+    strcpy(lte_tables_info[TABLE_S6A].name, "TABLE_S6A");
+#ifdef RELATE_AGING
+    lte_tables_info[TABLE_S6A].set_timer =s6a_cell_set_timer;
+#endif
+
+
+
+
+#endif
+
+
+    /* S1-MME table */
+    for(i=S1_MME_ENOB_TABLE_START; i<S1_MME_ENOB_TABLE_END; i++)
+    {
+          bucket = lte_tables + i; 
+          cvmx_spinlock_init(&(bucket->lock));
+          bucket->index = i -  S1_MME_ENOB_TABLE_START;
+          INIT_LIST_HEAD(&bucket->head);
+    }
+    
+    lte_tables_info[TABLE_S1_ENODEB_MME].first_bucket = lte_tables + S1_MME_ENOB_TABLE_START;
+    lte_tables_info[TABLE_S1_ENODEB_MME].max_bucket =  S1_MME_ENOB_TABLE_SIZE;  
+    lte_tables_info[TABLE_S1_ENODEB_MME].compare = s1_mme_table_compare;
+    lte_tables_info[TABLE_S1_ENODEB_MME].hash    = s1_mme_table_hash;
+    lte_tables_info[TABLE_S1_ENODEB_MME].update  = s1_mme_table_update_entry;  
+//    lte_tables_info[TABLE_S1_ENODEB_MME].pool =  CVMX_FPA_LTE_RELATE128_POOL1;
+    strcpy(lte_tables_info[TABLE_S1_ENODEB_MME].name, "TABLE_S1_ENODEB_MME");
+#ifdef RELATE_AGING
+    lte_tables_info[TABLE_S1_ENODEB_MME].set_timer =s1_mme_cell_set_timer;
+#endif
+
+
+    /* S-TMSI table */
+    for(i=S1_STMSI_ENOB_TABLE_START; i<S1_STMSI_ENOB_TABLE_END; i++)
+    {
+          bucket = lte_tables + i; 
+          cvmx_spinlock_init(&(bucket->lock));
+          bucket->index = i -  S1_STMSI_ENOB_TABLE_START;
+          INIT_LIST_HEAD(&bucket->head);
+    }
+
+    lte_tables_info[TABLE_S_TIMSI].first_bucket = lte_tables + S1_STMSI_ENOB_TABLE_START;
+    lte_tables_info[TABLE_S_TIMSI].max_bucket =  S1_STMSI_ENOB_TABLE_SIZE;  
+    lte_tables_info[TABLE_S_TIMSI].compare = s_tmsi_table_compare;
+    lte_tables_info[TABLE_S_TIMSI].hash    = s_tmsi_table_hash;
+    lte_tables_info[TABLE_S_TIMSI].update  = s_tmsi_table_update_entry;  
+//    lte_tables_info[TABLE_S_TIMSI].pool =  CVMX_FPA_LTE_RELATE128_POOL1;
+    strcpy(lte_tables_info[TABLE_S_TIMSI].name, "TABLE_S_TIMSI");
 
     cvmx_spinlock_init(&(imsi_delete_lock));
     

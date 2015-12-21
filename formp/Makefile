@@ -16,7 +16,7 @@ all: $(PUBSO)
 	@echo $(PUBSO) 
 
 $(PUBSO):$(OBJS)
-	$(CC) -o $@ $(OBJS) -L../libs $(LIBS)
+	$(CC)  -o $@ $(OBJS) -L../libs $(LIBS)
 	
 .c.o:
 	$(CC) -g $(CFLAG) -c $< $(INCL)

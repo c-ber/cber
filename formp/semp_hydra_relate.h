@@ -137,6 +137,9 @@
 #define S1_U_TABLE_SIZE                         (2*TABLE_MAGNITUDE)
 
 #define HEX_IMSI_LEN                            18   /* 用于输入0xffffffff11223344格式*/
+
+#define LTE_LOG_HEAD_SIZE                        4           //统一头的长度
+#define LTE_LOG_DATA_SIZE                        252         //统一内容长度
 /******************* end  ***********************************************/
 
 
@@ -200,7 +203,38 @@ typedef struct
      uint64_t   s1u_table_incomplete;
     
      uint64_t   s1u_table_ueip_mismatch;            /*数据报文UE IP 不匹配*/
-     
+     uint64_t   s11_mme_cell_use;
+     uint64_t   s11_sgw_cell_use;
+     uint64_t   imsi_cell_use;
+     uint64_t   s1u_cell_use;
+
+     uint64_t   s1ap_initialUEMessage;              /*initialUEMessage*/
+     uint64_t   s1ap_ciphered_initialUEMessage;
+     uint64_t   s1ap_imsi_initialUEMessage;
+     uint64_t   s1ap_old_guti_initialUEMessage;
+     uint64_t   s1ap_invalid_initialUEMessage;
+     uint64_t   s1ap_not_found_imsi_from_STMSI;
+     uint64_t   s1ap_alg_type_set;
+     uint64_t   s1ap_get_kasme_failed;
+     uint64_t   s1ap_update_imsi_kasme_failed;
+     uint64_t   s1ap_update_imsi_kasme_success;
+     uint64_t   s1ap_search_imsi_kasme_failed;
+     uint64_t   s1ap_guti_invalid;
+     uint64_t   s1ap_uplinkNASTransport_update_imsi;
+
+/*For debug S1-MME guti decrypt*/
+    uint64_t   s1ap_InitialContextSetup;
+    uint64_t   s1ap_InitialContextSetup_failed;
+    uint64_t   s1ap_InitialContextSetup_no_ciphered;
+    uint64_t   decrypt_failed;
+    uint64_t   parse_guti_failed;
+
+    uint64_t   create_stmsi_table;
+    uint64_t   create_stmsi_table_failed;
+    uint64_t   search_imsi_failed_1;
+    uint64_t   search_imsi_failed_2;
+    uint64_t   search_kasme_failed_1;
+
 }lte_relate_stat_t;
 
 
@@ -208,10 +242,11 @@ typedef struct
 /* 表名 */
 typedef enum
 {
+    TABLE_MIN = -1,/*用于数据越界判断*/
     TABLE_IMSI = 0,
     TABLE_S11_MME,
     TABLE_S11_SGW,
-    TABLE_S1,
+    TABLE_S1U,
     TABLE_S6A,
     TABLE_S1_ENODEB_MME,
     TABLE_S_TIMSI,
@@ -274,10 +309,14 @@ typedef union
         uint32_t     s11_sgw_bkt;
         uint32_t     s6a_bkt;
         uint32_t     s1_mme_bkt;
-
+        lte_guti_t    guti;
+        lte_tai_t     tai;
         uint16_t     msisdn_len;
+        uint16_t     guti_len;
+        uint16_t     tai_len;
     }im;
-
+    
+    /*s1_enode_mme table*/
     struct
     {
         uint32_t        enode_ip;
@@ -290,6 +329,13 @@ typedef union
         uint32_t        cipher_alg_type;
         uint32_t        guti_flag;
     }id;
+
+    /*s_timsi table*/
+    struct
+    {
+        lte_s_tmsi_t     s_tmsi;       
+        lte_imsi_t      imsi;
+    }in;
 
     it_cell_t it;            /* 通过ip和teid哈希查询的可共用 */
 
@@ -406,5 +452,11 @@ typedef struct _lte_log
     log_level_t  lv;                 /* 日志等级 */
     log_en_t     en;                 /* 打开或关闭 */
 }lte_log_t, *plte_log_t;
+
+typedef struct _log_str
+{
+    uint32_t len;
+    uint8_t  va[LTE_LOG_DATA_SIZE];
+}log_str_t;
 
 #endif /* SEMP_HYDRA_RELATE_H_ */

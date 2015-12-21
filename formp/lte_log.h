@@ -33,16 +33,14 @@
 /***************************** 扩展日志缓存功能 ********************************/
 #define LTE_LOG_CACHE       "lte_log_cache"
 
-#define LTE_LOG_HEAD_SIZE     1
-#define LTE_LOG_DATA_SIZE     127
-#define LTE_LOG_SIZE          (LTE_LOG_HEAD_SIZE + LTE_LOG_DATA_SIZE)
+
 #define LTE_TOTAL_SIZE        (10)
-#define LTE_LOG_CACHE_SIZE    (LTE_LOG_SIZE * LTE_TOTAL_SIZE)//128M
+#define LTE_LOG_CACHE_SIZE    (LTE_LOG_DATA_SIZE * LTE_TOTAL_SIZE)//256M
 
 #define STATUS_LOG_NEW     1
 #define STATUS_LOG_NONE    0
 
-#
+
 #define FIFO_HEAD (fifo.buffer)
 #define FIFO_TAIL (FIFO_HEAD + fifo.size - 1)
 
@@ -58,18 +56,19 @@ typedef struct _log_pkt
 {
     struct
     {
-        uint8_t en:1; /*是否使用*/
-        uint8_t len:7;/*日志长度，不以\0为结束标志，以len为标准*/
+        uint32_t en:1; /*是否使用*/
+        uint32_t len:7;/*日志长度，不以\0为结束标志，以len为标准*/
     };
     log_data_t data;
 }log_pkt_t;
+
 
 typedef struct log_cache_kfifo
 {
     log_pkt_t *buffer;  /* the buffer holding the data */
     unsigned int size;  /* the size of the allocated buffer */
-    log_pkt_t* pwrite_cur;  /* data is added at offset (in % size) */
-    log_pkt_t* pread_cur;   /* data is extracted from off. (out % size) */
+    log_pkt_t* pwrite_cur;  /* 写日志的当前指针 */
+    log_pkt_t* pread_cur;   /* 读日志的当前指针 */
     cvmx_spinlock_t wlock;  /* protects concurrent modifications */
 }kfifo_t;
 /*********************************** END **************************************/

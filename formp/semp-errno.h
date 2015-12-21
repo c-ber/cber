@@ -9,21 +9,21 @@
 
 
 typedef enum {
-    MP_OK                   = 0,          /* 正常返回 */
-    MP_PARSE_RLT            = 36,         /* 协议解析结果错误 */
-    MP_TABLE_EMPTY          = 37,         /* 空表操作 */
-    MP_TABLE_FULL           = 38,         /* 表项已满 */
-    MP_NOT_FOUND            = 39,         /* 表项未找到 */
-    MP_CELL_FOUND           = 40,         /* 表项已找到 */
-    MP_FUN_PARAM_ERR        = 41,         /* 函数参数非法 */
-    MP_NULL_POINT           = 42,         /* 空指针错误 */
-    MP_SPACE_NOT_ENOUGH     = 43,         /* 指针指向的地址空间不够 */
-    MP_NON_BCD_FORMAT       = 44,         /* 非TBCD格式 */
-    MP_NO_LOG_READ          = 45,         /* 当前没有可读日志 */
-    MP_NO_MEMERY            = 46,         /* 没有空间可用 */
-    MP_RELATE_SUCCESS       = 47,         /* gtpu关联成功 */
-    MP_FAIL                 = 0xff        /* 正常处理中的错误返回 */
+    MP_OK                   = 0,           /* 正常返回 */
+    MP_PARSE_RLT            = 100,         /* 协议解析结果错误 */
+    MP_TABLE_EMPTY          = 101,         /* 空表操作 */
+    MP_TABLE_FULL           = 102,         /* 表项已满 */
+    MP_NOT_FOUND            = 103,         /* 表项未找到 */
+    MP_CELL_FOUND           = 104,         /* 表项已找到 */
+    MP_FUN_PARAM_ERR        = 105,         /* 函数参数非法 */
+    MP_NULL_POINT           = 106,         /* 空指针错误 */
+    MP_SPACE_NOT_ENOUGH     = 107,         /* 指针指向的地址空间不够 */
+    MP_NON_BCD_FORMAT       = 108,         /* 非BCD格式 */
+    MP_NO_LOG_READ          = 109,         /* 当前没有可读日志 */
+    MP_RELATE_SUCCESS       = 110,         /* gtpu关联成功 */
+    MP_FAIL                 = 255          /* 正常处理中的错误返回 */
 }mp_code_t;
+
 
 typedef enum mp_error_e{
     MP_E_NONE                 = 0,          /* OK */
@@ -47,8 +47,10 @@ typedef enum mp_error_e{
     MP_E_PORT                 = -18,        /* Invalid port */
     MP_E_EXCEED               = -19,        /* exceed range */
     MP_E_EINVAL               = -20,        /* Invalid argument */
-
-    MP_E_LIMIT                = -21 ,          /* Unknown error, Must come last */
+    MP_E_AVP_EINVAL           = -21,        /*invalid avp*/
+    MP_E_RAND_EINVAL          =-22,         /*invalid rand */
+    MP_E_KASME_EINVAL         =-23,         /*invalid kasme */
+    MP_E_LIMIT                = -24 ,          /* Unknown error, Must come last */
 } mp_error_t;
 
 #define MP_E_SUCCESS(rv)              ((rv) >= 0)

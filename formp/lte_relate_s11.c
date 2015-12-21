@@ -20,17 +20,341 @@
 CVMX_SHARED gtpc_switch_t g_msg_module_switch[GTP_MSG_MAX] = {};
 
 
+/***************************s11-mme************************/
+/**********************************************************************************************
+  函数名称      : s11_mme_table_compare
+  描述          : imsi table 表项的比较函数
+  调用          :
+  被调用        : dataplane_lte_init
+                  hash_table_search_update
+  被访问的表    :
+  被修改的表    :
+  输入          : void *table, void *update
+  输出          : 无
+  返回          : 返回值为MP_OK
+  其他          :
+**********************************************************************************************/
+
+
+mp_code_t s11_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
+{
+
+
+    if(NULL == src || NULL == dst || NULL == cmp)
+        return MP_NULL_POINT;
+
+    lte_table_ctrl_mme_t * sentry = (lte_table_ctrl_mme_t *)src;
+    lte_table_ctrl_mme_t * dentry = (lte_table_ctrl_mme_t *)dst;
+
+
+    if(sentry->fteid.teid== dentry->fteid.teid
+            && sentry->fteid.ip == dentry->fteid.ip)
+    {
+         *cmp = HASH_CMP_SAME;
+    }
+    else
+    {
+        LTE_DEBUG_PRINTF("Compare: Src:<0x%x,0x%x>, Dst<0x%x,0x%x>\n",
+                    sentry->fteid.ip,sentry->fteid.teid,
+                    dentry->fteid.ip,dentry->fteid.teid);
+         *cmp = HASH_CMP_DIFF;
+    }
+
+    return MP_OK;
+}
+
+/**********************************************************************************************
+  函数名称      : s11_mme_table_hash
+  描述          : imsi table 表项的hash函数
+  调用          :
+  被调用        : dataplane_lte_init
+                  hash_table_search_update
+  被访问的表    :
+  被修改的表    :
+  输入          : hash_key_t *key, uint32_t *hash_result
+  输出          : 无
+  返回          : 返回值为MP_OK
+  其他          :
+**********************************************************************************************/
+
+
+mp_code_t s11_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
+{
+    if(NULL == key || NULL == hash_result)
+        return MP_NULL_POINT;
+
+    uint32_t index = 0;
+    index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
+    *hash_result = index;
+    return MP_OK;
+}
+/**********************************************************************************************
+  函数名称      : s11_mme_table_update_entry
+  描述          : imsi table 表项更新函数
+  调用          :
+  被调用        : dataplane_lte_init
+                  hash_table_search_update
+  被访问的表    :
+  被修改的表    :
+  输入          : void *table, void *update
+  输出          : 无
+  返回          : 返回值为MP_OK
+  其他          :
+**********************************************************************************************/
+
+
+mp_code_t s11_mme_table_update_entry(void *table, void *update)
+{
+
+    lte_table_ctrl_mme_t *entry =  (lte_table_ctrl_mme_t *)table;
+    lte_table_ctrl_mme_t *up_d =  (lte_table_ctrl_mme_t *)update;
+
+    entry->fteid.teid = up_d->fteid.teid;
+    entry->fteid.ip   = up_d->fteid.ip;
+    entry->pos_imsi.index     = up_d->pos_imsi.index;
+    entry->pos_imsi.node       = up_d->pos_imsi.node;
+#ifdef RELATE_AGING
+    entry->aging = (uint16_t)g_aging_timer_max;
+#endif
+
+    return MP_OK;
+}
+#ifdef RELATE_AGING
+uint16_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
+{
+    lte_table_ctrl_mme_t *entry =  (lte_table_ctrl_mme_t *)cell;
+    LTE_DEBUG_PRINTF("mme: aging = %d\n", entry->aging);
+    switch( opera )
+    {
+        case TIMER_REPLACE:
+            entry->aging = value;
+            break;
+        case TIMER_REDUCE:
+            entry->aging = entry->aging?entry->aging - value:entry->aging;
+            break;
+        default:
+            break;
+    }
+    return entry->aging;
+}
+#endif
+/**********************************************************************************************
+  函数名称      : s11_sgw_table_compare
+  描述          : imsi table 表项更新函数
+  调用          :
+  被调用        : dataplane_lte_init
+                  hash_table_search_update
+  被访问的表    :
+  被修改的表    :
+  输入          : void *src, void* dst, hash_cmp_em_t *cmp
+  输出          : 无
+  返回          : 返回值为MP_OK
+  其他          :
+**********************************************************************************************/
+
+
+/***************************s11-sgw************************/
+mp_code_t s11_sgw_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
+{
+
+    if(NULL == src || NULL == dst || NULL == cmp)
+        return MP_FUN_PARAM_ERR;
+
+    lte_table_ctrl_sgw_t * sentry = (lte_table_ctrl_sgw_t *)src;
+    lte_table_ctrl_sgw_t * dentry = (lte_table_ctrl_sgw_t *)dst;
+
+
+
+    if(sentry->fteid.teid== dentry->fteid.teid
+            && sentry->fteid.ip == dentry->fteid.ip)
+    {
+         *cmp = HASH_CMP_SAME;
+    }
+    else
+    {
+        LTE_DEBUG_PRINTF("Compare: Src:<0x%x,0x%x>, Dst<0x%x,0x%x>\n",
+                    sentry->fteid.ip,sentry->fteid.teid,
+                    dentry->fteid.ip,dentry->fteid.teid);
+         *cmp = HASH_CMP_DIFF;
+    }
+
+    return MP_OK;
+}
+
+/**********************************************************************************************
+  函数名称      : s11_sgw_table_hash
+  描述          : imsi table 表项hash函数
+  调用          :
+  被调用        : dataplane_lte_init
+                  hash_table_search_update
+  被访问的表    :
+  被修改的表    :
+  输入          : void *src, void* dst, hash_cmp_em_t *cmp
+  输出          : 无
+  返回          : 返回值为MP_OK
+  其他          :
+**********************************************************************************************/
+
+mp_code_t s11_sgw_table_hash(hash_key_t *key, uint32_t *hash_result)
+{
+    if(NULL == key || NULL == hash_result)
+        return MP_FUN_PARAM_ERR;
+
+    uint32_t index = 0;
+    index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
+    *hash_result = index;
+    return MP_OK;
+}
+
+mp_code_t s11_sgw_table_update_entry(void *table, void *update)
+{
+
+    lte_table_ctrl_sgw_t *entry =  (lte_table_ctrl_sgw_t *)table;
+    lte_table_ctrl_sgw_t *up_d =  (lte_table_ctrl_sgw_t *)update;
+
+    entry->fteid.teid = up_d->fteid.teid;
+    entry->fteid.ip   = up_d->fteid.ip;
+
+ //   entry->pos_imsi.index     = up_d->pos_imsi.index;
+//    entry->pos_imsi.node       = up_d->pos_imsi.node;
+
+    memcpy(&(entry->pos_imsi), &(up_d->pos_imsi),
+                                            sizeof(hash_table_index_t));
+    memcpy(&(entry->pos_mme), &(up_d->pos_mme),
+                                            sizeof(hash_table_index_t));
+#ifdef RELATE_AGING
+    entry->aging = (uint16_t)g_aging_timer_max;
+#endif
+
+    return MP_OK;
+}
+#ifdef RELATE_AGING
+uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
+{
+    lte_table_ctrl_sgw_t *entry =  (lte_table_ctrl_sgw_t *)cell;
+    LTE_DEBUG_PRINTF("sgw: aging = %d\n", entry->aging);
+    switch( opera )
+    {
+        case TIMER_REPLACE:
+            entry->aging = value;
+            break;
+        case TIMER_REDUCE:
+            entry->aging = entry->aging?entry->aging - value:entry->aging;
+            break;
+        default:
+            break;
+    }
+    return entry->aging;
+}
+#endif
+
+
+/***************************s1u************************/
+mp_code_t s1u_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
+{
+
+    if(NULL == src || NULL == dst || NULL == cmp)
+        return MP_FUN_PARAM_ERR;
+
+    lte_table_s1u_t * sentry = (lte_table_s1u_t *)src;
+    lte_table_s1u_t * dentry = (lte_table_s1u_t *)dst;
+
+    if(sentry->fteid.teid== dentry->fteid.teid
+            && sentry->fteid.ip == dentry->fteid.ip)
+    {
+         *cmp = HASH_CMP_SAME;
+    }
+    else
+    {
+         *cmp = HASH_CMP_DIFF;
+    }
+
+    return MP_OK;
+}
+
+mp_code_t s1u_table_hash(hash_key_t *key, uint32_t *hash_result)
+{
+    if(NULL == key || NULL == hash_result)
+        return MP_FUN_PARAM_ERR;
+
+    uint32_t index = 0;
+    index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
+    *hash_result = index;
+    return MP_OK;
+}
+
+mp_code_t s1u_table_update_entry(void *table, void *update)
+{
+
+    lte_table_s1u_t *entry =  (lte_table_s1u_t *)table;
+    lte_table_s1u_t *up_d =  (lte_table_s1u_t *)update;
+
+    entry->fteid.teid = up_d->fteid.teid;
+    entry->fteid.ip   = up_d->fteid.ip;
+    entry->ue_ip      = up_d->ue_ip;
+//    entry->bucket     = up_d->bucket;
+//    entry->node       = up_d->node;
+
+    memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
+    memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
+    memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
+
+    memcpy(entry->guti,   up_d->guti, sizeof(lte_guti_t));
+    memcpy(entry->tai,    up_d->tai,  sizeof(lte_tai_t));
+    PRINTF_GUTI(entry->guti);
+    PRINTF_TAI(entry->tai);
+    entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
+#ifdef RELATE_AGING
+    entry->aging = (uint16_t)g_aging_timer_max;
+#endif
+
+    return MP_OK;
+}
+
+#ifdef RELATE_AGING
+uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
+{
+    lte_table_s1u_t *entry =  (lte_table_s1u_t *)cell;
+    LTE_DEBUG_PRINTF("s1u: aging = %d\n", entry->aging);
+    switch( opera )
+    {
+        case TIMER_REPLACE:
+            entry->aging = value;
+            break;
+        case TIMER_REDUCE:
+            entry->aging = entry->aging?entry->aging - value:entry->aging;
+            break;
+        default:
+            break;
+    }
+    return entry->aging;
+}
+#endif
+
+/***************************s1u-end************************/
+
 
 inline mp_code_t lte_sgw_update_s1u(const struct list_head  *   node,
-                             struct list_head* s1u_node, 
+                             struct list_head* s1u_node,
                              uint32_t s1u_buck_offset, uint8_t bearerid)
 {
-    lte_table_ctrl_sgw_t *sgw_e = NODE2ENTRY(node, lte_table_ctrl_sgw_t);
+    lte_table_ctrl_sgw_t *sgw_e = NULL;
     int i;
+
+    if( cvmx_unlikely(NULL == node || NULL == s1u_node) )
+    {
+        return MP_FUN_PARAM_ERR;
+    }
 
     if(s1u_buck_offset > MAX_INDEX_V)
     {
         return MP_FUN_PARAM_ERR;
+    }
+
+    sgw_e = NODE2ENTRY(node, lte_table_ctrl_sgw_t);
+    if( cvmx_unlikely(NULL == sgw_e) )
+    {
+        return MP_NULL_POINT;
     }
 
     for(i=0; i<MAX_PDN; i++)
@@ -72,8 +396,6 @@ inline mp_code_t lte_mme_update_s1u(lte_table_ctrl_mme_t * mme_e,
 
     if (cvmx_unlikely( NULL == mme_e))
     {
-        hydra_stat_inc(stat_pkts_s11_mme_entry_unexpect_null);
-        LTE_DEBUG_PRINTF("Create Session response: MME NULL while update S1U \n");
         return MP_FUN_PARAM_ERR;
     }
 
@@ -117,8 +439,7 @@ inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t be
 
     if( cvmx_unlikely(NULL == table_mme_e) )
     {
-        hydra_stat_inc(stat_pkts_s11_mme_entry_unexpect_null);
-        return MP_NULL_POINT;
+        return MP_FUN_PARAM_ERR;
     }
 
     if(bearerid == 0)
@@ -127,7 +448,7 @@ inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t be
         {
             if(ENABLE == table_mme_e->pos_s1u[i].en)
             {
-                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1),
+                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1U),
                         table_mme_e->pos_s1u[i].index, table_mme_e->pos_s1u[i].node);
                 if( MP_OK != rv)
                     return rv;
@@ -141,7 +462,7 @@ inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t be
             if(bearerid == table_mme_e->pos_s1u[i].bearerid
                         && ENABLE == table_mme_e->pos_s1u[i].en)
             {
-                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1),
+                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1U),
                         table_mme_e->pos_s1u[i].index, table_mme_e->pos_s1u[i].node);
                 if( MP_OK != rv)
                     return rv;
@@ -153,12 +474,17 @@ inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t be
 }
 
 
-inline mp_code_t lte_sgw_delete_s1u
-                            (lte_table_ctrl_sgw_t*table_sgw_e, uint8_t bearerid)
+inline mp_code_t lte_sgw_delete_s1u(lte_table_ctrl_sgw_t *table_sgw_e,
+                                    uint8_t bearerid )
 {
     /*delete mme bearer in s1u*/
     int i;
     mp_code_t rv = MP_OK;
+
+    if (cvmx_unlikely( NULL == table_sgw_e))
+    {
+        return MP_FUN_PARAM_ERR;
+    }
 
     if(bearerid == 0)
     {
@@ -166,7 +492,7 @@ inline mp_code_t lte_sgw_delete_s1u
         {
             if(ENABLE == table_sgw_e->pos_s1u[i].en)
             {
-                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1),
+                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1U),
                         table_sgw_e->pos_s1u[i].index, table_sgw_e->pos_s1u[i].node);
                 if( MP_OK != rv)
                     return rv;
@@ -180,7 +506,7 @@ inline mp_code_t lte_sgw_delete_s1u
             if(bearerid == table_sgw_e->pos_s1u[i].bearerid
                         && ENABLE == table_sgw_e->pos_s1u[i].en)
             {
-                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1),
+                rv = hash_table_cell_delete(LTE_GET_TABLE_PTR(TABLE_S1U),
                         table_sgw_e->pos_s1u[i].index, table_sgw_e->pos_s1u[i].node);
                 if( MP_OK != rv)
                     return rv;
@@ -246,14 +572,14 @@ mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
 
     if( cvmx_unlikely(NULL == gtpc) )
     {
-        LTE_DEBUG_PRINTF1("Create Session request: Check gtpc point <NULL> \n");
-        hydra_stat_inc(stat_pkts_info_incompelte);
+        LTE_DEBUG_PRINTF("Create Session request: Check gtpc point <NULL> \n");
+        hydra_stat_inc(stat_pkts_info_incompelte_1);
         return MP_FUN_PARAM_ERR;
     }
 
     if( MP_OK != check_TBCD_encode(LTE_IMSI_LEN, gtpc->imsi) )
     {
-        LTE_DEBUG_PRINTF1("Create Session request: Check imsi <non-bcd encode> \n");
+        LTE_DEBUG_PRINTF("Create Session request: Check imsi <non-bcd encode> \n");
         hydra_stat_inc(stat_pkts_imsi_info_not_bcd);
         return MP_FUN_PARAM_ERR;
     }
@@ -261,8 +587,8 @@ mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
     if( 0 == gtpc->fteid[S11_MME].ip
                     || 0 == gtpc->fteid[S11_MME].teid)
     {
-        LTE_DEBUG_PRINTF1("Create Session request: Check info <incompelte>\n");
-        hydra_stat_inc(stat_pkts_info_incompelte);
+        LTE_DEBUG_PRINTF("Create Session request: Check info <incompelte>\n");
+        hydra_stat_inc(stat_pkts_info_incompelte_1);
         return MP_OK;
     }
 
@@ -278,22 +604,18 @@ mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
     memcpy(imsi_search_d.imsi, gtpc->imsi, sizeof(lte_imsi_t));
     memcpy(imsi_search_d.imei, gtpc->imei, sizeof(lte_imei_t));
     memcpy(imsi_search_d.msisdn, gtpc->msisdn, sizeof(lte_msisdn_t));
-
-    memcpy(imsi_search_d.guti, guti_base, sizeof(lte_guti_t));
-    memcpy(imsi_search_d.tai,  tai_base,  sizeof(lte_tai_t));
-
     imsi_search_d.ex_field.msisdn_len = gtpc->msisdn_len;
 
     PRINTF_IMSI(imsi_search_d.imsi);
     update_imsi_hash_key(imsi_search_d.imsi, &(imsi_control.key));
 
-    LTE_DEBUG_PRINTF1("key=%lx\n" , imsi_control.key.data[0]);
+    LTE_DEBUG_PRINTF("key=%lx\n" , imsi_control.key.data[0]);
 
     rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_IMSI), &imsi_control);
 
     if(MP_OK != rv)
     {
-        LTE_DEBUG_PRINTF1("Create Session request: search Imsi <Failed>\n");
+        LTE_DEBUG_PRINTF("Create Session request: search Imsi <Failed>\n");
         hydra_stat_inc(stat_pkts_imsi_table_failed);
         return rv;
     }
@@ -304,11 +626,12 @@ mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
     if (cvmx_unlikely( NULL == imsi_bucket
             || NULL == imsi_list_node ))
     {
-        LTE_DEBUG_PRINTF1("Create Session request: Check Imsi Ptr <NULL>\n");
+        LTE_DEBUG_PRINTF("Create Session request: Check Imsi Ptr <NULL>\n");
         return MP_NULL_POINT;
     }
-
-
+    hash_table_index_t test = {};
+    test.index = 0x544;
+    s11_mme_search_d.pos_imsi = test;
     SET_TABLE_INDEX( (&(s11_mme_search_d.pos_imsi)), imsi_bucket->index, imsi_list_node);
     s11_mme_control.d_compare = &s11_mme_search_d;
     s11_mme_control.d_update  =  &s11_mme_search_d;
@@ -324,7 +647,7 @@ mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc)
 
     if(MP_OK != rv)
     {
-        LTE_DEBUG_PRINTF1("Create Session request: Search MME <Failed>\n");
+        LTE_DEBUG_PRINTF("Create Session request: Search MME <Failed>\n");
         hydra_stat_inc(stat_pkts_s11_mme_table_failed);
         return rv;
     }
@@ -364,7 +687,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
     /* 处理create session rsp拒绝报文，不带后面的信息了*/
     if (cvmx_unlikely(REUQEST_ACCEPT != gtpc->cause ))
     {
-         LTE_DEBUG_PRINTF1("Create Session response: Check Cause <Reject-%d>\n", gtpc->cause );
+         LTE_DEBUG_PRINTF("Create Session response: Check Cause <Reject-%d>\n", gtpc->cause );
          hydra_stat_inc(stat_pkts_response_reject);
     }
 
@@ -374,8 +697,8 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
                     || 0 == gtpc->fteid[S1U_SGW].teid
                         ))
     {
-        LTE_DEBUG_PRINTF1("Create Session response: Check Param Valid <Some fied zero>\n");
-        hydra_stat_inc(stat_pkts_info_incompelte);
+        LTE_DEBUG_PRINTF("Create Session response: Check Param Valid <Some fied zero>\n");
+        hydra_stat_inc(stat_pkts_info_incompelte_2);
         return MP_OK;
     }
 
@@ -399,7 +722,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
 
     if(MP_OK != rv)
     {
-        LTE_DEBUG_PRINTF1("Create Session response: Search Table S11_MME <Failed>\n");
+        LTE_DEBUG_PRINTF("Create Session response: Search Table S11_MME <Failed>\n");
         hydra_stat_inc(stat_pkts_s11_mme_table_failed);
         return rv;
     }
@@ -411,7 +734,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
         || NULL == mme_list_node ))
     {
         hydra_stat_inc(stat_pkts_s11_mme_entry_unexpect_null);
-        LTE_DEBUG_PRINTF1("Create Session response: Check S11_MME bucket and node <NULL>\n");
+        LTE_DEBUG_PRINTF("Create Session response: Check S11_MME bucket and node <NULL>\n");
         return MP_NULL_POINT;
     }
 
@@ -430,7 +753,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
 
         if (cvmx_unlikely(NULL == imsi_bucket))
         {
-            LTE_DEBUG_PRINTF1("Error: invalid imsi node at S11_MME %s.%d\n",
+            LTE_DEBUG_PRINTF("Error: invalid imsi node at S11_MME %s.%d\n",
                                                 __func__, __LINE__);
             return MP_NULL_POINT;
         }
@@ -464,7 +787,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
         }
         else
         {
-             LTE_DEBUG_PRINTF1("Create Session response: Check IMSI bucket and node <unexpec free>\n");
+             LTE_DEBUG_PRINTF("Create Session response: Check IMSI bucket and node <unexpec free>\n");
              LTE_HASH_TABLE_UNLOCK((imsi_bucket));
              hydra_stat_inc(stat_pkts_imsi_unexpect_free);
              return MP_FAIL;
@@ -503,7 +826,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
 
         if(MP_OK != rv)
         {
-            LTE_DEBUG_PRINTF1("Create Session response: search S11_SGW <Failed>\n");
+            LTE_DEBUG_PRINTF("Create Session response: search S11_SGW <Failed>\n");
             hydra_stat_inc(stat_pkts_s11_sgw_table_failed);
             return rv;
         }
@@ -514,7 +837,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
         if (cvmx_unlikely( NULL == sgw_bucket))
         {
             hydra_stat_inc(stat_pkts_s11_sgw_entry_unexpect_null);
-            LTE_DEBUG_PRINTF1("Create Session response: check S11_SGW  bucket <NULL>\n");
+            LTE_DEBUG_PRINTF("Create Session response: check S11_SGW  bucket <NULL>\n");
             return MP_NULL_POINT;
         }
 
@@ -552,12 +875,12 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
         s1u_control.new_enable      =  ENABLE;
         s1u_control.update_enable   =  ENABLE;
 
-        rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_S1),
+        rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_S1U),
                                                              &s1u_control);
         if(MP_OK != rv)
         {
-            LTE_DEBUG_PRINTF1("Create Session response: Search S1U table <Failed>\n");
-            hydra_stat_inc(stat_pkts_s1u_table_failed);
+            LTE_DEBUG_PRINTF("Create Session response: Search S1U table <Failed>\n");
+            hydra_stat_inc(stat_pkts_s1u_table_failed_2);
             return rv;
         }
 
@@ -570,7 +893,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
         if (cvmx_unlikely( NULL == s1u_sgw_bucket))
         {
             hydra_stat_inc(stat_pkts_s1u_entry_unexpect_null);
-            LTE_DEBUG_PRINTF1("Create Session response: Search S1U_SGW bucket <NULL>\n");
+            LTE_DEBUG_PRINTF("Create Session response: Search S1U_SGW bucket <NULL>\n");
             return MP_NULL_POINT;
         }
 
@@ -578,7 +901,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
                                 s1u_sgw_bucket->index, bearerid);
         if(MP_OK != rv)
         {
-            LTE_DEBUG_PRINTF1("Create Session response: Update S1U_SGW bucket <Failed>\n");
+            LTE_DEBUG_PRINTF("Create Session response: Update S1U_SGW bucket <Failed>\n");
             return rv;
         }
 
@@ -586,7 +909,7 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
     else
     {
         hydra_stat_inc(stat_pkts_s11_mme_table_incompelte);
-        LTE_DEBUG_PRINTF1("Create Session response: Search S11_MME <Incompelte>\n");
+        LTE_DEBUG_PRINTF("Create Session response: Search S11_MME <Incompelte>\n");
         return MP_FAIL;
     }
     hydra_stat_inc(stat_pkts_gtpc_create_session_rsp_related);
@@ -630,7 +953,7 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
                     || 0 == gtpc->fteid[S1U_ENODEB].teid))
     {
 
-        hydra_stat_inc(stat_pkts_info_incompelte);
+        hydra_stat_inc(stat_pkts_info_incompelte_3);
         return MP_OK;
     }
 
@@ -655,7 +978,6 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
     if(MP_OK != rv)
     {
         hydra_stat_inc(stat_pkts_s11_sgw_table_failed);
-        /*When The rv != BCM_E_NONE*/
         return rv;
     }
 
@@ -724,19 +1046,27 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
         memcpy(s1u_search_d.imsi , table_imsi_e->imsi, sizeof(lte_imsi_t));
         memcpy(s1u_search_d.imei , table_imsi_e->imei, sizeof(lte_imei_t));
         memcpy(s1u_search_d.msisdn , table_imsi_e->msisdn, sizeof(lte_msisdn_t));
-
+        memcpy(s1u_search_d.guti, table_imsi_e->guti, sizeof(lte_guti_t));
+        memcpy(s1u_search_d.tai,  table_imsi_e->tai,  sizeof(lte_tai_t));
         s1u_search_d.ex_field.msisdn_len = table_imsi_e->ex_field.msisdn_len;
+
+        PRINTF_IMSI(s1u_search_d.imsi);
+        PRINTF_GUTI(s1u_search_d.guti);
+        PRINTF_TAI(s1u_search_d.tai);
+        PRINTF_GUTI(table_imsi_e->guti);
+        PRINTF_TAI(table_imsi_e->tai);
+        PRINTF_IMSI(table_imsi_e->imsi);
 
         s1u_control.compare_enable  =  ENABLE;
         s1u_control.new_enable     =  ENABLE;
         s1u_control.update_enable   =  ENABLE;
 
 
-        rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_S1),
+        rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_S1U),
                                                              &s1u_control);
         if(MP_OK != rv)
         {
-            hydra_stat_inc(stat_pkts_s1u_table_failed);
+            hydra_stat_inc(stat_pkts_s1u_table_failed_3);
             return rv;
         }
 
@@ -801,7 +1131,7 @@ mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc)
     if( 0 == gtpc->fteid[S1U_SGW].ip  || 0 == gtpc->fteid[S1U_SGW].teid)
     {
 
-        hydra_stat_inc(stat_pkts_info_incompelte);
+        hydra_stat_inc(stat_pkts_info_incompelte_4);
         return MP_OK;
     }
 
@@ -899,16 +1229,21 @@ mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc)
         memcpy(s1u_search_d.tai,  table_imsi_e->tai,  sizeof(lte_tai_t));
         s1u_search_d.ex_field.msisdn_len = table_imsi_e->ex_field.msisdn_len;
 
+        PRINTF_GUTI(s1u_search_d.guti);
+        PRINTF_TAI(s1u_search_d.tai);
+        PRINTF_GUTI(table_imsi_e->guti);
+        PRINTF_TAI(table_imsi_e->tai);
+        
         s1u_control.compare_enable  =  ENABLE;
         s1u_control.new_enable      =  ENABLE;
         s1u_control.update_enable   =  ENABLE;
 
 
-        rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_S1),
+        rv = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_S1U),
                                                              &s1u_control);
         if(MP_OK != rv)
         {
-            hydra_stat_inc(stat_pkts_s1u_table_failed);
+            hydra_stat_inc(stat_pkts_s1u_table_failed_4);
             return rv;
         }
 
@@ -917,7 +1252,7 @@ mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc)
 
         if(MP_OK != rv)
         {
-            hydra_stat_inc(stat_pkts_s1u_table_failed);
+            hydra_stat_inc(stat_pkts_s1u_table_failed_4);
             return rv;
         }
 
@@ -1265,7 +1600,7 @@ mp_code_t npcp_show_relate_info(lte_imsi_t cb_imsi)
              {
                     
                     table_s1u = (lte_table_s1u_t*)hash_table_index_to_entry
-                        (LTE_GET_TABLE_PTR(TABLE_S1), &(table_sgw_e->pos_s1u[i]));
+                        (LTE_GET_TABLE_PTR(TABLE_S1U), &(table_sgw_e->pos_s1u[i]));
 
                     if( NULL != table_s1u)
                     {
@@ -1297,7 +1632,7 @@ mp_code_t npcp_show_relate_info(lte_imsi_t cb_imsi)
              if(ENABLE == table_mme_e->pos_s1u[i].en)
              {
                     table_s1u = (lte_table_s1u_t*)hash_table_index_to_entry
-                        (LTE_GET_TABLE_PTR(TABLE_S1), &(table_mme_e->pos_s1u[i]));
+                        (LTE_GET_TABLE_PTR(TABLE_S1U), &(table_mme_e->pos_s1u[i]));
 
                     if( NULL != table_s1u)
                     {

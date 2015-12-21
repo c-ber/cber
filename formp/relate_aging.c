@@ -43,9 +43,9 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
     lte_table_imsi_t     imsi_cell = {};
     lte_table_ctrl_sgw_t sgw_cell  = {};
     lte_table_ctrl_mme_t mme_cell  = {};
-    hash_table_index_t   imsi_pos  = {};
 
-    LTE_DEBUG_PRINTF("Start to delete table according by imsi !\n");
+    LOG_PRINT(M_AGING, LV_INFO,"Start to delete table according by imsi !\n");
+
     /* 调用哈希查询接口，查询imsi表 */
     memcpy(imsi_cell.imsi, imsi, sizeof(lte_table_imsi_t));
     update_imsi_hash_key(imsi, &(key));
@@ -55,6 +55,7 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
     memcpy(&imsi_cell, entry, sizeof(lte_table_imsi_t));
     if(MP_CELL_FOUND != ret)
     {
+        LOG_PRINT(M_AGING, LV_WARN,"can't find imsi cell.\n");
         LTE_IMSI_TABLE_DELETE_UNLOCK;
         return MP_FAIL;
     }
@@ -80,11 +81,13 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
     /* 删除s11-sgw,s11-mme，删除其下s1u表 */
     hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S11_SGW), &(imsi_cell.pos_sgw));
     hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S11_MME), &(imsi_cell.pos_mme));
+    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S6A), &(imsi_cell.pos_s6a));
+    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S1_ENODEB_MME), &(imsi_cell.s1_mme));
 
     /*采用哈希方式删除imsi总表*/
     hash_cell_delete_by_hash(LTE_GET_TABLE_PTR(TABLE_IMSI),&(key));
     LTE_IMSI_TABLE_DELETE_UNLOCK;
-    LTE_DEBUG_PRINTF("Delete table according by imsi finish!!!!\n");
+    LOG_PRINT(M_AGING, LV_INFO,"Delete table according by imsi finish!!!!\n");
     return MP_OK;
 }
 
@@ -110,19 +113,21 @@ mp_code_t lte_aging_relate_update_timer_by_imsi(lte_imsi_t imsi)
 
     memcpy(imsi_search_d.imsi, imsi, sizeof(lte_imsi_t));
     PRINTF_IMSI(imsi_search_d.imsi);
-    LTE_DEBUG_PRINTF("Start to update aging according by imsi !\n");
+    LOG_PRINT(M_AGING, LV_INFO,"Start to update aging according by imsi !\n");
 
     update_imsi_hash_key(imsi_search_d.imsi, &(imsi_control.key));
 
     ret = hash_table_search_update(LTE_GET_TABLE_PTR(TABLE_IMSI), &imsi_control);
     if(MP_OK != ret)
     {
-       return ret;
+        LOG_PRINT(M_AGING, LV_ERROR,"return error[%d].\n",ret);
+        return ret;
     }
 
     if(HASH_CMP_DIFF  == imsi_control.search)
     {
-       return MP_NOT_FOUND;
+        LOG_PRINT(M_AGING, LV_WARN,"can't find imsi cell.\n");
+        return MP_NOT_FOUND;
     }
 
     table_imsi_e = NODE2ENTRY(imsi_control.node, lte_table_imsi_t);
@@ -141,7 +146,7 @@ mp_code_t lte_aging_relate_update_timer_by_imsi(lte_imsi_t imsi)
     {
        table_mme_e->aging = g_aging_timer_max;
     }
-    LTE_DEBUG_PRINTF("Finish to update aging according by imsi !\n");
+    LOG_PRINT(M_AGING, LV_INFO,"Finish to update aging according by imsi !\n");
     return ret;
 }
 
@@ -162,6 +167,11 @@ static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
     struct list_head *pos = NULL, *next = NULL;
 
     if (cvmx_unlikely(NULL == table))
+    {
+        return MP_NULL_POINT;
+    }
+
+    if (cvmx_unlikely(NULL == table->first_bucket))
     {
         return MP_NULL_POINT;
     }
@@ -197,14 +207,17 @@ static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
                 s1u_cell->ex_field.updt_tim = false;//必须要恢复更新计数器值的标志
             }
 
+            if(cvmx_unlikely(NULL == table->set_timer ))
+            {
+                return MP_NULL_POINT;
+            }
             tim = table->set_timer((void *)hash_cell->entry, TIMER_REDUCE, 1);
             if( tim <= LTE_AGING_TIMER_LOWER_LIMIT )
             {
                 /* 删除cell,这里要用统一接口，待优化 */
                 __list_del( hash_cell->node.prev, hash_cell->node.next);
                 MP_MEMSET_P( hash_cell_t, hash_cell );
-                HASH_CELL_FREE(table->pool, hash_cell);
-                bucket->bucket_depth--;
+                HASH_CELL_FREE(bucket, table->pool, hash_cell);
             }
         }
 
@@ -235,6 +248,11 @@ static mp_code_t lte_aging_search_imsi_table( hash_table_t *table )
         return MP_NULL_POINT;
     }
 
+    if (cvmx_unlikely(NULL == table->first_bucket))
+    {
+        return MP_NULL_POINT;
+    }
+
     for ( i = 0; i < table->max_bucket; i++ )
     {
         bucket = table->first_bucket + i;
@@ -251,6 +269,10 @@ static mp_code_t lte_aging_search_imsi_table( hash_table_t *table )
                 return MP_NULL_POINT;
             }
 
+            if(cvmx_unlikely(NULL == table->set_timer ))
+            {
+                return MP_NULL_POINT;
+            }
             tim = table->set_timer((void *)hash_cell->entry, TIMER_REDUCE, 1);
             memcpy(&imsi_cell, (hash_cell->entry), sizeof(lte_table_imsi_t));
 
@@ -260,7 +282,7 @@ static mp_code_t lte_aging_search_imsi_table( hash_table_t *table )
             }
         }
     }
-    LTE_DEBUG_PRINTF("End to  search imsi table!\n");
+    LOG_PRINT(M_AGING, LV_INFO,"End to  search imsi table!\n");
     return MP_OK;
 }
 
@@ -278,7 +300,7 @@ static mp_code_t lte_aging_search_table( hash_table_t *table )
     hash_cell_t *hash_cell = NULL;
     struct list_head *pos = NULL, *next = NULL;
 
-    LTE_DEBUG_PRINTF("LTE DEBUG LOG :" "Entry to [%s] search\n",table->name);
+    LOG_PRINT(M_AGING, LV_INFO, "Entry to [%s] search\n",table->name);
     if (cvmx_unlikely(NULL == table))
     {
         return MP_NULL_POINT;
@@ -301,12 +323,16 @@ static mp_code_t lte_aging_search_table( hash_table_t *table )
                 return MP_NULL_POINT;
             }
 
+            if(cvmx_unlikely(NULL == table->set_timer ))
+            {
+                return MP_NULL_POINT;
+            }
             tim = table->set_timer((void *)hash_cell->entry, TIMER_REDUCE, 1);
             if( tim <= LTE_AGING_TIMER_LOWER_LIMIT)//删除cell
             {
                 __list_del( hash_cell->node.prev, hash_cell->node.next);
                 MP_MEMSET_P( hash_cell_t, hash_cell );
-                HASH_CELL_FREE(table->pool, hash_cell);
+                HASH_CELL_FREE(bucket, table->pool, hash_cell);
             }
         }
 
@@ -314,7 +340,53 @@ static mp_code_t lte_aging_search_table( hash_table_t *table )
     }
     return MP_OK;
 }
+/******************************************************************************
+ * 函数名称    : lte_full_table_update_timer
+ * 功能        : 通用的直接扫描方式, 更新计数器
+ * 参数        :
+ * 返回        : 错误码，见错误码定义
+******************************************************************************/
+mp_code_t lte_full_table_update_timer( hash_table_t *table,
+                                       uint16_t      tm)
+{
+    int i = 0;
+    hash_bucket_t    *bucket    = NULL;
+    hash_cell_t *hash_cell = NULL;
+    struct list_head *pos = NULL, *next = NULL;
 
+    if (cvmx_unlikely(NULL == table))
+    {
+        return MP_NULL_POINT;
+    }
+
+    for ( i = 0; i < table->max_bucket; i++ )
+    {
+        bucket = table->first_bucket + i;
+        if(cvmx_unlikely(NULL == bucket ))
+        {
+            return MP_NULL_POINT;
+        }
+
+        LTE_HASH_TABLE_LOCK(bucket); /*锁住桶子，下面是遍历cell链表*/
+        list_for_each_safe( pos, next, &(bucket->head) )
+        {
+            hash_cell = list_entry(pos, hash_cell_t, node);
+            if(cvmx_unlikely(NULL == hash_cell ))
+            {
+                return MP_NULL_POINT;
+            }
+
+            if(cvmx_unlikely(NULL == table->set_timer ))
+            {
+                return MP_NULL_POINT;
+            }
+            table->set_timer((void *)hash_cell->entry, TIMER_REPLACE, tm);
+        }
+
+        LTE_HASH_TABLE_UNLOCK(bucket);
+    }
+    return MP_OK;
+}
 /******************************************************************************
  * 函数名称    : lte_aging_get_relate_num
  * 功能        : 获取成功关联总数
@@ -358,7 +430,8 @@ static mp_code_t lte_aging_get_relate_num(uint32_t *relate_total_num)
             }
 
             uint64_t imsi_d = *((uint64_t *)(&imsi_entry->imsi[0]));
-            if(imsi_d == 0){
+            if(imsi_d == 0)
+            {
                 continue;
             }
 
@@ -377,7 +450,7 @@ static mp_code_t lte_aging_get_relate_num(uint32_t *relate_total_num)
             for(j=0;j<MAX_PDN;j++)
             {
                 table_s1u= (lte_table_s1u_t*)hash_table_index_to_entry
-                            (LTE_GET_TABLE_PTR(TABLE_S1), &(table_mme_e->pos_s1u[j]));
+                            (LTE_GET_TABLE_PTR(TABLE_S1U), &(table_mme_e->pos_s1u[j]));
                 if(NULL != table_s1u  )
                 {
                     flag = true;
@@ -392,7 +465,7 @@ static mp_code_t lte_aging_get_relate_num(uint32_t *relate_total_num)
             for(j=0;j<MAX_PDN;j++)
             {
                 table_s1u = (lte_table_s1u_t*)hash_table_index_to_entry
-                        (LTE_GET_TABLE_PTR(TABLE_S1), &(table_sgw_e->pos_s1u[j]));
+                        (LTE_GET_TABLE_PTR(TABLE_S1U), &(table_sgw_e->pos_s1u[j]));
                 if(NULL != table_s1u  )
                 {
                     flag = true;
@@ -422,18 +495,21 @@ static mp_code_t lte_aging_get_relate_num(uint32_t *relate_total_num)
 ******************************************************************************/
 mp_code_t lte_aging_process_check()
 {
-    LTE_DEBUG_PRINTF("LTE DEBUG LOG :" "Entry to aging process!\n");
-
-    /*遍历整个关联表*/
-    lte_aging_search_s1u_table( LTE_GET_TABLE_PTR(TABLE_S1) );
-    lte_aging_search_imsi_table(LTE_GET_TABLE_PTR(TABLE_IMSI) );
-    //lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_IMSI) );
-    lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_SGW) );
-    lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_MME) );
-
+    LOG_PRINT(M_AGING, LV_INFO, "Entry to aging process!\n");
+    /* 如果配置了老化时间为0， 则关闭老化功能 */
+    if( 0 != g_max_relate_lifetime  &&  true == g_lte_start_flag )
+    {
+        /*遍历整个关联表*/
+        lte_aging_search_s1u_table( LTE_GET_TABLE_PTR(TABLE_S1U) );
+        lte_aging_search_imsi_table(LTE_GET_TABLE_PTR(TABLE_IMSI) );
+        //lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_IMSI) );
+        lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_SGW) );
+        lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_MME) );
+        lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_S1_ENODEB_MME) );
+        lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_S6A));
+    }
     return MP_OK;
 }
-
 
 /******************************************************************************
  * 函数名称    : npcp_update_cell_timer

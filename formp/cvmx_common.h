@@ -17,6 +17,11 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#ifndef TRUE
+#define FALSE   0
+#define TRUE    1
+#endif
+
 #ifndef ENABLE
 #define ENABLE      1                   /** Symbol of instance control */
 #define DISABLE     0         /** Symbol of instance control */

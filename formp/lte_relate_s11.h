@@ -24,9 +24,46 @@ extern CVMX_SHARED  hash_bucket_t *lte_tables;
 extern CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX];
 extern CVMX_SHARED  cvmx_spinlock_t imsi_delete_lock;
 
-//extern CVMX_SHARED uint64_t g_scan_interval;
+extern CVMX_SHARED uint64_t g_scan_interval;
 extern CVMX_SHARED uint64_t g_aging_timer_max;
-//extern CVMX_SHARED uint64_t g_max_relate_lifetime;
+extern CVMX_SHARED uint64_t g_max_relate_lifetime;
+
+
+
+mp_code_t s11_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);
+
+mp_code_t s11_mme_table_hash(hash_key_t *key, uint32_t *hash_result);
+
+mp_code_t s11_mme_table_update_entry(void *table, void *update);
+
+#ifdef RELATE_AGING
+uint16_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);
+#endif
+
+
+
+mp_code_t s11_sgw_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);
+
+mp_code_t s11_sgw_table_hash(hash_key_t *key, uint32_t *hash_result);
+
+mp_code_t s11_sgw_table_update_entry(void *table, void *update);
+
+#ifdef RELATE_AGING
+uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);
+#endif
+
+
+
+mp_code_t s1u_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);
+
+mp_code_t s1u_table_hash(hash_key_t *key, uint32_t *hash_result);
+
+mp_code_t s1u_table_update_entry(void *table, void *update);
+
+#ifdef RELATE_AGING
+uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);
+#endif
+
 
 
 inline mp_code_t lte_sgw_update_s1u(const struct list_head  *   node,
@@ -52,8 +89,6 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc);
 mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc);
 
 mp_code_t lte_s11_gtpc_delete_session_req(parse_gtpc_t *gtpc);
-
-
 
 mp_code_t lte_s11_gtpc_delete_session_rsp(parse_gtpc_t *gtpc);
 

@@ -18,7 +18,7 @@
 #include "lte_log.h"
 
 /* 配置了读写锁，不对外开放，初始值为0 */
-volatile CVMX_SHARED uint32_t g_lte_log_swt      = 0;
+volatile CVMX_SHARED uint32_t g_lte_log_swt = 0;
 CVMX_SHARED cvmx_spinlock_t   g_lte_log_spinlock;
 
 
@@ -36,7 +36,6 @@ inline int lte_log_init()
     fifo.size = LTE_TOTAL_SIZE;
     fifo.pwrite_cur = fifo.buffer;
     fifo.pread_cur =  fifo.buffer;
-
     cvmx_spinlock_init(&(g_lte_log_spinlock));
     cvmx_spinlock_init(&(fifo.wlock));
 
@@ -92,7 +91,7 @@ inline mp_code_t lte_log_read(uint8_t *dst_data, uint8_t dst_len, int* read_acl_
     memcpy(dst_data, fifo.pread_cur->data, fifo.pread_cur->len);
     *(dst_data + fifo.pread_cur->len) = '\0';
     fifo.pread_cur->en = STATUS_LOG_NONE;
-
+    *read_acl_len =  fifo.pread_cur->len;
     /*adjust new currut point*/
     if( IS_LIST_TAIL(fifo.pread_cur) )
     {

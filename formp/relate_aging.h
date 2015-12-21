@@ -15,21 +15,6 @@
 #ifndef MODULES_LTE_RELATE_AGING_H_
 #define MODULES_LTE_RELATE_AGING_H_
 
-
-#include "lte_relate.h"
-#include "lte_hash.h"
-#include "lte_relate_s11.h"
-
-extern CVMX_SHARED hash_bucket_t  *lte_tables;
-extern CVMX_SHARED hash_table_t    lte_tables_info[TABLE_MAX];
-extern CVMX_SHARED cvmx_spinlock_t imsi_delete_lock;
-
-#ifdef RELATE_AGING
-
-/**************************************************************************/
-/*                              宏定义块                                  */
-/**************************************************************************/
-
 #ifndef bool
 #define bool uint8_t
 #endif
@@ -40,7 +25,19 @@ extern CVMX_SHARED cvmx_spinlock_t imsi_delete_lock;
 #define false 0
 #endif
 
+#include "lte_relate.h"
+#include "lte_hash.h"
+#include "lte_relate_s11.h"
+
+extern CVMX_SHARED hash_bucket_t  *lte_tables;
+extern CVMX_SHARED hash_table_t    lte_tables_info[TABLE_MAX];
+extern CVMX_SHARED cvmx_spinlock_t imsi_delete_lock;
+extern volatile CVMX_SHARED  bool g_lte_start_flag;
+
 #define LTE_AGING_TIMER_LOWER_LIMIT     1    /* 老化计数器值下限值 */
+
+#ifdef RELATE_AGING
+
 
 /**************************************************************************/
 /*                              结构体和枚举定义块                         */
@@ -70,6 +67,8 @@ static mp_code_t lte_aging_search_table(hash_table_t *table);
 static mp_code_t lte_aging_get_relate_num(uint32_t *relate_total_num);
 
 static mp_code_t lte_aging_process_delete();
+
+mp_code_t lte_full_table_update_timer( hash_table_t *table, uint16_t tm);
 
 mp_code_t lte_aging_process_check();
 
