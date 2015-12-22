@@ -1050,7 +1050,98 @@ mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
     return ret;
 }
 
+inline mp_code_t hash_cell_new(hash_table_t *table,
+                               hash_bucket_t *bucket,
+                               void * cell)
+{
+    mp_code_t ret = MP_OK;
+    hash_cell_t *hash_cell = NULL;
+    /*new The cell*/
+    hash_cell = (hash_cell_t *)HASH_CELL_NEW(table->pool);
+    if( NULL  == hash_cell)
+    {
+        LTE_DEBUG_PRINTF("FPA Memory not available for CVMX_FPA_LTE_POOL %s.%d\n", __func__, __LINE__);
+        return MP_NULL_POINT;
+    }
+    list_add( &(hash_cell->node),&bucket->head);
+    bucket->bucket_depth++;
 
+    memcpy(hash_cell->entry, cell, table->cell_size);
+    return ret;
+}
+/* 插入算法：如果找到就更新，没找到就在链表尾部插入新结点 */
+mp_code_t hash_cell_insert_by_hash( hash_table_t *table,
+                                    hash_key_t   *key,
+                                    void * cell)
+{
+    mp_code_t ret = MP_OK;
+    struct list_head *pos  = NULL;
+    struct list_head *next = NULL;
+
+    hash_bucket_t  *bucket     = NULL;
+    hash_cell_t    *src_cell   = NULL;
+    hash_cmp_em_t  cmp_rlt     = HASH_CMP_DIFF;
+    uint32_t       hash_result = 0;
+    uint8_t        entry[TABLE_CELL_MAX_LEN] = {0};
+
+    if (cvmx_unlikely(NULL == table || NULL == key ))
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+
+    if( BYTE_GET_UINT64(key->size) > sizeof(entry) )
+    {
+        LTE_DEBUG_PRINTF("Error: The key size exceeds the entry size.\n");
+        return MP_SPACE_NOT_ENOUGH;
+    }
+    memcpy(entry, key, BYTE_GET_UINT64(key->size) );
+
+    /* 哈希运算获取桶偏移值 */
+
+    if(NULL == table->hash)
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+    MP_ERR_PRT(table->hash(key, &hash_result));
+    hash_result = hash_result % table->max_bucket;
+
+    bucket = table->first_bucket + hash_result;
+    if(cvmx_unlikely(NULL == bucket ))
+    {
+        LTE_DEBUG_PRINTF("%s: bucket=NULL\n", table->name);
+        return MP_NULL_POINT;
+    }
+
+    /* 遍历双向链表，比较cell中key是否一致 */
+    LTE_HASH_TABLE_LOCK(bucket);
+    list_for_each_safe(pos, next, &(bucket->head))
+    {
+        src_cell = list_entry(pos, hash_cell_t, node);
+        MP_POINT_CHECK(src_cell);
+
+        if(NULL == table->compare)
+        {
+            ret = MP_NULL_POINT;
+            break;
+        }
+        ret = table->compare((void *)src_cell->entry, entry, &cmp_rlt);
+        if (ret != MP_OK)
+        {
+            break;
+        }
+        if(HASH_CMP_SAME == cmp_rlt)
+        {
+            table->update(src_cell->entry, cell);
+            LTE_HASH_TABLE_UNLOCK(bucket);
+            return MP_OK;
+        }
+    }
+    /*调用new函数*/
+    hash_cell_new(table, bucket, cell);
+
+    LTE_HASH_TABLE_UNLOCK(bucket);
+    return MP_FAIL;
+}
 /******************************************************************************
  * 函数名称    : hash_cell_get_by_index
  * 功能        : 根据行列索引读取cell值
@@ -1565,123 +1656,4 @@ mp_error_t create_update_table_by_hash(
     return ret;
 }
 
-
-inline bool not_empty_array(uint8_t *src, int len)
-{
-    int i = 0;
-    for( i = 0; i < len; i++ )
-    {
-        if( 0x00 != *(src+i) )
-        {
-            return true;
-        }
-    }
-    return false;
-}
-/******************************************************************************
- * 函数名称    : hash_table_get_s1u_info
- * 功能        : gtpu报文进入后从s1u表获取关联信息
- * 参数        : gtpu: gtpu字段的结构体
- * 说明        : gtpu自带key，查到后需要将关联字段填充进去
- * 返回        : 错误码，关联成功返回MP_OK,其他错误见错误码说明
-******************************************************************************/
-inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
-{
-    mp_code_t ret = MP_NOT_FOUND;
-    struct list_head *pos  = NULL;
-    struct list_head *next = NULL;
-
-    hash_table_t    *table      = LTE_GET_TABLE_PTR(TABLE_S1U);
-    hash_bucket_t   *bucket     = NULL;
-    hash_cell_t     *src_cell   = NULL;       /* 链表返回的cell节点，需要转为s1u cell*/
-    hash_cmp_em_t   cmp_rlt     = HASH_CMP_DIFF;
-    uint32_t        hash_result = 0;
-    lte_table_s1u_t s1u_cell    = {};         /* 用于cell间哈希比较的临时值 */
-    lte_table_s1u_t *s1u_src_cell = NULL;     /* 指向查询到的cell */
-    hash_key_t  key = {};
-
-    if (cvmx_unlikely( NULL == gtpu ))
-    {
-        return MP_FUN_PARAM_ERR;
-    }
-
-    s1u_cell.fteid.ip   =  gtpu->ot_dstip ;
-    s1u_cell.fteid.teid =  gtpu->teid;
-
-    /* 哈希运算获取桶偏移值 */
-    update_fteid_hash_key( gtpu->ot_dstip, gtpu->teid, &key );
-    MP_ERR_PRT(table->hash( &key, &hash_result ));
-    hash_result = hash_result % table->max_bucket;
-
-    bucket = table->first_bucket + hash_result;
-    if(cvmx_unlikely(NULL == bucket ))
-    {
-        LTE_DEBUG_PRINTF("%s: bucket=NULL\n", table->name);
-        return MP_NULL_POINT;
-    }
-
-    /*遍历双向链表，比较cell中key是否一致,即确定列*/
-    LTE_HASH_TABLE_LOCK(bucket);
-    list_for_each_safe(pos, next, &(bucket->head))
-    {
-        src_cell = list_entry(pos, hash_cell_t, node);
-        MP_POINT_CHECK(src_cell);
-
-        if(NULL == table->compare)
-        {
-            ret = MP_NULL_POINT;
-            break;
-        }
-        ret = table->compare((void *)src_cell->entry, (void*)&s1u_cell, &cmp_rlt);
-        if (ret != MP_OK)
-        {
-            ret = MP_NOT_FOUND;
-            break;
-        }
-        if(HASH_CMP_SAME == cmp_rlt)
-        {
-            s1u_src_cell = (lte_table_s1u_t *)(src_cell->entry);
-            /* 给报文打上关联信息，imsi, imei, msisdn */
-            if ( cvmx_likely( (uint64_t)(gtpu->imsi) != 0))
-            {
-                memcpy(gtpu->imsi , s1u_src_cell->imsi, sizeof(lte_imsi_t));
-                gtpu->imsi_en = ENABLE;
-            }
-            PRINTF_IMSI(gtpu->imsi);
-            if ( cvmx_likely( (uint64_t)(gtpu->imei) != 0))
-            {
-                memcpy(gtpu->imei , s1u_src_cell->imei, sizeof(lte_imei_t));
-                gtpu->imei_en = ENABLE;
-            }
-            if ( cvmx_likely( (uint64_t)(gtpu->msisdn) != 0))
-            {
-                memcpy(gtpu->msisdn, s1u_src_cell->msisdn, sizeof(lte_msisdn_t));
-                gtpu->msisdn_en= ENABLE;
-            }
-            if ( cvmx_likely( not_empty_array(s1u_src_cell->guti, LTE_GUTI_LEN )))
-            {
-                memcpy(gtpu->guti, s1u_src_cell->guti, sizeof(lte_guti_t));
-                gtpu->guti_en= ENABLE;
-            }
-            PRINTF_GUTI(gtpu->guti);
-            if ( cvmx_likely( not_empty_array(s1u_src_cell->tai,LTE_TAI_MAX_LEN )))
-            {
-                memcpy(gtpu->tai,  s1u_src_cell->tai,  sizeof(lte_tai_t));
-                gtpu->tai_en= ENABLE;
-            }
-            PRINTF_TAI(gtpu->tai);
-            gtpu->msisdn_len = s1u_src_cell->ex_field.msisdn_len;
-
-#ifdef RELATE_AGING
-           /* 对于关联上的gtp-u报文,需要更新关联表项计数器值 */
-            s1u_src_cell->aging = g_aging_timer_max;
-            s1u_src_cell->ex_field.updt_tim = true;
-#endif
-            LTE_HASH_TABLE_UNLOCK(bucket);
-            return MP_RELATE_SUCCESS;
-        }
-    }
-    LTE_HASH_TABLE_UNLOCK(bucket);
-    return ret;
-}
 

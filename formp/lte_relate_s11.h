@@ -92,6 +92,8 @@ mp_code_t lte_s11_gtpc_delete_session_req(parse_gtpc_t *gtpc);
 
 mp_code_t lte_s11_gtpc_delete_session_rsp(parse_gtpc_t *gtpc);
 
+inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu);
+
 //int npcp_gtp_switch_set( uint16_t  ilen, void *idata,
 //                                       uint16_t *olen, void *odata );
 //

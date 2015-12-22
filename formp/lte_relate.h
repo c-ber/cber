@@ -146,7 +146,7 @@ typedef union
 typedef struct
 {
     uint32_t msisdn_len:4;
-    uint32_t updt_tim:1;           //计时器值更新标志
+    uint32_t updt_tim:1;           /* 计时器值更新标志 */
     uint32_t data_bak:3;
 }__attribute__((packed)) extend_field_t;
 
@@ -200,7 +200,7 @@ typedef struct
 /* s11-sgw 表项 */
 typedef struct
 {
-    lte_fteid_t         fteid;              //16字节
+    lte_fteid_t         fteid;              //8字节
     hash_table_index_t  pos_mme;            //12字节
     hash_table_index_t  pos_imsi;           //12字节
     hash_table_index_t  pos_s1u[MAX_PDN];   //12*4 =48字节
@@ -208,11 +208,15 @@ typedef struct
     uint16_t            aging;              //1字节      累计93字节
 }__attribute__((packed)) lte_table_ctrl_sgw_t ;
 
-
+typedef enum
+{
+    RELATE_FULL_CREATE =  1<<0,
+    RELATE_NEVER_CREATE = 1<<1
+}S1U_TABLE_RELATE_TYPE;
 /* s1u 表项  一共2,000,000 个，分上下行，分别1,000,000*/
 typedef struct
 {
-    lte_fteid_t         fteid;              //16字节
+    lte_fteid_t         fteid;              //8字节
     uint32_t            ue_ip;              //4字节
     uint8_t             bearerid;           //1字节
     lte_imsi_t          imsi;               //8字节
@@ -222,6 +226,13 @@ typedef struct
     uint16_t            aging;              //2字节
     lte_tai_t           tai;                //5字节
     lte_guti_t          guti;               //12字节  累计65字节
+
+    uint8_t is_create_relate;     /* bit0:建立了完整关联表
+                                     bit1:未建立过完整关联表 */
+    uint64_t b0_relate_gtpu_num;  /* 建立了完整关联表  :关联的gtp-u报文个数 */
+    uint64_t b1_relate_gtpu_num;  /* 未建立过完整关联表:关联的gtp-u报文个数 */
+
+
 }__attribute__((packed)) lte_table_s1u_t ;
 
 

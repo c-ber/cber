@@ -235,7 +235,9 @@ typedef struct
 }while(0)
 
 
-
+inline mp_code_t hash_cell_new(hash_table_t *table,
+                               hash_bucket_t *bucket,
+                               void * cell);
 
 mp_code_t hash_table_search_update(hash_table_t *table, hash_table_control_t *control);
 mp_code_t hash_table_search_destroy(hash_table_t *table, hash_table_control_t *control);
@@ -260,7 +262,6 @@ mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
                                           hash_table_index_t *index,
                                           uint16_t            tm);
 
-//inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu);
 
 /* chengshuan Add for table operation */
 

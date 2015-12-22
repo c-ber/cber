@@ -304,6 +304,9 @@ mp_code_t s1u_table_update_entry(void *table, void *update)
     PRINTF_GUTI(entry->guti);
     PRINTF_TAI(entry->tai);
     entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
+
+    entry->is_create_relate |= up_d->is_create_relate;
+    entry->b0_relate_gtpu_num = up_d->b0_relate_gtpu_num;
 #ifdef RELATE_AGING
     entry->aging = (uint16_t)g_aging_timer_max;
 #endif
@@ -860,13 +863,16 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
 
 
         s1u_search_d.ue_ip   =  gtpc->pdn.pdn_addr;
-
+        table_imsi_e->pdn.pdn_addr = gtpc->pdn.pdn_addr;
         memcpy(s1u_search_d.imsi ,   table_imsi_e->imsi, sizeof(lte_imsi_t));
         memcpy(s1u_search_d.imei ,   table_imsi_e->imei, sizeof(lte_imei_t));
         memcpy(s1u_search_d.msisdn , table_imsi_e->msisdn, sizeof(lte_msisdn_t));
         memcpy(s1u_search_d.guti, table_imsi_e->guti, sizeof(lte_guti_t));
         memcpy(s1u_search_d.tai,  table_imsi_e->tai,  sizeof(lte_tai_t));
         s1u_search_d.ex_field.msisdn_len = table_imsi_e->ex_field.msisdn_len;
+        s1u_search_d.is_create_relate = 1;
+        s1u_search_d.b0_relate_gtpu_num = 0;
+        s1u_search_d.b1_relate_gtpu_num = 0;
 
         s1u_control.d_compare =
         s1u_control.d_update = (void *)&s1u_search_d;
@@ -1049,6 +1055,9 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
         memcpy(s1u_search_d.guti, table_imsi_e->guti, sizeof(lte_guti_t));
         memcpy(s1u_search_d.tai,  table_imsi_e->tai,  sizeof(lte_tai_t));
         s1u_search_d.ex_field.msisdn_len = table_imsi_e->ex_field.msisdn_len;
+        s1u_search_d.is_create_relate = 1;
+        s1u_search_d.b0_relate_gtpu_num = 0;
+        s1u_search_d.b1_relate_gtpu_num = 0;
 
         PRINTF_IMSI(s1u_search_d.imsi);
         PRINTF_GUTI(s1u_search_d.guti);
@@ -1228,6 +1237,9 @@ mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc)
         memcpy(s1u_search_d.guti, table_imsi_e->guti, sizeof(lte_guti_t));
         memcpy(s1u_search_d.tai,  table_imsi_e->tai,  sizeof(lte_tai_t));
         s1u_search_d.ex_field.msisdn_len = table_imsi_e->ex_field.msisdn_len;
+        s1u_search_d.is_create_relate = 1;
+        s1u_search_d.b0_relate_gtpu_num = 0;
+        s1u_search_d.b1_relate_gtpu_num = 0;
 
         PRINTF_GUTI(s1u_search_d.guti);
         PRINTF_TAI(s1u_search_d.tai);
@@ -1325,6 +1337,144 @@ mp_code_t lte_s11_gtpc_delete_session_rsp(parse_gtpc_t *gtpc)
 }
 
 
+inline bool not_empty_array(uint8_t *src, int len)
+{
+    int i = 0;
+    for( i = 0; i < len; i++ )
+    {
+        if( 0x00 != *(src+i) )
+        {
+            return true;
+        }
+    }
+    return false;
+}
+/******************************************************************************
+ * 函数名称    : hash_table_get_s1u_info
+ * 功能        : gtpu报文进入后从s1u表获取关联信息
+ * 参数        : gtpu: gtpu字段的结构体
+ * 说明        : gtpu自带key，查到后需要将关联字段填充进去
+ * 返回        : 错误码，关联成功返回MP_OK,其他错误见错误码说明
+******************************************************************************/
+inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
+{
+    mp_code_t ret = MP_NOT_FOUND;
+    struct list_head *pos  = NULL;
+    struct list_head *next = NULL;
+
+    hash_table_t    *table      = LTE_GET_TABLE_PTR(TABLE_S1U);
+    hash_bucket_t   *bucket     = NULL;
+    hash_cell_t     *src_cell   = NULL;       /* 链表返回的cell节点，需要转为s1u cell*/
+    hash_cmp_em_t   cmp_rlt     = HASH_CMP_DIFF;
+    uint32_t        hash_result = 0;
+    lte_table_s1u_t s1u_cell    = {};         /* 用于cell间哈希比较的临时值 */
+    lte_table_s1u_t *s1u_src_cell = NULL;     /* 指向查询到的cell */
+    hash_key_t  key = {};
+
+    if (cvmx_unlikely( NULL == gtpu ))
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+
+    s1u_cell.fteid.ip   =  gtpu->ot_dstip ;
+    s1u_cell.fteid.teid =  gtpu->teid;
+
+    /* 哈希运算获取桶偏移值 */
+    update_fteid_hash_key( gtpu->ot_dstip, gtpu->teid, &key );
+    MP_ERR_PRT(table->hash( &key, &hash_result ));
+    hash_result = hash_result % table->max_bucket;
+
+    bucket = table->first_bucket + hash_result;
+    if(cvmx_unlikely(NULL == bucket ))
+    {
+        LTE_DEBUG_PRINTF("%s: bucket=NULL\n", table->name);
+        return MP_NULL_POINT;
+    }
+
+    /*遍历双向链表，比较cell中key是否一致,即确定列*/
+    LTE_HASH_TABLE_LOCK(bucket);
+    list_for_each_safe(pos, next, &(bucket->head))
+    {
+        src_cell = list_entry(pos, hash_cell_t, node);
+        MP_POINT_CHECK(src_cell);
+
+        if(NULL == table->compare)
+        {
+            ret = MP_NULL_POINT;
+            break;
+        }
+
+        ret = table->compare((void *)src_cell->entry, (void*)&s1u_cell, &cmp_rlt);
+        if( MP_OK != ret)
+        {
+            break;
+        }
+
+        if(HASH_CMP_SAME == cmp_rlt)
+        {
+            s1u_src_cell = (lte_table_s1u_t *)(src_cell->entry);
+            /* 给报文打上关联信息，imsi, imei, msisdn */
+            if ( cvmx_likely( (uint64_t)(gtpu->imsi) != 0))
+            {
+                memcpy(gtpu->imsi , s1u_src_cell->imsi, sizeof(lte_imsi_t));
+                gtpu->imsi_en = ENABLE;
+            }
+            PRINTF_IMSI(gtpu->imsi);
+            if ( cvmx_likely( (uint64_t)(gtpu->imei) != 0))
+            {
+                memcpy(gtpu->imei , s1u_src_cell->imei, sizeof(lte_imei_t));
+                gtpu->imei_en = ENABLE;
+            }
+            if ( cvmx_likely( (uint64_t)(gtpu->msisdn) != 0))
+            {
+                memcpy(gtpu->msisdn, s1u_src_cell->msisdn, sizeof(lte_msisdn_t));
+                gtpu->msisdn_en= ENABLE;
+            }
+            if ( cvmx_likely( not_empty_array(s1u_src_cell->guti, LTE_GUTI_LEN )))
+            {
+                memcpy(gtpu->guti, s1u_src_cell->guti, sizeof(lte_guti_t));
+                gtpu->guti_en= ENABLE;
+            }
+            PRINTF_GUTI(gtpu->guti);
+            if ( cvmx_likely( not_empty_array(s1u_src_cell->tai,LTE_TAI_MAX_LEN )))
+            {
+                memcpy(gtpu->tai,  s1u_src_cell->tai,  sizeof(lte_tai_t));
+                gtpu->tai_en= ENABLE;
+            }
+            PRINTF_TAI(gtpu->tai);
+            gtpu->msisdn_len = s1u_src_cell->ex_field.msisdn_len;
+
+            if(s1u_src_cell->is_create_relate & RELATE_FULL_CREATE)
+            {
+                s1u_src_cell->b0_relate_gtpu_num++;
+            }
+            else
+            {
+                s1u_src_cell->b1_relate_gtpu_num++;
+                //这里如果算关联成功，只能计入补充的成功
+                //需要加一个统计
+                LTE_HASH_TABLE_UNLOCK(bucket);
+                return MP_NOT_FOUND;
+            }
+
+#ifdef RELATE_AGING
+           /* 对于关联上的gtp-u报文,需要更新关联表项计数器值 */
+            s1u_src_cell->aging = g_aging_timer_max;
+            s1u_src_cell->ex_field.updt_tim = true;
+#endif
+            LTE_HASH_TABLE_UNLOCK(bucket);
+            return MP_RELATE_SUCCESS;
+        }
+    }
+    /*没关联上就做下统计*/
+    s1u_cell.is_create_relate |= RELATE_NEVER_CREATE;
+    s1u_cell.b0_relate_gtpu_num = 1;
+    s1u_cell.b1_relate_gtpu_num = 0;
+    hash_cell_new(table, bucket, &s1u_cell);
+
+    LTE_HASH_TABLE_UNLOCK(bucket);
+    return ret;
+}
 
 /******************************************************************************
  * 函数名称    : npcp_gtp_switch_set
