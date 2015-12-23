@@ -336,6 +336,9 @@ mp_code_t lte_gtpu_process(parse_gtpu_t *gtpu)
         case MP_RELATE_SUCCESS:
             hydra_stat_inc(stat_pkts_gtpu_related);
             break;
+        case MP_EXCEPTION_STAT:
+            hydra_stat_inc(stat_pkts_gtpu_related_supply);
+            break;
         default:
             hydra_stat_inc(stat_pkts_s1u_table_failed_gtpu);
             break;

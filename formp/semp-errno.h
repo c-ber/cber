@@ -21,6 +21,7 @@ typedef enum {
     MP_NON_BCD_FORMAT       = 108,         /* 非BCD格式 */
     MP_NO_LOG_READ          = 109,         /* 当前没有可读日志 */
     MP_RELATE_SUCCESS       = 110,         /* gtpu关联成功 */
+    MP_EXCEPTION_STAT       = 111,         /* 未建表的异常关联情况 */
     MP_FAIL                 = 255          /* 正常处理中的错误返回 */
 }mp_code_t;
 

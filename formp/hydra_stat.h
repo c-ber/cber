@@ -150,6 +150,7 @@ typedef enum
     stat_business_grpwork_null,
     stat_pkts_lte_relate_failed,
     stat_pkts_gtpu_related,
+    stat_pkts_gtpu_related_supply,
     stat_pkts_gtpc_create_session_req,  
     stat_pkts_gtpc_create_session_req_related, 
     stat_pkts_gtpc_create_session_rsp,

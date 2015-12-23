@@ -1358,7 +1358,6 @@ inline bool not_empty_array(uint8_t *src, int len)
 ******************************************************************************/
 inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
 {
-    mp_code_t ret = MP_NOT_FOUND;
     struct list_head *pos  = NULL;
     struct list_head *next = NULL;
 
@@ -1381,7 +1380,10 @@ inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
 
     /* 哈希运算获取桶偏移值 */
     update_fteid_hash_key( gtpu->ot_dstip, gtpu->teid, &key );
-    MP_ERR_PRT(table->hash( &key, &hash_result ));
+    if( MP_OK !=  table->hash(&key, &hash_result) )
+    {
+        return MP_NULL_POINT;
+    }
     hash_result = hash_result % table->max_bucket;
 
     bucket = table->first_bucket + hash_result;
@@ -1400,14 +1402,13 @@ inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
 
         if(NULL == table->compare)
         {
-            ret = MP_NULL_POINT;
-            break;
+            return MP_NULL_POINT;
         }
 
-        ret = table->compare((void *)src_cell->entry, (void*)&s1u_cell, &cmp_rlt);
-        if( MP_OK != ret)
+        if( MP_OK != table->compare((void *)src_cell->entry,
+                                    (void *)&s1u_cell, &cmp_rlt))
         {
-            break;
+            return MP_NULL_POINT;
         }
 
         if(HASH_CMP_SAME == cmp_rlt)
@@ -1454,7 +1455,7 @@ inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
                 //这里如果算关联成功，只能计入补充的成功
                 //需要加一个统计
                 LTE_HASH_TABLE_UNLOCK(bucket);
-                return MP_NOT_FOUND;
+                return MP_EXCEPTION_STAT;
             }
 
 #ifdef RELATE_AGING
@@ -1473,7 +1474,7 @@ inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
     hash_cell_new(table, bucket, &s1u_cell);
 
     LTE_HASH_TABLE_UNLOCK(bucket);
-    return ret;
+    return MP_NOT_FOUND;
 }
 
 /******************************************************************************
