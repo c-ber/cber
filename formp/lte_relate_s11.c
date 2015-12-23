@@ -1468,8 +1468,8 @@ inline mp_code_t hash_table_get_s1u_info(parse_gtpu_t *gtpu)
     }
     /*没关联上就做下统计*/
     s1u_cell.is_create_relate |= RELATE_NEVER_CREATE;
-    s1u_cell.b0_relate_gtpu_num = 1;
-    s1u_cell.b1_relate_gtpu_num = 0;
+    s1u_cell.b0_relate_gtpu_num = 0;
+    s1u_cell.b1_relate_gtpu_num = 1;
     hash_cell_new(table, bucket, &s1u_cell);
 
     LTE_HASH_TABLE_UNLOCK(bucket);
