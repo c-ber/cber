@@ -36,8 +36,14 @@ inline int lte_log_init()
     fifo.size = LTE_TOTAL_SIZE;
     fifo.pwrite_cur = fifo.buffer;
     fifo.pread_cur =  fifo.buffer;
+    printf("log cache addr = %p\n", fifo.buffer);
     cvmx_spinlock_init(&(g_lte_log_spinlock));
     cvmx_spinlock_init(&(fifo.wlock));
+
+    fifo.pkt_read_cur = 0;
+    fifo.pkt_write_cur = 0;
+    fifo.pkt_count = 0;
+    fifo.pkt_total_bytes = 0;
 
     return 0;
 }
@@ -77,7 +83,7 @@ inline mp_code_t lte_log_write(const char *format, ...)
     return MP_OK;
 }
 
-inline mp_code_t lte_log_read(uint8_t *dst_data, uint8_t dst_len, int* read_acl_len)
+inline mp_code_t lte_log_read(uint8_t *dst_data, uint16_t dst_len, int* read_acl_len)
 {
     if( NULL == dst_data || (dst_len < LTE_LOG_DATA_SIZE))
     {
@@ -136,7 +142,97 @@ inline uint32_t lte_log_flag_read()
     return g_lte_log_swt;
 }
 
+/**********************************************************************
+ * lte_packet_write
+ * 函数说明：捕捉报文并存入cache中，抓满就停止
+ **********************************************************************/
+inline mp_code_t lte_packet_write(uint8_t* buf, uint16_t len)
+{
+    uint8_t *pkt_base = (uint8_t *)(fifo.buffer);
 
+    if( len >= LTE_LOG_DATA_SIZE)
+    {
+        return MP_FAIL;
+    }
+    /*必须要少一个，否则最后一条报文不全*/
+    if( fifo.pkt_write_cur <  sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-1) )
+    {
+//        if(fifo.pkt_write_cur > sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-3) ||
+//           fifo.pkt_write_cur < sizeof(log_pkt_t)* (3)    )
+//        {
+//            printf("write packet, pkt_write_cur = %d [%lu],",
+//                fifo.pkt_write_cur,sizeof(log_pkt_t)* LTE_TOTAL_SIZE );
+//        }
+        memcpy(pkt_base+fifo.pkt_write_cur, &len, sizeof(uint16_t));
+        fifo.pkt_write_cur += 2;
+        memcpy(pkt_base+fifo.pkt_write_cur, buf, len);
+        fifo.pkt_write_cur += len;
+        fifo.pkt_count++;
+        fifo.pkt_total_bytes = fifo.pkt_total_bytes + len;
+//        if(fifo.pkt_write_cur > sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-3) ||
+//           fifo.pkt_write_cur < sizeof(log_pkt_t)* (3)    )
+//        {
+//            printf("len = %d , pkt_write_cur = %d\n", len,  fifo.pkt_write_cur);
+//        }
+    }
+    return MP_OK;
+}
 
+inline mp_code_t lte_packet_read(uint8_t* buf, uint16_t *len)
+{
+    uint8_t *pkt_base = (uint8_t *)(fifo.buffer);
+//    int i = 0;
+    if( fifo.pkt_read_cur <  sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-1) )
+    {
+//        printf("read packet, pkt_read_cur = %d [%lu]\n", fifo.pkt_read_cur,sizeof(log_pkt_t)* LTE_TOTAL_SIZE );
+        memcpy(len, pkt_base+fifo.pkt_read_cur, sizeof(uint16_t));
+        fifo.pkt_read_cur += 2;
+        memcpy(buf, pkt_base+fifo.pkt_read_cur, *len);
+        fifo.pkt_read_cur += (*len);
+        fifo.pkt_count--;
+        fifo.pkt_total_bytes = fifo.pkt_total_bytes - (*len);
+//        printf("lte_packet_write: len = %d\n",*len);
+//        for(i = 0 ; i < *len ; i++)
+//        {
+//            if(i % 8 == 0 && i > 0)
+//                printf("\n");
+//            printf("%02x ", buf[i]);
+//        }
+//        printf("\n");
+    }
+    else
+    {
+        *len = 1;//代表数据取完了
+    }
+    return MP_OK;
+}
+
+int lte_packet_is_full()
+{
+    //return fifo.pkt_write_cur > 0 ? 1:0;//先拿一条试下
+    return ( fifo.pkt_write_cur <  sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-1) )? 0:1;
+}
+
+int lte_packet_have_data_to_read()
+{
+    return ( fifo.pkt_read_cur < fifo.pkt_write_cur )? 1: 0;
+}
+
+int lte_packet_count_get()
+{
+    return fifo.pkt_count;
+}
+int lte_packet_total_size_get()
+{
+    return fifo.pkt_total_bytes;
+}
+mp_code_t lte_packet_reset()
+{
+    fifo.pkt_read_cur = 0;
+    fifo.pkt_write_cur = 0;
+    fifo.pkt_count = 0;
+    fifo.pkt_total_bytes = 0;
+    return MP_OK;
+}
 
 #endif /* MODULES_LTE_LTE_LOG_C_ */

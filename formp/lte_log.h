@@ -33,10 +33,12 @@
 /***************************** 扩展日志缓存功能 ********************************/
 #define LTE_LOG_CACHE       "lte_log_cache"
 
-
-#define LTE_TOTAL_SIZE        (10)
+#ifdef CAP_PACKET_VERSION
+#define LTE_TOTAL_SIZE        (2*1024*1024)  //2G,分配的最小单元的单位为k
+#else
+#define LTE_TOTAL_SIZE        (1024 * 1024)
 #define LTE_LOG_CACHE_SIZE    (LTE_LOG_DATA_SIZE * LTE_TOTAL_SIZE)//256M
-
+#endif
 #define STATUS_LOG_NEW     1
 #define STATUS_LOG_NONE    0
 
@@ -51,25 +53,39 @@
 
 typedef uint8_t log_data_t[LTE_LOG_DATA_SIZE];
 
-/*本次设计，采用固定长度存放报文, 简单而稳定，鉴于内存够用*/
+#define CAPTURE_PKT_MAX_SIZE     8192 /* 即使采用分帧，也要限制最大报文长度 */
+/*本次设计，采用固定长度存放报文, 简单而稳定，鉴于内存够用
+首帧标志FIR、末帧标志FIN，FIR：置“1”，报文的第一帧。FIN：置“1”，报文的最后一帧。
+FIR、FIN组合状态所表示的含义见下表。
+FIR    FIN    应用说明
+  0      0    多帧：中间帧
+  0      1    多帧：结束帧
+  1      0    多帧：第1帧，有后续帧
+  1      1    单帧
+*/
 typedef struct _log_pkt
 {
     struct
     {
-        uint32_t en:1; /*是否使用*/
-        uint32_t len:7;/*日志长度，不以\0为结束标志，以len为标准*/
+        uint32_t en:1;  /* 是否使用 */
+        uint32_t fir:1; /* 首帧标志 */
+        uint32_t fin:1; /* 末帧标志 */
+        uint32_t len:15;/* 日志长度，不以\0为结束标志，以len为标准 */
     };
     log_data_t data;
 }log_pkt_t;
-
 
 typedef struct log_cache_kfifo
 {
     log_pkt_t *buffer;  /* the buffer holding the data */
     unsigned int size;  /* the size of the allocated buffer */
-    log_pkt_t* pwrite_cur;  /* 写日志的当前指针 */
-    log_pkt_t* pread_cur;   /* 读日志的当前指针 */
-    cvmx_spinlock_t wlock;  /* protects concurrent modifications */
+    log_pkt_t* pwrite_cur;   /* 写日志的当前指针 */
+    log_pkt_t* pread_cur;    /* 读日志的当前指针 */
+    uint32_t   pkt_write_cur;/* 写报文的当前指针 */
+    uint32_t   pkt_read_cur; /* 读报文的当前指针 */
+    uint32_t   pkt_count;    /* 当前存储的报文总数 */
+    uint32_t   pkt_total_bytes; /* 当前存储的总字节数 */
+    cvmx_spinlock_t wlock;   /* protects concurrent modifications */
 }kfifo_t;
 /*********************************** END **************************************/
 
@@ -142,6 +158,14 @@ inline mp_code_t lte_log_flag_write(log_module_t mid, log_level_t lv, log_en_t e
 inline uint32_t  lte_log_flag_read();
 inline int lte_log_init();
 inline mp_code_t lte_log_write(const char *format, ...);
-inline mp_code_t lte_log_read(uint8_t *dst_data, uint8_t dst_len, int* read_acl_len);
+inline mp_code_t lte_log_read(uint8_t *dst_data, uint16_t dst_len, int* read_acl_len);
+
+inline mp_code_t lte_packet_write(uint8_t* buf, uint16_t len);
+inline mp_code_t lte_packet_read(uint8_t* buf, uint16_t *len);
+int lte_packet_is_full();
+int lte_packet_have_data_to_read();
+int lte_packet_count_get();
+int lte_packet_total_size_get();
+mp_code_t lte_packet_reset();
 
 #endif /* MODULES_LTE_LTE_LOG_H_ */
