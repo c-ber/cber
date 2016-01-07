@@ -15,54 +15,34 @@
 #ifndef DB_H_
 #define DB_H_
 
-#include "semp-errno.h"
-#include "stdio.h"
-#include "string.h"
-#include "stdlib.h"
-#include "stdint.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 
-///* 数据库表操作类型 */
-//typedef enum
-//{
-//    OP_TABLE_INSERT,   /* 增 */
-//    OP_TABLE_DELETE,   /* 删 */
-//    OP_TABLE_UPDATE,   /* 改 */
-//    OP_TABLE_SELECT    /* 查 */
-//}db_opera_t;
-//
-//typedef  uint8_t table_key_t;
-//
-//
-//typedef mp_code_t (*table_opera_cb)(void data, table_key_t key);
-//
-//
-//typedef struct
-//{
-//    table_opera_cb toc_select;
-//    table_opera_cb toc_insert;
-//    table_opera_cb toc_update;
-//    table_opera_cb toc_delete;
-//}tbl_handler_t;
-//
-//typedef struct
-//{
-//    uint8_t imsi;
-//    uint8_t point_mme;
-//    uint8_t point_sgw;
-//}imsi_cell_t;
-//
-//typedef imsi_cell_t imsi_table_t[10];
-//
-//imsi_table_t imsi_table;
-//tbl_handler_t tbl_cb[1]; //1代表一个表
-//
-//mp_code_t lte_table_select(void data, table_key_t key);
-//mp_code_t lte_table_insert(void data, table_key_t key);
-//mp_code_t lte_table_update(void data, table_key_t key);
-//mp_code_t lte_table_delete(void data, table_key_t key);
-//
-//mp_code_t lte_table_opera_register();
-//mp_code_t lte_table_opera_unregister();
-//
-//mp_code_t lte_table_opera_process();
+#include "semp-errno.h"
+#include "lte_relate.h"
+#include "cvmx_common.h"
+#include "semp-errno.h"
+#include "list.h"
+#include "semp_hydra_relate.h"
+
+typedef  uint64_t item_mask_t;
+
+/*四类操作*/
+enum
+{
+    CELL_NEW,
+    CELL_VISIT,
+    CELL_INSERT,    /*找到就更新，没找到就new*/
+    CELL_DELETE,
+};
+
+
+typedef mp_code_t (*db_handler)(void *src, void *dst, item_mask_t mask);
+
+
+
+
 #endif /* DB_H_ */

@@ -146,13 +146,13 @@ inline uint32_t lte_log_flag_read()
  * lte_packet_write
  * 函数说明：捕捉报文并存入cache中，抓满就停止
  **********************************************************************/
-inline mp_code_t lte_packet_write(uint8_t* buf, uint16_t len)
+inline mp_code_t _lte_packet_write(uint8_t* buf, pkt_head_t *head)
 {
     uint8_t *pkt_base = (uint8_t *)(fifo.buffer);
 
-    if( len >= LTE_LOG_DATA_SIZE)
+    if( head->len > LTE_LOG_DATA_SIZE)
     {
-        return MP_FAIL;
+        return MP_FUN_PARAM_ERR;
     }
     /*必须要少一个，否则最后一条报文不全*/
     if( fifo.pkt_write_cur <  sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-1) )
@@ -163,12 +163,14 @@ inline mp_code_t lte_packet_write(uint8_t* buf, uint16_t len)
 //            printf("write packet, pkt_write_cur = %d [%lu],",
 //                fifo.pkt_write_cur,sizeof(log_pkt_t)* LTE_TOTAL_SIZE );
 //        }
-        memcpy(pkt_base+fifo.pkt_write_cur, &len, sizeof(uint16_t));
+
+        memcpy(pkt_base+fifo.pkt_write_cur, (void*)head, sizeof(uint16_t));
         fifo.pkt_write_cur += 2;
-        memcpy(pkt_base+fifo.pkt_write_cur, buf, len);
-        fifo.pkt_write_cur += len;
+        memcpy(pkt_base+fifo.pkt_write_cur, buf, head->len);
+        fifo.pkt_write_cur += head->len;
         fifo.pkt_count++;
-        fifo.pkt_total_bytes = fifo.pkt_total_bytes + len;
+        fifo.pkt_total_bytes = fifo.pkt_total_bytes + head->len;
+
 //        if(fifo.pkt_write_cur > sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-3) ||
 //           fifo.pkt_write_cur < sizeof(log_pkt_t)* (3)    )
 //        {
@@ -178,19 +180,19 @@ inline mp_code_t lte_packet_write(uint8_t* buf, uint16_t len)
     return MP_OK;
 }
 
-inline mp_code_t lte_packet_read(uint8_t* buf, uint16_t *len)
+inline mp_code_t lte_packet_read(uint8_t* buf, pkt_head_t *head)
 {
     uint8_t *pkt_base = (uint8_t *)(fifo.buffer);
 //    int i = 0;
     if( fifo.pkt_read_cur <  sizeof(log_pkt_t)* (LTE_TOTAL_SIZE-1) )
     {
 //        printf("read packet, pkt_read_cur = %d [%lu]\n", fifo.pkt_read_cur,sizeof(log_pkt_t)* LTE_TOTAL_SIZE );
-        memcpy(len, pkt_base+fifo.pkt_read_cur, sizeof(uint16_t));
+        memcpy(head, pkt_base+fifo.pkt_read_cur, sizeof(uint16_t));
         fifo.pkt_read_cur += 2;
-        memcpy(buf, pkt_base+fifo.pkt_read_cur, *len);
-        fifo.pkt_read_cur += (*len);
+        memcpy(buf, pkt_base+fifo.pkt_read_cur, head->len);
+        fifo.pkt_read_cur += head->len;
         fifo.pkt_count--;
-        fifo.pkt_total_bytes = fifo.pkt_total_bytes - (*len);
+        fifo.pkt_total_bytes = fifo.pkt_total_bytes - head->len;
 //        printf("lte_packet_write: len = %d\n",*len);
 //        for(i = 0 ; i < *len ; i++)
 //        {
@@ -202,7 +204,7 @@ inline mp_code_t lte_packet_read(uint8_t* buf, uint16_t *len)
     }
     else
     {
-        *len = 1;//代表数据取完了
+        head->len = 0;//无数据可读
     }
     return MP_OK;
 }
@@ -232,6 +234,51 @@ mp_code_t lte_packet_reset()
     fifo.pkt_write_cur = 0;
     fifo.pkt_count = 0;
     fifo.pkt_total_bytes = 0;
+    return MP_OK;
+}
+
+/*分帧接口，限制最大报文长度为8192字节*/
+inline mp_code_t lte_packet_split_write(uint8_t* buf, uint16_t len)
+{
+    uint16_t cur_offset = 0;
+    uint16_t split_num  = 0;
+    uint16_t i          = 0;
+    pkt_head_t head     = {0};
+
+    if( len > CAPTURE_PKT_MAX_SIZE || NULL == buf )
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+    if(len > LTE_LOG_DATA_SIZE)
+    {
+        //多帧处理
+        split_num = (len % LTE_LOG_DATA_SIZE) ? 1 : 0;
+        split_num = split_num + len/LTE_LOG_DATA_SIZE;
+
+        //循环处理首帧和中间帧
+        for( i = 0 ; i < split_num - 1; i++ )
+        {
+            head.fir = !i;//首帧判断
+            head.len = LTE_LOG_DATA_SIZE;
+            head.fin = 0;
+            _lte_packet_write(buf + i * LTE_LOG_DATA_SIZE, &head);
+        }
+
+        //末帧
+        head.len = len - i * LTE_LOG_DATA_SIZE;
+        head.fir = 0;
+        head.fin = 1;
+        _lte_packet_write(buf + i * LTE_LOG_DATA_SIZE, &head);
+    }
+    else
+    {
+        //单帧处理
+        head.len = len;
+        head.fir = 1;
+        head.fin = 1;
+        _lte_packet_write(buf, &head);
+    }
+
     return MP_OK;
 }
 

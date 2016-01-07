@@ -227,6 +227,34 @@ void test_s6a_request()
     }
 }
 
+void test_s6a_response()
+{
+    mp_code_t ret;
+    parse_diameter_t diameter;
+    uint8_t imsi[8] =  {0x53,0x61,0x20,0x00,0x31,0x16,0x12,0x00};  /*IMEI*/;
+    uint8_t kasme[32] = {0xa5,0xc7,0x7d,0x4b,0x80,0xf2,0xf7,0xa6,
+                         0xd9,0x15,0x9b,0x2f,0x3a,0xa9,0x43,0xa9,
+                         0x4f,0x43,0x51,0xbf,0x66,0xe8,0x1f,0xb1,
+                         0x81,0x20,0x79,0x3d,0x88,0x99,0x55,0x28};
+
+    uint8_t rand[16]  = {0x7a,0x43,0xe6,0x33,0xcd,0x34,0xba,0x50,
+                         0x55,0xc9,0x77,0x12,0x68,0x64,0x07,0xdc};
+    diameter.valid_kasme_rand_pair_num = 1;
+    diameter.hop_by_hop = 0x0d700959;
+    diameter.valid_mask = ~0;
+    diameter.hss_ip     = 0x0a471a3a;
+    diameter.s6a_mme_ip = 0x0a471b04;
+    memcpy( diameter.user_name , imsi, 8);
+    diameter.dmt_type = DMT_RES_PKT;
+    memcpy(diameter.kasme_info[0].kasme, kasme, sizeof(kasme));
+    memcpy(diameter.kasme_info[0].rand, rand, sizeof(rand));
+
+    ret = lte_dmt_relevance_process(&diameter);
+    if( MP_OK != ret )
+    {
+        printf("step 1 ,code[%d]\n", ret);
+    }
+}
 
 char * tablename[]={
 "TABLE_IMSI",
@@ -297,36 +325,38 @@ void test()
     int i = 0, j = 0;
     lte_aging_t ag;
     ag.rt_min_time = 0;
-    for( i = 0 ; i < 2; i++)
+
+    for( i = 0 ; i < 5; i++)
     {
         printf("*******************************\n");
         printf("cell[%02d]:\n",i);
         printf("*******************************\n");
-        test_gtp_u();
-        test_gtp_u();
-        test32();
-        show_memory();
 
-        test33();
-        show_memory();
+        test_s6a_response();
 
-
-        test34();
-        show_memory();
-
-        test35();
-        show_memory();
-
-        npcp_show_relate_info(imsi_base);
-
-        test_gtp_u();
+//        test32();
+//        show_memory();
+//
+//        test33();
+//        show_memory();
+//
+//
+//        test34();
+//        show_memory();
+//
+//        test35();
+//        show_memory();
+//
+//        npcp_show_relate_info(imsi_base);
+//
+//        test_gtp_u();
 
 //            test_s6a_request();
 //            show_memory();
 //
 //        test_delete();
         /*µÝÔöÊý¾Ý*/
-        add_data();
+//        add_data();
 
     }
 
@@ -335,6 +365,40 @@ void test()
     //test_delete();
     //show_memory();
 }
+
+void test_capture()
+{
+    int i = 0;
+    int j = 0;
+    uint8_t buf[3][LTE_LOG_DATA_SIZE];
+    uint8_t buf1[LTE_LOG_DATA_SIZE] = {0};
+    pkt_head_t head = {};
+    for( i = 0 ; i < 3; i++ )
+    {
+        for( j = 0 ;j < LTE_LOG_DATA_SIZE;j++)
+        {
+            buf[i][j] = j+1;
+        }
+    }
+    lte_log_init();
+    lte_packet_split_write((uint8_t *)buf, 25);
+
+    printf("packet count = %d\n",lte_packet_count_get());
+    printf("packet total size = %d\n",lte_packet_total_size_get());
+
+    while(lte_packet_have_data_to_read())
+    {
+        lte_packet_read(buf1, &head);
+        printf("read data, fir[%d], fin[%d],len[%d]:",
+                head.fir, head.fin, head.len);
+        for(i = 0 ; i < head.len;i++)
+        {
+            printf("%02x ",buf1[i]);
+        }
+        printf("\n");
+    }
+}
+
 
 int main(int argc,char * argv[])
 {

@@ -68,8 +68,6 @@ typedef struct _log_pkt
     struct
     {
         uint32_t en:1;  /* 是否使用 */
-        uint32_t fir:1; /* 首帧标志 */
-        uint32_t fin:1; /* 末帧标志 */
         uint32_t len:15;/* 日志长度，不以\0为结束标志，以len为标准 */
     };
     log_data_t data;
@@ -160,12 +158,13 @@ inline int lte_log_init();
 inline mp_code_t lte_log_write(const char *format, ...);
 inline mp_code_t lte_log_read(uint8_t *dst_data, uint16_t dst_len, int* read_acl_len);
 
-inline mp_code_t lte_packet_write(uint8_t* buf, uint16_t len);
-inline mp_code_t lte_packet_read(uint8_t* buf, uint16_t *len);
+inline mp_code_t _lte_packet_write(uint8_t* buf, pkt_head_t *head);
+
 int lte_packet_is_full();
 int lte_packet_have_data_to_read();
 int lte_packet_count_get();
 int lte_packet_total_size_get();
 mp_code_t lte_packet_reset();
-
+inline mp_code_t lte_packet_split_write(uint8_t* buf, uint16_t len);
+inline mp_code_t lte_packet_read(uint8_t* buf, pkt_head_t *head);
 #endif /* MODULES_LTE_LTE_LOG_H_ */

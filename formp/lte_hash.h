@@ -82,6 +82,9 @@ typedef enum tagS1UTableUpdateAction
     S1UT_UPDATE_AGING        = 0x0080,           //[[CN]] 更新aging       [[CN]]
     S1UT_UPDATE_TAI          = 0x0100,           //[[CN]] 更新tai         [[CN]]
     S1UT_UPDATE_GUTI         = 0x0200,           //[[CN]] 更新guti        [[CN]]
+    S1UT_UPDATE_CREATE_REALTE= 0x0400,
+    S1UT_UPDATE_B0_NUM       = 0x0800,
+    S1UT_UPDATE_B1_NUM       = 0x1000
 }S1UTableUpdateActionEnum;
 
 /*s6a表项的更新操作类型定义，每一位对应更新一个元素*/
@@ -123,7 +126,7 @@ typedef struct hash_cell_s
 
 typedef struct
 {
-#define MAX_HASH_DWORD 1
+#define MAX_HASH_DWORD 8
     uint64_t  data[MAX_HASH_DWORD];
     uint8_t   size;//sizeof(uint64_t)
 }hash_key_t;
@@ -235,9 +238,7 @@ typedef struct
 }while(0)
 
 
-inline mp_code_t hash_cell_new(hash_table_t *table,
-                               hash_bucket_t *bucket,
-                               void * cell);
+
 
 mp_code_t hash_table_search_update(hash_table_t *table, hash_table_control_t *control);
 mp_code_t hash_table_search_destroy(hash_table_t *table, hash_table_control_t *control);
@@ -262,6 +263,7 @@ mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
                                           hash_table_index_t *index,
                                           uint16_t            tm);
 
+inline mp_code_t hash_cell_new(hash_table_t *table, hash_bucket_t *bucket, void * cell);
 
 /* chengshuan Add for table operation */
 
@@ -301,8 +303,8 @@ mp_error_t create_update_table_by_hash(
                             uint64_t actionType,               /* [in] 操作类型，指定需要更新的表项内容 */
                             void* data,                          /* [in] 表项内容 */
                             uint8_t len,                         /* [in] 表项长度，校验类型用 */
-                            hash_table_index_t* index,            /* [out] index*/
-                            hash_bucket_t* bucket);
+                            hash_table_index_t* index           /* [out] index*/
+                            );
 
 /* chengshuan Add for table operation -end- */
 

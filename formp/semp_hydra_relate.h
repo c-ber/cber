@@ -139,7 +139,11 @@
 #define HEX_IMSI_LEN                            18   /* 用于输入0xffffffff11223344格式*/
 
 #define LTE_LOG_HEAD_SIZE                        4           //统一头的长度
+#ifdef CAP_PACKET_VERSION
+#define LTE_LOG_DATA_SIZE                        8           //统一内容长度
+#else
 #define LTE_LOG_DATA_SIZE                        252         //统一内容长度
+#endif
 /******************* end  ***********************************************/
 
 
@@ -453,10 +457,34 @@ typedef struct _lte_log
     log_en_t     en;                 /* 打开或关闭 */
 }lte_log_t, *plte_log_t;
 
+typedef struct
+{
+    uint16_t len:14;
+    uint16_t fir:1;
+    uint16_t fin:1;
+}pkt_head_t;
+
 typedef struct _log_str
 {
     uint32_t len;
     uint8_t  va[LTE_LOG_DATA_SIZE];
 }log_str_t;
+
+
+/*抓包控制设置*/
+typedef enum
+{
+    GET_PKT_COUNT_AND_SIZE, /*获取当前报文总数和总大小*/
+    RESET_PKT_CACHE,
+    START_CAPTURE_GTPC,
+    START_CAPTURE_GTPU,  /*抓完后需要关闭抓包*/
+}pkt_cap_ctrl_t;
+
+typedef struct
+{
+    pkt_cap_ctrl_t ctrl;
+    uint32_t pkt_count;
+    uint32_t pkt_total_size;
+}pkt_cache_t;
 
 #endif /* SEMP_HYDRA_RELATE_H_ */

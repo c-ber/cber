@@ -37,35 +37,32 @@ int update_imsi_table(void *dst, void *src, uint64_t action)
     if( IMSIT_UPDATE_S11_POS & action )
     {
         LTE_DEBUG_PRINTF("update_pos_mme !\n");
-        imsi_dst->pos_mme = imsi_src->pos_mme;
+        memcpy(&(imsi_dst->pos_mme), &(imsi_src->pos_mme), sizeof(hash_table_index_t));
     }
     if( IMSIT_UPDATE_SGW_POS & action )
     {
         LTE_DEBUG_PRINTF("update_pos_sgw !\n");
-        imsi_dst->pos_sgw = imsi_src->pos_sgw;
+        memcpy(&(imsi_dst->pos_sgw), &(imsi_src->pos_sgw), sizeof(hash_table_index_t));
     }
     if( IMSIT_UPDATE_S6A_POS & action )
     {
         LTE_DEBUG_PRINTF("update_pos_s6a !\n");
-        imsi_dst->pos_s6a = imsi_src->pos_s6a;
+        memcpy(&(imsi_dst->pos_s6a), &(imsi_src->pos_s6a), sizeof(hash_table_index_t));
     }
     if( IMSIT_UPDATE_S1_POS & action )
     {
         LTE_DEBUG_PRINTF("update_imsi_S1_MME_POS !\n");
-        imsi_dst->s1_mme = imsi_src->s1_mme;
+        memcpy(&(imsi_dst->s1_mme), &(imsi_src->s1_mme), sizeof(hash_table_index_t));
     }
     if( IMSIT_UPDATE_PDN & action )
     {
         LTE_DEBUG_PRINTF("update_pdn !\n"); 
-        imsi_dst->pdn.pdn_type = imsi_src->pdn.pdn_type;
-        imsi_dst->pdn.pdn_addr = imsi_src->pdn.pdn_addr;
+        memcpy(&(imsi_dst->pdn), &(imsi_src->pdn), sizeof(lte_pdn_t));
     }
     if( IMSIT_UPDATE_EX_FIELD & action )
     {
         LTE_DEBUG_PRINTF("update_ex_field !\n");
-        imsi_dst->ex_field.msisdn_len= imsi_src->ex_field.msisdn_len;
-        imsi_dst->ex_field.updt_tim= imsi_src->ex_field.updt_tim;
-        imsi_dst->ex_field.data_bak= imsi_src->ex_field.data_bak;
+        memcpy(&(imsi_dst->ex_field), &(imsi_src->ex_field), sizeof(extend_field_t));
     }
     if( IMSIT_UPDATE_GUTI & action )
     {
@@ -242,10 +239,10 @@ int update_s11_sgw_table(void *dst, void *src, uint64_t action)
     {
         LTE_DEBUG_PRINTF("update_s11_sgw_pos_mme !\n");
         memcpy(&(s11_sgw_dst->pos_mme), &(s11_sgw_src->pos_mme), sizeof(hash_table_index_t));
-
     }
     if( S11_SGWT_UPDATE_POS_IMSI & action )
     {
+        LTE_DEBUG_PRINTF("update_s11_sgw_pos_imsi !\n");
         memcpy(&(s11_sgw_dst->pos_imsi), &(s11_sgw_src->pos_imsi), sizeof(hash_table_index_t));
     }
     if( S11_SGWT_UPDATE_POS_S1U & action )
@@ -318,9 +315,7 @@ int update_s1u_table(void *dst, void *src, uint64_t action)
     if( S1UT_UPDATE_EX_FIELD & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_ex_field !\n");
-        s1u_dst->ex_field.msisdn_len= s1u_src->ex_field.msisdn_len;
-        s1u_dst->ex_field.updt_tim= s1u_src->ex_field.updt_tim;
-        s1u_dst->ex_field.data_bak= s1u_src->ex_field.data_bak;
+        memcpy(&(s1u_dst->ex_field), &(s1u_src->ex_field), sizeof(extend_field_t));
     }
     if( S1UT_UPDATE_AGING & action )
     {
@@ -342,6 +337,18 @@ int update_s1u_table(void *dst, void *src, uint64_t action)
         memcpy(s1u_dst->guti, s1u_src->guti, sizeof(lte_guti_t));
     }
 
+    if( S1UT_UPDATE_CREATE_REALTE & action )
+    {
+        s1u_dst->is_create_relate = s1u_src->is_create_relate;
+    }
+    if( S1UT_UPDATE_B0_NUM & action )
+    {
+        s1u_dst->b0_relate_gtpu_num = s1u_src->b0_relate_gtpu_num;
+    }
+    if( S1UT_UPDATE_B1_NUM & action )
+    {
+        s1u_dst->b1_relate_gtpu_num = s1u_src->b1_relate_gtpu_num;
+    }
     return 0;
 }
 
@@ -1397,6 +1404,7 @@ mp_error_t search_table_by_hash(
     lte_table_imsi_t *table_imsi                = NULL;
     lte_table_s1_mme_enodeb_t *table_s1_mme     = NULL;
     lte_table_s_tmsi_t *table_s_tmsi            = NULL;
+    lte_table_ctrl_mme_t *table_s11_mme         = NULL;
 
     hash_table_control_t table_control  = {};
     *result = FALSE;
@@ -1432,7 +1440,17 @@ mp_error_t search_table_by_hash(
     }
     else if( TABLE_S11_MME == table_type)
     {
-    //TODO
+        table_s11_mme = NODE2ENTRY(table_control.node, lte_table_ctrl_mme_t);
+        if( NULL == table_s11_mme )
+        {
+            return MP_E_MEMORY;
+        }
+
+        LTE_DEBUG_PRINTF("The S11-MME table search successed ! ret = %d\n", ret);
+
+        memcpy(data, table_s11_mme, sizeof(lte_table_ctrl_mme_t));
+        *len = sizeof(lte_table_ctrl_mme_t);
+        *result = TRUE;
     }
     else if( TABLE_S11_SGW == table_type)
     {
@@ -1467,7 +1485,7 @@ mp_error_t search_table_by_hash(
     else if( TABLE_S_TIMSI == table_type)
     {
         table_s_tmsi = NODE2ENTRY(table_control.node, lte_table_s_tmsi_t);
-        if( NULL == table_s1_mme )
+        if( NULL == table_s_tmsi )
         {
             return MP_E_MEMORY;
         }
@@ -1503,8 +1521,7 @@ mp_error_t create_update_table_by_hash(
                             uint64_t actionType,               /* [in] 操作类型，指定需要更新的表项内容 */
                             void* data,                          /* [in] 表项内容 */
                             uint8_t len,                         /* [in] 表项长度，校验类型用 */
-                            hash_table_index_t* index,            /* [out] index*/
-                            hash_bucket_t* bucket
+                            hash_table_index_t* index          /* [out] index*/
                             )
 {
     mp_error_t ret = MP_E_NONE;
@@ -1652,7 +1669,7 @@ mp_error_t create_update_table_by_hash(
     index->index    = (table_control.bucket)->index;
     index->bearerid = 0;
     index->node     = table_control.node;
-
+    
     return ret;
 }
 

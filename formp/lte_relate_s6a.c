@@ -201,7 +201,7 @@ int32_t lte_s6a_dmt_auth_request(parse_diameter_t *diameter)
                                     updata_opt_mask,\
                                     (void *)&s6a_search_d,\
                                     sizeof(s6a_search_d),\
-                                    &index,NULL);
+                                    &index);
     if(MP_OK != rv)
     {
         LTE_DEBUG_PRINTF("diameter auth request: search Ts6a <Failed>\n");
@@ -221,7 +221,7 @@ int32_t lte_s6a_dmt_auth_request(parse_diameter_t *diameter)
                                     updata_opt_mask,\
                                     (void *)&imsi_search_d,\
                                     sizeof(imsi_search_d),\
-                                    &index,NULL);
+                                    &index);
      
     if(MP_OK != rv)
     {
@@ -270,7 +270,7 @@ int32_t lte_s6a_dmt_auth_response(parse_diameter_t *diameter)
                                     updata_opt_mask,\
                                     (void *)&s6a_search_d,\
                                     sizeof(s6a_search_d),\
-                                    &index,NULL);
+                                    &index);
     if(MP_OK != rv)
     {
         LTE_DEBUG_PRINTF("diameter auth request: search Ts6a <Failed>\n");

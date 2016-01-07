@@ -8,6 +8,23 @@
 #ifndef HYDRA_STAT_H_
 #define HYDRA_STAT_H_
 
+
+#include <string.h>
+
+
+
+typedef struct{
+    uint32_t index;
+    uint32_t num;
+} hydra_stat_op_in_t;
+
+typedef struct
+{
+    uint32_t module;
+    uint32_t lvl;
+} npcp_dp_log_lvl_set_t;
+
+#define HYDRA_STAT_NAME_SIZE      128
 typedef enum
 {
     stat_pkt,
@@ -173,7 +190,11 @@ typedef enum
     stat_pkts_imsi_table_failed,
     stat_pkts_s11_mme_table_failed,  
     stat_pkts_s11_sgw_table_failed, 
-    stat_pkts_s1u_table_failed,
+
+    stat_pkts_s1u_table_failed_2,               /* 第2，3，4均有，区分开*/
+    stat_pkts_s1u_table_failed_3,
+    stat_pkts_s1u_table_failed_4,
+    stat_pkts_s1u_table_failed_gtpu,
     
     stat_pkts_imsi_entry_unexpect_null,
     stat_pkts_s11_mme_entry_unexpect_null,  
@@ -188,7 +209,46 @@ typedef enum
     stat_pkts_s1u_pnd_over,
     stat_pkts_imsi_unexpect_free,
     stat_pkts_response_reject,
-    stat_pkts_info_incompelte,
+    stat_pkts_info_incompelte_1,                /* 第1，2，3，4均有，区分开*/
+    stat_pkts_info_incompelte_2,
+    stat_pkts_info_incompelte_3,
+    stat_pkts_info_incompelte_4,
+    stat_pkts_imsi_info_not_bcd,
+    stat_pkts_imsi_new_cell_fail,
+    stat_pkts_s11_mme_new_cell_fail,
+    stat_pkts_s11_sgw_new_cell_fail,
+    stat_pkts_s1u_new_cell_fail,
+
+/* s1ap related counters */
+    stat_pkts_s1ap_initialUEMessage,
+    stat_pkts_s1ap_ciphered_initialUEMessage,
+    stat_pkts_s1ap_imsi_initialUEMessage,
+    stat_pkts_s1ap_old_guti_initialUEMessage,
+    stat_pkts_s1ap_invalid_initialUEMessage,
+    stat_pkts_s1ap_not_found_imsi_from_STMSI,
+    stat_pkts_s1ap_alg_type_set,
+    stat_pkts_s1ap_get_kasme_failed,
+    stat_pkts_s1ap_update_imsi_kasme_failed,
+    stat_pkts_s1ap_update_imsi_kasme_success,
+    stat_pkts_s1ap_search_imsi_kasme_failed,
+    stat_pkts_s1ap_guti_invalid,
+    stat_pkts_s1ap_uplinkNASTransport_update_imsi,
+
+    stat_pkts_InitialContextSetup,
+    stat_pkts_InitialContextSetup_failed,
+    stat_pkts_InitialContextSetup_no_ciphered,
+
+    stat_decrypt_failed,
+    stat_parse_guti_failed,
+    stat_pkts_create_stmsi_table,
+    stat_pkts_stmsi_table_failed,
+
+/*debug -s-*/
+    stat_search_imsi_failed_1,
+    stat_search_imsi_failed_2,
+    stat_search_kasme_failed_1,
+
+/*debug -e-*/
 
     //stat_create_session_req_err_table_sgw,
     
@@ -201,8 +261,11 @@ typedef enum
     stat_business_innerl4_udp,
     stat_business_outerl4_tcp,
     stat_business_innerl4_tcp,
+    //sctp
     stat_business_outerl4_sctp,
     stat_business_innerl4_sctp,
+    stat_business_multi_data_chunk_sctp,
+
     stat_business_s1ap_pkt,
     stat_business_not_s1ap_pkt,
     stat_business_s1ap_match_port_pkt,
@@ -212,6 +275,32 @@ typedef enum
     stat_business_s1ap_permit_pkt,
     stat_business_s1ap_drop_pkt,
     stat_business_s1ap_fwd_pkt,
+
+    //diameter
+    stat_business_dmt_pkts,
+    stat_business_dmt_standard_port_pkts,
+    stat_business_dmt_custom_port_pkts,
+    stat_business_dmt_error_ppid_pkts,
+    stat_business_dmt_version_err_pkts,
+    stat_business_dmt_cmd_not_318_pkts,
+    stat_business_dmt_not_3gpp_app_pkts,
+    stat_business_dmt_auth_request_pkts,
+    stat_business_dmt_auth_response_pkts,
+    stat_business_dmt_usr_too_long,
+    stat_business_dmt_too_many_kasme_rand_pair,
+    stat_business_dmt_auth_msg_incompelte,
+    stat_business_dmt_auth_req_search_s6a_fail,
+    stat_diameter_pkt_permit,
+    stat_diameter_pkt_forward,
+    stat_diameter_pkt_drop,
+    stat_diameter_pkt_rand_too_long,
+    stat_diameter_pkt_rand_too_short,
+    stat_diameter_pkt_kasme_too_long,
+    stat_diameter_pkt_kasme_too_short,
+    stat_diameter_auth_ans_pkt_without_key,
+
+    stat_s1ap_tai_too_long,
+
     stat_business_v4mask_pkt,
     stat_business_v4mask_permit_pkt,
     stat_business_v4mask_drop_pkt,
@@ -232,10 +321,14 @@ typedef enum
     stat_oifgrp_add_imsi_pkts,
     stat_oifgrp_add_imei_pkts,
     stat_oifgrp_add_msisdn_pkts,
+    stat_oifgrp_add_tai_pkts,
+    stat_oifgrp_add_guti_pkts,
     stat_oifgrp_add_imsi_fail,
     stat_oifgrp_add_imei_fail,
     stat_oifgrp_add_msisdn_fail,
-    
+    stat_oifgrp_add_tai_fail,
+    stat_oifgrp_add_guti_fail,
+    stat_oifgrp_pkt_too_log,
     
     stat_business_xmit_fwd,
     stat_business_xmit_fwd_fail,
@@ -262,6 +355,13 @@ typedef enum
     stat_business_not_vlan_pkt,
     stat_max
 } hydra_stat_e;
+
+struct stat_compare_s
+{
+    hydra_stat_e  stat;
+    char  *stat_name;
+};
+
 
 #define hydra_stat_inc(t) do{}while(0)
 #define HYDRA_STAT_INC(t) do{}while(0)

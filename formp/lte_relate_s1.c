@@ -124,7 +124,7 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
     }
 
     // create S1-MME table
-    rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_search_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index,NULL);
+    rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_search_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
     if(MP_E_NONE != rv)
     {
        return rv;
@@ -145,7 +145,7 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
     action_imsi |= IMSIT_UPDATE_TAI;
 
     // create IMSI table
-    rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi, (void*)&imsi_search_d, sizeof(lte_table_imsi_t), &imsi_index,NULL);
+    rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi, (void*)&imsi_search_d, sizeof(lte_table_imsi_t), &imsi_index);
     if(MP_E_NONE != rv)
     {
         LTE_DEBUG_PRINTF("initialUEMessage: create ImsiT <Failed>\n");
@@ -324,7 +324,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     uint64_t action_imsi = 0;
 
     action_imsi |= IMSIT_UPDATE_GUTI;
-    rv = create_update_table_by_hash(TABLE_IMSI, UPDATE_IMSIT_GUTI, action_imsi, (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index,NULL);
+    rv = create_update_table_by_hash(TABLE_IMSI, UPDATE_IMSIT_GUTI, action_imsi, (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index);
     if (MP_E_NONE != rv)
     {
         LTE_DEBUG_PRINTF("Update imsi table guti failed! \n");
@@ -405,8 +405,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     PRINTF_IMSI( s_tmsi_table_d.imsi );
     hydra_stat_inc(stat_pkts_create_stmsi_table);
 
-    rv = create_update_table_by_hash(TABLE_S_TIMSI, CREATE_TABLE, action_imsi,
-            (void*)&s_tmsi_table_d, sizeof(lte_table_s_tmsi_t), &s_tmsi_index,NULL);
+    rv = create_update_table_by_hash(TABLE_S_TIMSI, CREATE_TABLE, action_imsi, (void*)&s_tmsi_table_d, sizeof(lte_table_s_tmsi_t), &s_tmsi_index);
     if(MP_E_NONE != rv)
     {
         LTE_DEBUG_PRINTF("Create S-TMSI table failed!\n");
@@ -531,8 +530,7 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
         // step 1.update S1-MME table
         hash_table_index_t s1_mme_index             = {};
         // The old S1-MME table has already been deleted by imsi related tabels. so create a new one by s1_mme_cell value.
-        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE,
-                action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index,NULL);
+        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
         if(MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Update S1-MME table imsi: <Failed>\n");
@@ -551,8 +549,7 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
         action_imsi |= IMSIT_UPDATE_IMSI;
         
         // create IMSI table
-        rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi,
-                (void*)&imsi_search_d, sizeof(lte_table_imsi_t), &imsi_index,NULL);
+        rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi, (void*)&imsi_search_d, sizeof(lte_table_imsi_t), &imsi_index);
         if(MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Create Imsi table <Failed>\n");
@@ -610,8 +607,7 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
         hydra_stat_inc(stat_pkts_s1ap_alg_type_set);
 
         // update the Ciphering Algorithm type into S1-MME table
-        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme,
-                (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index,NULL);
+        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
         if (MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Update S1-MME table cipher alg type failed! \n");
@@ -624,8 +620,7 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
         memcpy(&(s1_mme_table_d.rand), &nas.rand, sizeof(lte_rand_t));
         action_s1_mme |= S1_MMET_UPDATE_RAND;
         // update rand into S1-MME table at the same time search imsi info from s1_mme
-        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme,
-                (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index,NULL);
+        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
         if (MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Update S1-MME table rand failed! \n");
@@ -706,8 +701,7 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
         PRINTF_KASME(imsi_cell.kasme);
 
         /* update kasme into imsi table */
-        rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi,
-                (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index,NULL);
+        rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi, (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index);
         if (MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Update IMSI table kasme failed! \n");
