@@ -173,7 +173,6 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
         // InitialContextSetup Message is not ciphered  
         LTE_DEBUG_PRINTF("ciphered_flag: %d \n", nas.ciphered_flag);
         hydra_stat_inc(stat_pkts_InitialContextSetup_no_ciphered);
-        //return MP_E_NONE;
     }
 
     // 1.0 search s1_mme table for imsi and cipher Algorithm type
@@ -198,20 +197,24 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
         hydra_stat_inc(stat_search_imsi_failed_1);
         return rv;
     }
+
     if( cell_len != sizeof(lte_table_s1_mme_enodeb_t) )
     {
         LTE_DEBUG_PRINTF("The table size searched is wrong! rv = %d\n", rv);
-        //return MP_E_INTERNAL;
+        return MP_E_INTERNAL;
     }
+     
     if( FALSE == result)
     {
         LTE_DEBUG_PRINTF("Didn't find S1-MME table! rv = %d\n", rv);
         hydra_stat_inc(stat_search_imsi_failed_2);
-        //return rv;
+        return rv;
     }
 
     PRINTF_IMSI(s1_mme_cell.imsi);
 
+    IMSI_IS_0(&(s1_mme_cell.imsi));
+     
     // 1.1 Search imsi table for kasme
     cell_len = 0;
     result = 0;
@@ -234,13 +237,13 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     if( cell_len != sizeof(lte_table_imsi_t) )
     {
         LTE_DEBUG_PRINTF("The table size searched is wrong! rv = %d\n", rv);
-        //return MP_E_INTERNAL;
+        return MP_E_INTERNAL;
     }
     if( FALSE == result)
     {
         LTE_DEBUG_PRINTF("Didn't find imsi table! rv = %d\n", rv);
         hydra_stat_inc(stat_pkts_s1ap_search_imsi_kasme_failed);
-        //return rv;
+        return rv;
     }
     PRINTF_KASME(imsi_cell.kasme);
     PRINTF_IMSI(imsi_cell.imsi);
@@ -273,7 +276,6 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
         }
 #endif
 
-
     if(nas.ciphered_flag == FALSE)
     {
         nas_dst.data = nas_src.data;
@@ -292,11 +294,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
             return rv;
         }
     }
-#if 0
-
-    nas_dst.data = nas_src.data;
-    nas_dst.len = nas_src.data_len;
-#endif
+    
 
     // 2.1 parse guti from the plain data
     lte_guti_t guti = {};

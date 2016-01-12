@@ -45,6 +45,7 @@
 
 
 #define GTPC_PORT         2123
+#define GTPU_PORT         2152
 
 
 #define S1AP_PORT         0x3c8e
@@ -66,7 +67,7 @@
 #define    DATA_HEADER_LEN    16
 #define    ACL_LEN_OFFSET     8
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define LOG_DEBUG(fmt, _arg...)   printf(fmt, ##_arg)
@@ -82,7 +83,7 @@
 
 
 void pcap_search();
-
+void pcap_add_merge(char *input_file);
 
 typedef struct  {
         uint32_t     tv_sec;         /* seconds (XXX should be time_t) */
@@ -90,6 +91,5 @@ typedef struct  {
         uint32_t caplen;     /* length of portion present */
         uint32_t len;        /* length this packet (off wire) */
 }pcap_pkthdr;
-
 
 #endif /* FORMP_CB_PCAP_H_ */

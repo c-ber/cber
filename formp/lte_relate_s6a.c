@@ -262,6 +262,9 @@ int32_t lte_s6a_dmt_auth_response(parse_diameter_t *diameter)
     }
     s6a_search_d.nas_key.valid_key_num = diameter->valid_kasme_rand_pair_num;
     updata_opt_mask |= S6_AT_UPDATE_NAS_KEY;
+    updata_opt_mask |= S6_AT_UPDATE_HSSIP;
+    updata_opt_mask |= S6_AT_UPDATE_MMEIP;
+    updata_opt_mask |= S6_AT_UPDATE_HOP_BY_HOP;
     #ifdef RELATE_AGING
     s6a_search_d.aging = (uint16_t)g_aging_timer_max;
     updata_opt_mask |= S6_AT_UPDATE_AGING;

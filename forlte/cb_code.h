@@ -7,7 +7,7 @@
 typedef enum {
     CB_FUN_PARAM_ERR        = -3,         /* 函数参数非法 */
     CB_NULL_POINT           = -2,         /* 空指针错误 */
-    CB_E_FAIL               = -1,         /* 正常处理中的错误返回 */
+    CB_FAIL                 = -1,         /* 正常处理中的错误返回 */
     CB_OK                   =  0,         /* 正常返回 */
     CB_PARSE_RLT            =  1,         /* 协议解析结果错误 */
     CB_TABLE_EMPTY          =  2,         /* 空表操作 */

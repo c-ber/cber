@@ -71,4 +71,17 @@ cb_code_t exchange(uint8_t * buf, int n)
     }
     return CB_OK;
 }
+
+cb_code_t parse_head(uint8_t src[],pkt_head_t *head)
+{
+    uint16_t tmp = src[0] & 0x3f;
+//    tmp = tmp << 6;
+//    head->fin = src[1] & 0x01;
+//    head->fir = (src[1] & 0x02) >> 1;
+//    head->len = (src[1] >> 2) + tmp;
+    head->fin = src[0] >> 7;
+    head->fir = (src[0] >> 6) & 0x01;
+    head->len = (tmp<<8) + src[1];
+    return CB_OK;
+}
 #endif /* UTIL_C_ */

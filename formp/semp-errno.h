@@ -49,9 +49,10 @@ typedef enum mp_error_e{
     MP_E_EXCEED               = -19,        /* exceed range */
     MP_E_EINVAL               = -20,        /* Invalid argument */
     MP_E_AVP_EINVAL           = -21,        /*invalid avp*/
-    MP_E_RAND_EINVAL          =-22,         /*invalid rand */
-    MP_E_KASME_EINVAL         =-23,         /*invalid kasme */
-    MP_E_LIMIT                = -24 ,          /* Unknown error, Must come last */
+    MP_E_RAND_EINVAL          = -22,        /*invalid rand */
+    MP_E_KASME_EINVAL         = -23,        /*invalid kasme */
+    MP_E_NOT_VLAN_PKT         = -24,        /*in packet without vlan tag*/
+    MP_E_LIMIT                = -25 ,       /* Unknown error, Must come last */        
 } mp_error_t;
 
 #define MP_E_SUCCESS(rv)              ((rv) >= 0)

@@ -7,6 +7,9 @@
 //#include "packet_gre.h"
 //#include "ifgrp.h"
 //#include "transmit-exp.h"
+#ifdef CAP_PACKET_VERSION
+CVMX_SHARED core_pktcap_t pkt_cap[48] = {};
+#endif
 
 CVMX_SHARED  hash_bucket_t *lte_tables = NULL;
 CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX] = {};
@@ -336,9 +339,11 @@ mp_code_t lte_gtpu_process(parse_gtpu_t *gtpu)
         case MP_RELATE_SUCCESS:
             hydra_stat_inc(stat_pkts_gtpu_related);
             break;
+#ifdef STAT_TEST
         case MP_EXCEPTION_STAT:
             hydra_stat_inc(stat_pkts_gtpu_related_supply);
             break;
+#endif
         default:
             hydra_stat_inc(stat_pkts_s1u_table_failed_gtpu);
             break;

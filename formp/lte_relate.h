@@ -205,7 +205,7 @@ typedef struct
     hash_table_index_t  pos_imsi;           //12字节
     hash_table_index_t  pos_s1u[MAX_PDN];   //12*4 =48字节
     uint32_t            newest_seq;         //4字节
-    uint16_t            aging;              //1字节      累计93字节
+    uint16_t            aging;              //2字节      累计86字节
 }__attribute__((packed)) lte_table_ctrl_sgw_t ;
 
 typedef enum
@@ -225,13 +225,13 @@ typedef struct
     extend_field_t      ex_field;           //1字节
     uint16_t            aging;              //2字节
     lte_tai_t           tai;                //5字节
-    lte_guti_t          guti;               //12字节  累计65字节
-
+    lte_guti_t          guti;               //12字节
+#ifdef STAT_TEST
     uint8_t is_create_relate;     /* bit0:建立了完整关联表
                                      bit1:未建立过完整关联表 */
     uint64_t b0_relate_gtpu_num;  /* 建立了完整关联表  :关联的gtp-u报文个数 */
     uint64_t b1_relate_gtpu_num;  /* 未建立过完整关联表:关联的gtp-u报文个数 */
-
+#endif
 
 }__attribute__((packed)) lte_table_s1u_t ;
 
@@ -320,6 +320,9 @@ inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t be
 inline mp_code_t lte_sgw_delete_s1u(lte_table_ctrl_sgw_t*table_sgw_e, uint8_t bearerid);
 
 extern inline mp_error_t  update_imsi_s6a_index(void *table_item,void *update );
+
+
+
 
 #endif
 

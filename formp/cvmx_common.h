@@ -36,7 +36,7 @@
 #define cvmx_spinlock_init(t)   pthread_mutex_init(t,NULL)
 
 #define semp_named_shared_memblock_get(t) ((void*)NULL)
-
+#define cvmx_get_core_num() 2
 typedef pthread_mutex_t cvmx_spinlock_t;
 
 

@@ -19,6 +19,11 @@
 #include "lte_hash.h"
 #include "relate_aging.h"
 
+typedef struct
+{
+    uint8_t is_open:1;
+    uint8_t need_cap:1;
+}core_pktcap_t;
 
 extern CVMX_SHARED  hash_bucket_t *lte_tables;
 extern CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX];
@@ -28,6 +33,7 @@ extern CVMX_SHARED uint64_t g_scan_interval;
 extern CVMX_SHARED uint64_t g_aging_timer_max;
 extern CVMX_SHARED uint64_t g_max_relate_lifetime;
 
+extern CVMX_SHARED core_pktcap_t pkt_cap[48];
 
 
 mp_code_t s11_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);

@@ -117,7 +117,11 @@
 #endif /*LTE_DEBUG*/
 
 
-
+#define IMSI_IS_0(_imsi) if(0 == *((uint64_t *)_imsi))\
+                          {\
+                            hydra_stat_inc(stat_imsi_is_0);\
+                            return MP_E_INTERNAL;\
+                          }
 
 
 

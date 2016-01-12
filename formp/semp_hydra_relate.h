@@ -211,7 +211,12 @@ typedef struct
      uint64_t   s11_sgw_cell_use;
      uint64_t   imsi_cell_use;
      uint64_t   s1u_cell_use;
-
+#ifdef STAT_TEST
+     uint32_t user_fail_num;
+     uint32_t user_succ_num;
+     uint64_t total_fail_num;
+     uint64_t total_succ_num;
+#endif
      uint64_t   s1ap_initialUEMessage;              /*initialUEMessage*/
      uint64_t   s1ap_ciphered_initialUEMessage;
      uint64_t   s1ap_imsi_initialUEMessage;
@@ -238,6 +243,7 @@ typedef struct
     uint64_t   search_imsi_failed_1;
     uint64_t   search_imsi_failed_2;
     uint64_t   search_kasme_failed_1;
+    uint64_t   imsi_is_0;
 
 }lte_relate_stat_t;
 
@@ -289,6 +295,8 @@ typedef union
         lte_imei_t   imei;
         lte_msisdn_t msisdn;
         uint16_t     msisdn_len;
+        lte_guti_t   guti;
+        lte_tai_t    tai;
     }s1;
 }cell_type_t;
 
@@ -413,6 +421,13 @@ typedef enum
     INT32_AGING_TIME                    /* 设定的老化时间 */
 }lte_aging_param_t;
 
+typedef struct
+{
+    int aging_time;
+    table_name_t name;
+}aging_time_t;
+
+
 /*-----------------------------日志结构-------------------------------------*/
 /* 日志等级 */
 typedef enum
@@ -459,9 +474,9 @@ typedef struct _lte_log
 
 typedef struct
 {
-    uint16_t len:14;
-    uint16_t fir:1;
     uint16_t fin:1;
+    uint16_t fir:1;
+    uint16_t len:14;
 }pkt_head_t;
 
 typedef struct _log_str
