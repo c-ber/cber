@@ -78,11 +78,12 @@ cb_code_t parse_gtpc(uint8_t * pbuf, int slen)
         return CB_FAIL;
     }
 
-    //≈–∂œeth_type
-    if( (*(pbuf + ETH_TYPE_OFFSET)) == ETH_TYPE_VLAN )
+    //≈–∂œn≤„vlan ,eth_type
+    while( (*(pbuf + ETH_TYPE_OFFSET + vlan_vir )) == ETH_TYPE_VLAN )
     {
-        vlan_vir = VLAN_PRI_LEN;
+        vlan_vir += VLAN_PRI_LEN;
     }
+
 
     //≈–∂œudp
     ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + PROTOCAL_OFFSET);
@@ -126,11 +127,12 @@ cb_code_t parse_s1ap(uint8_t * pbuf, int slen)
         return CB_FAIL;
     }
 
-    //≈–∂œeth_type
-    if( (*(pbuf + ETH_TYPE_OFFSET)) == ETH_TYPE_VLAN )
+    //≈–∂œn≤„vlan ,eth_type
+    while( (*(pbuf + ETH_TYPE_OFFSET + vlan_vir )) == ETH_TYPE_VLAN )
     {
-        vlan_vir = VLAN_PRI_LEN;
+        vlan_vir += VLAN_PRI_LEN;
     }
+
 
     //≈–∂œsctp
     ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + PROTOCAL_OFFSET);
@@ -181,11 +183,12 @@ cb_code_t parse_gtpu(uint8_t * pbuf, int slen)
         return CB_FAIL;
     }
 
-    //≈–∂œeth_type
-    if( (*(pbuf + ETH_TYPE_OFFSET)) == ETH_TYPE_VLAN )
+    //≈–∂œn≤„vlan ,eth_type
+    while( (*(pbuf + ETH_TYPE_OFFSET + vlan_vir )) == ETH_TYPE_VLAN )
     {
-        vlan_vir = VLAN_PRI_LEN;
+        vlan_vir += VLAN_PRI_LEN;
     }
+
 
     //≈–∂œudp
     ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + PROTOCAL_OFFSET);
@@ -600,7 +603,7 @@ void pcap_search_fteid(char *input_file)
     //º”‘ÿ≈‰÷√Œƒº˛£¨¥Ê◊≈fteid
     if( CB_OK != init_config_file())
     {
-        printf("Failed to load configuration file");
+        printf("Failed to load configuration file\n");
     }
 
     printf("Start   to open file [%s]\n", input_file);
@@ -665,11 +668,12 @@ void pcap_search_fteid(char *input_file)
             ctmp = 0;
             vlan_vir = 0;
 
-            //≈–∂œeth_type
-            if( (*(data + ETH_TYPE_OFFSET)) == ETH_TYPE_VLAN )
+            //≈–∂œn≤„vlan ,eth_type
+            while( (*(data + ETH_TYPE_OFFSET + vlan_vir )) == ETH_TYPE_VLAN )
             {
-                vlan_vir = VLAN_PRI_LEN;
+                vlan_vir += VLAN_PRI_LEN;
             }
+
 
             if( CB_OK == gtpc_fteid_match(data, data_acl_len, vlan_vir) )
             {
