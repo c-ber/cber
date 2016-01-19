@@ -89,14 +89,20 @@ cb_code_t parse_gtpc(uint8_t * pbuf, int slen)
     ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + PROTOCAL_OFFSET);
     if( ctmp != PROTOCOL_UDP )
     {
-        LOG_DEBUG("not udpn");
+        LOG_DEBUG("not udp\n");
         return CB_FAIL;
     }
 
     //判断端口
+//#define NET_BYTE_NORMAL
     memcpy(&sport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN, 2);
     memcpy(&dport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN + 2, 2);
-    if( sport == GTPC_PORT || dport == GTPC_PORT )
+
+#ifndef NET_BYTE_NORMAL /*今天碰到一个端口号逆序的，应该都是这样的*/
+    exchange((uint8_t*)(&sport), sizeof(uint16_t));
+    exchange((uint8_t*)(&dport), sizeof(uint16_t));
+#endif
+    if( !(sport == GTPC_PORT || dport == GTPC_PORT) )
     {
         LOG_DEBUG("not gtpc\n");
         return CB_FAIL;
@@ -104,7 +110,7 @@ cb_code_t parse_gtpc(uint8_t * pbuf, int slen)
 
     ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + L3_ALL_LEN + L4_ALL_LEN + MSG_TYPE_OFFSET);
     //if( CB_OK != gtpc_msg_check(pbuf, slen, ctmp, vlan_vir) )
-    if( ctmp < 32 || ctmp > 37 )
+    if( ctmp < 32 || ctmp > 37  )/* 这里是排除不要的报文 */
     {
         return CB_FAIL;
     }
@@ -201,9 +207,9 @@ cb_code_t parse_gtpu(uint8_t * pbuf, int slen)
     //判断端口
     memcpy(&sport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN, 2);
     memcpy(&dport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN + 2, 2);
-    if( sport == GTPC_PORT || dport == GTPC_PORT )
+    if( !(sport == GTPU_PORT || dport == GTPU_PORT) )
     {
-        LOG_DEBUG("not gtpc\n");
+        LOG_DEBUG("not gtpu\n");
         return CB_FAIL;
     }
 
@@ -258,6 +264,10 @@ void pcap_search(char *input_file)
         LOG_DEBUG("------------------------------------\n");
         LOG_DEBUG("cur offset = 0x%x\n", ftell(fp));
 
+//        if(p_id == 348233 )
+//        {
+//            printf("test\n");
+//        }
         fread(pcap_data_header, DATA_HEADER_LEN, 1, fp);
         memcpy(&data_acl_len, pcap_data_header + ACL_LEN_OFFSET, 4);
 
@@ -277,10 +287,10 @@ void pcap_search(char *input_file)
         {
             break;
         }
-//#define PARSE_GTPC
+#define PARSE_GTPC
         //协议解析
 #ifdef PARSE_GTPC
-        if(data_acl_len > 250 || data_acl_len < 360)
+        if(data_acl_len > 100 || data_acl_len < 360)
         {
             if( CB_OK == parse_gtpc(data, data_acl_len) )
             {
@@ -299,7 +309,7 @@ void pcap_search(char *input_file)
             fwrite(data, data_acl_len, 1, fout);
         }
 #endif
-#define PARSE_GTPU
+//#define PARSE_GTPU
 #ifdef PARSE_GTPU
         if( CB_OK == parse_gtpu(data, data_acl_len) )
         {
