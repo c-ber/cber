@@ -39,7 +39,6 @@ CVMX_SHARED gtpc_switch_t g_msg_module_switch[GTP_MSG_MAX] = {};
 mp_code_t s11_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 {
 
-
     if(NULL == src || NULL == dst || NULL == cmp)
         return MP_NULL_POINT;
 
@@ -88,37 +87,7 @@ mp_code_t s11_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
     *hash_result = index;
     return MP_OK;
 }
-/**********************************************************************************************
-  函数名称      : s11_mme_table_update_entry
-  描述          : imsi table 表项更新函数
-  调用          :
-  被调用        : dataplane_lte_init
-                  hash_table_search_update
-  被访问的表    :
-  被修改的表    :
-  输入          : void *table, void *update
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          :
-**********************************************************************************************/
 
-
-mp_code_t s11_mme_table_update_entry(void *table, void *update)
-{
-
-    lte_table_ctrl_mme_t *entry =  (lte_table_ctrl_mme_t *)table;
-    lte_table_ctrl_mme_t *up_d =  (lte_table_ctrl_mme_t *)update;
-
-    entry->fteid.teid = up_d->fteid.teid;
-    entry->fteid.ip   = up_d->fteid.ip;
-    entry->pos_imsi.index     = up_d->pos_imsi.index;
-    entry->pos_imsi.node       = up_d->pos_imsi.node;
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
-
-    return MP_OK;
-}
 #ifdef RELATE_AGING
 uint16_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
@@ -206,28 +175,6 @@ mp_code_t s11_sgw_table_hash(hash_key_t *key, uint32_t *hash_result)
     return MP_OK;
 }
 
-mp_code_t s11_sgw_table_update_entry(void *table, void *update)
-{
-
-    lte_table_ctrl_sgw_t *entry =  (lte_table_ctrl_sgw_t *)table;
-    lte_table_ctrl_sgw_t *up_d =  (lte_table_ctrl_sgw_t *)update;
-
-    entry->fteid.teid = up_d->fteid.teid;
-    entry->fteid.ip   = up_d->fteid.ip;
-
- //   entry->pos_imsi.index     = up_d->pos_imsi.index;
-//    entry->pos_imsi.node       = up_d->pos_imsi.node;
-
-    memcpy(&(entry->pos_imsi), &(up_d->pos_imsi),
-                                            sizeof(hash_table_index_t));
-    memcpy(&(entry->pos_mme), &(up_d->pos_mme),
-                                            sizeof(hash_table_index_t));
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
-
-    return MP_OK;
-}
 #ifdef RELATE_AGING
 uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
@@ -280,34 +227,6 @@ mp_code_t s1u_table_hash(hash_key_t *key, uint32_t *hash_result)
     uint32_t index = 0;
     index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
     *hash_result = index;
-    return MP_OK;
-}
-
-mp_code_t s1u_table_update_entry(void *table, void *update)
-{
-
-    lte_table_s1u_t *entry =  (lte_table_s1u_t *)table;
-    lte_table_s1u_t *up_d =  (lte_table_s1u_t *)update;
-
-    entry->fteid.teid = up_d->fteid.teid;
-    entry->fteid.ip   = up_d->fteid.ip;
-    entry->ue_ip      = up_d->ue_ip;
-//    entry->bucket     = up_d->bucket;
-//    entry->node       = up_d->node;
-
-    memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
-    memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
-    memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
-
-    memcpy(entry->guti,   up_d->guti, sizeof(lte_guti_t));
-    memcpy(entry->tai,    up_d->tai,  sizeof(lte_tai_t));
-    PRINTF_GUTI(entry->guti);
-    PRINTF_TAI(entry->tai);
-    entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
-
     return MP_OK;
 }
 
@@ -798,6 +717,8 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc)
         s11_sgw_search_d.aging = (uint16_t)g_aging_timer_max;
         action_s11_sgw |= S11_SGWT_UPDATE_AGING;
 
+        
+        LTE_DEBUG_PRINTF("s11_sgw_teid:%x s11_sgw_ip: %x \n",s11_sgw_search_d.fteid.teid, s11_sgw_search_d.fteid.ip);
         rv = create_update_table_by_hash(TABLE_S11_SGW, CREATE_TABLE, action_s11_sgw, (void *)&s11_sgw_search_d, 
                                                         sizeof(lte_table_ctrl_sgw_t), &s11_sgw_index);
         LTE_DEBUG_PRINTF("s11_sgw_index: %d \n",s11_sgw_index.index);

@@ -42,7 +42,7 @@ struct ie_common_hdr
 } ;
 
 
-typedef struct
+typedef struct parse_gtpc_t
 {
     lte_imsi_t          imsi;  /*IMSI*/
     lte_imei_t          imei;  /*IMEI*/

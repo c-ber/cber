@@ -82,8 +82,7 @@
 
 
 
-#define LTE_HASH_TABLE_SIZE           (5*TABLE_MAGNITUDE)
-#define LTE_HASH_CELL_NUMBER          (5*TABLE_MAGNITUDE)
+#define LTE_HASH_TABLE_SIZE           (8*TABLE_MAGNITUDE)
 #define LTE_HASH_CELL_SIZE            (1)
 
 #define LTE_TABLE_SIZE_TOTAL  (S6A_TABLE_SIZE+IMSI_TABLE_SIZE+ \
@@ -318,9 +317,6 @@ inline void update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key);
 
 inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t bearerid);
 inline mp_code_t lte_sgw_delete_s1u(lte_table_ctrl_sgw_t*table_sgw_e, uint8_t bearerid);
-
-extern inline mp_error_t  update_imsi_s6a_index(void *table_item,void *update );
-
 
 
 

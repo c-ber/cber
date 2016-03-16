@@ -4,11 +4,11 @@
 extern CVMX_SHARED uint64_t g_aging_timer_max;
 
 // Update imsi table callback function
-int update_imsi_table(void *dst, void *src, uint64_t action)
+mp_code_t update_imsi_table(void *dst, void *src, uint64_t action)
 {
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_imsi_t   *imsi_src = (lte_table_imsi_t *)src;
     lte_table_imsi_t   *imsi_dst = (lte_table_imsi_t *)dst;
@@ -100,15 +100,15 @@ int update_imsi_table(void *dst, void *src, uint64_t action)
         #endif
     }
 
-    return 0;
+    return MP_OK;
 }
 
 // Update s1_mme table callback function
-int update_s1_mme_table(void *dst, void *src, uint64_t action)
+mp_code_t update_s1_mme_table(void *dst, void *src, uint64_t action)
 {
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_s1_mme_enodeb_t   *s1_mme_src = (lte_table_s1_mme_enodeb_t *)src;
     lte_table_s1_mme_enodeb_t   *s1_mme_dst = (lte_table_s1_mme_enodeb_t *)dst;
@@ -168,16 +168,16 @@ int update_s1_mme_table(void *dst, void *src, uint64_t action)
         s1_mme_dst->guti_flag = s1_mme_src->guti_flag;
     }
 
-    return 0;
+    return MP_OK;
 }
 
 // Update s11_mme table callback function
-int update_s11_mme_table(void *dst, void *src, uint64_t action)
+mp_code_t update_s11_mme_table(void *dst, void *src, uint64_t action)
 {
     int i;
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_ctrl_mme_t   *s11_mme_src = (lte_table_ctrl_mme_t *)src;
     lte_table_ctrl_mme_t   *s11_mme_dst = (lte_table_ctrl_mme_t *)dst;
@@ -216,16 +216,16 @@ int update_s11_mme_table(void *dst, void *src, uint64_t action)
         s11_mme_dst->aging = s11_mme_src->aging;
     }
 
-    return 0;
+    return MP_OK;
 }
 
 // Update s11_sgw table callback function
-int update_s11_sgw_table(void *dst, void *src, uint64_t action)
+mp_code_t update_s11_sgw_table(void *dst, void *src, uint64_t action)
 {
     int i;
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_ctrl_sgw_t   *s11_sgw_src = (lte_table_ctrl_sgw_t *)src;
     lte_table_ctrl_sgw_t   *s11_sgw_dst = (lte_table_ctrl_sgw_t *)dst;
@@ -263,15 +263,15 @@ int update_s11_sgw_table(void *dst, void *src, uint64_t action)
         LTE_DEBUG_PRINTF("update_s11_sgw_aging !\n"); 
         s11_sgw_dst->aging = s11_sgw_src->aging;
     }
-    return 0;
+    return MP_OK;
 }
 
 // Update s1u table callback function
-int update_s1u_table(void *dst, void *src, uint64_t action)
+mp_code_t update_s1u_table(void *dst, void *src, uint64_t action)
 {
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_s1u_t   *s1u_src = (lte_table_s1u_t *)src;
     lte_table_s1u_t   *s1u_dst = (lte_table_s1u_t *)dst;
@@ -336,7 +336,7 @@ int update_s1u_table(void *dst, void *src, uint64_t action)
         PRINTF_GUTI(s1u_dst->guti);
         memcpy(s1u_dst->guti, s1u_src->guti, sizeof(lte_guti_t));
     }
-
+#ifdef STAT_TEST
     if( S1UT_UPDATE_CREATE_REALTE & action )
     {
         s1u_dst->is_create_relate = s1u_src->is_create_relate;
@@ -349,16 +349,17 @@ int update_s1u_table(void *dst, void *src, uint64_t action)
     {
         s1u_dst->b1_relate_gtpu_num = s1u_src->b1_relate_gtpu_num;
     }
-    return 0;
+#endif
+    return MP_OK;
 }
 
 // Update s6a table callback function
-int update_s6a_table(void *dst, void *src, uint64_t action)
+mp_code_t update_s6a_table(void *dst, void *src, uint64_t action)
 {
     int i;
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_s6a_t   *s6a_src = (lte_table_s6a_t *)src;
     lte_table_s6a_t   *s6a_dst = (lte_table_s6a_t *)dst;
@@ -400,15 +401,15 @@ int update_s6a_table(void *dst, void *src, uint64_t action)
             memcpy(s6a_dst->nas_key.key[i].kasme, s6a_src->nas_key.key[i].kasme, sizeof(lte_kasme_t));
         }
     }
-    return 0;
+    return MP_OK;
 }
 
 // Update s_tmsi table callback function
-int update_s_tmsi_table(void *dst, void *src, uint64_t action)
+mp_code_t update_s_tmsi_table(void *dst, void *src, uint64_t action)
 {
     if( (NULL == src) || (NULL == dst) )
     {
-        return 0;
+        return MP_NULL_POINT;
     }
     lte_table_s_tmsi_t   *s_tmsi_src = (lte_table_s_tmsi_t *)src;
     lte_table_s_tmsi_t   *s_tmsi_dst = (lte_table_s_tmsi_t *)dst;
@@ -425,94 +426,8 @@ int update_s_tmsi_table(void *dst, void *src, uint64_t action)
       PRINTF_IMSI(s_tmsi_dst->imsi);
       memcpy(s_tmsi_dst->imsi, s_tmsi_src->imsi, sizeof(lte_imsi_t));
    }
-      return 0;
+      return MP_OK;
 }
-
-
-// Update callback function
-int update_imsi_GUTI(void *dst,void *src)
-{
-    if( (NULL == src) || (NULL == dst) )
-    {
-        return 0;
-    }
-    lte_table_imsi_t   *imsi_src = (lte_table_imsi_t *)src;
-    lte_table_imsi_t   *imsi_dst = (lte_table_imsi_t *)dst;
-    LTE_DEBUG_PRINTF("update_imsi_GUTI !\n");
-    PRINTF_GUTI(imsi_src->guti);
-    PRINTF_GUTI(imsi_dst->guti);
-    memcpy(imsi_dst->guti, imsi_src->guti, sizeof(lte_guti_t));
-
-    return 0;
-}
-
-int update_imsi_kasme(void *dst,void *src)
-{
-    if( (NULL == src) || (NULL == dst) )
-    {
-        return 0;
-    }
-    lte_table_imsi_t   *imsi_src = (lte_table_imsi_t *)src;
-    lte_table_imsi_t   *imsi_dst = (lte_table_imsi_t *)dst;
-
-    PRINTF_IMSI(imsi_src->imsi);
-    LTE_DEBUG_PRINTF("update_imsi_kasme !\n");
-
-    memcpy(imsi_dst->kasme, imsi_src->kasme, sizeof(lte_kasme_t));
-
-    return 0;
-}
-
-int update_s1_mme_cipher_alg_type(void *dst,void *src)
-{
-    if( (NULL == src) || (NULL == dst) )
-    {
-        return 0;
-    }
-
-    lte_table_s1_mme_enodeb_t   *s1_mme_src = (lte_table_s1_mme_enodeb_t *)src;
-    lte_table_s1_mme_enodeb_t   *s1_mme_dst = (lte_table_s1_mme_enodeb_t *)dst;
-
-    LTE_DEBUG_PRINTF("update_s1_mme_cipher_alg_type from %d to %d !\n", s1_mme_dst->cipher_alg_type, s1_mme_src->cipher_alg_type);
-
-    s1_mme_dst->cipher_alg_type = s1_mme_src->cipher_alg_type;
-    return 0;
-}
-
-int update_s1_mme_rand(void *dst,void *src)
-{
-    if( (NULL == src) || (NULL == dst) )
-    {
-        return 0;
-    }
-    lte_table_s1_mme_enodeb_t   *s1_mme_src = (lte_table_s1_mme_enodeb_t *)src;
-    lte_table_s1_mme_enodeb_t   *s1_mme_dst = (lte_table_s1_mme_enodeb_t *)dst;
-
-    LTE_DEBUG_PRINTF("update_s1_mme_rand !\n");
-    PRINTF_IMSI(s1_mme_src->imsi);
-    PRINTF_RAND(s1_mme_src->rand);
-
-    memcpy(s1_mme_dst->rand, s1_mme_src->rand, sizeof(lte_rand_t));
-    return 0;
-}
-
-int update_s1_mme_imsi(void *dst,void *src)
-{
-    if( (NULL == src) || (NULL == dst) )
-    {
-        return 0;
-    }
-    lte_table_s1_mme_enodeb_t   *s1_mme_src = (lte_table_s1_mme_enodeb_t *)src;
-    lte_table_s1_mme_enodeb_t   *s1_mme_dst = (lte_table_s1_mme_enodeb_t *)dst;
-
-    LTE_DEBUG_PRINTF("update_s1_mme_imsi !\n");
-    PRINTF_IMSI(s1_mme_src->imsi);
-    PRINTF_IMSI(s1_mme_dst->imsi);
-
-    memcpy(s1_mme_dst->imsi, s1_mme_src->imsi, sizeof(lte_imsi_t));
-    return 0;
-}
-
 
 mp_code_t hash_table_flush(hash_table_t *table)
 {
@@ -774,46 +689,20 @@ mp_code_t hash_table_search_update(hash_table_t *table,
 
     if(ENABLE == control->update_enable && NULL != hash_cell)
     {
-        //chengshuan add for action callback
-        if( NULL != control->action_up )
+        if(NULL == control->d_update  || NULL == table->update)
         {
-            rv = control->action_up((void *)hash_cell->entry, control->d_update, control->update_action);
-            if (cvmx_unlikely( MP_OK != rv))
-            {
-                LTE_HASH_TABLE_UNLOCK(bucket);
-                LTE_DEBUG_PRINTF("%s: update: Failed\n", table->name);
-                return rv;
-            }
-            LTE_DEBUG_PRINTF("%s: control->action_up: Success\n", table->name);
+                LTE_HASH_TABLE_UNLOCK(bucket); 
+                LTE_DEBUG_PRINTF("%s: update: NULL == control->d_update  || NULL == table->update\n", table->name);
+                return MP_NULL_POINT;
         }
-        else if( NULL != control->action )
+        rv = table->update((void *)hash_cell->entry, control->d_update, control->update_action);
+        if (cvmx_unlikely( MP_OK != rv))
         {
-            rv = control->action((void *)hash_cell->entry, control->d_update);
-            if (cvmx_unlikely( MP_OK != rv))
-            {
-                LTE_HASH_TABLE_UNLOCK(bucket);
-                LTE_DEBUG_PRINTF("%s: update: Failed\n", table->name);
-                return rv;
-            }
-            LTE_DEBUG_PRINTF("%s: control->action: Success\n", table->name);
+            LTE_HASH_TABLE_UNLOCK(bucket);
+            LTE_DEBUG_PRINTF("%s: update: Failed\n", table->name);
+            return rv;
         }
-        else
-        {
-            if(NULL == control->d_update  || NULL == table->update)
-            {
-                    LTE_HASH_TABLE_UNLOCK(bucket); 
-                    LTE_DEBUG_PRINTF("%s: update: NULL == control->d_update  || NULL == table->update\n", table->name);
-                    return MP_NULL_POINT;
-            }
-            rv = table->update((void *)hash_cell->entry, control->d_update);
-            if (cvmx_unlikely( MP_OK != rv))
-            {
-                LTE_HASH_TABLE_UNLOCK(bucket);
-                LTE_DEBUG_PRINTF("%s: update: Failed\n", table->name);
-                return rv;
-            }
-            LTE_DEBUG_PRINTF("%s: update: Success\n", table->name);      
-        }
+        LTE_DEBUG_PRINTF("%s: update: Success\n", table->name);      
     }
     
     LTE_HASH_TABLE_UNLOCK(bucket);
@@ -1056,7 +945,7 @@ mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
 #endif
     return ret;
 }
-
+#ifdef STAT_TEST
 inline mp_code_t hash_cell_new(hash_table_t *table,
                                hash_bucket_t *bucket,
                                void * cell)
@@ -1138,7 +1027,7 @@ mp_code_t hash_cell_insert_by_hash( hash_table_t *table,
         }
         if(HASH_CMP_SAME == cmp_rlt)
         {
-            table->update(src_cell->entry, cell);
+            table->update(src_cell->entry, cell, 0xffffffffffffffff);//将action参数置为全1，对表项的所有内容进行更新
             LTE_HASH_TABLE_UNLOCK(bucket);
             return MP_OK;
         }
@@ -1149,6 +1038,7 @@ mp_code_t hash_cell_insert_by_hash( hash_table_t *table,
     LTE_HASH_TABLE_UNLOCK(bucket);
     return MP_FAIL;
 }
+#endif
 /******************************************************************************
  * 函数名称    : hash_cell_get_by_index
  * 功能        : 根据行列索引读取cell值
@@ -1550,6 +1440,11 @@ mp_error_t create_update_table_by_hash(
     table_control.d_compare        = data;
     table_control.d_update         = data;
 
+    if(CREATE_TABLE != opType)
+    {
+        table_control.new_enable = DISABLE;
+    }
+
     if( TABLE_IMSI == table_type )
     {
         if( sizeof(lte_table_imsi_t) != len )
@@ -1561,9 +1456,6 @@ mp_error_t create_update_table_by_hash(
         update_imsi_hash_key(imsi_search_d.imsi, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_IMSI key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_IMSI update_action=%lx\n" , actionType);
-
-        table_control.action_up = update_imsi_table;
-
     }
     else if( TABLE_S11_MME == table_type)
     {
@@ -1576,8 +1468,6 @@ mp_error_t create_update_table_by_hash(
         update_fteid_hash_key(s11_mme_search_d.fteid.ip, s11_mme_search_d.fteid.teid, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_S11_MME key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_S11_MME update_action=%lx\n" , actionType);
-
-        table_control.action_up = update_s11_mme_table;
     }
     else if( TABLE_S11_SGW == table_type)
     {
@@ -1590,8 +1480,6 @@ mp_error_t create_update_table_by_hash(
         update_fteid_hash_key(s11_sgw_search_d.fteid.ip, s11_sgw_search_d.fteid.teid, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_S11_SGW key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_S11_SGW update_action=%lx\n" , actionType);
-
-        table_control.action_up = update_s11_sgw_table;
     }
     else if( TABLE_S1U == table_type)
     {
@@ -1604,8 +1492,6 @@ mp_error_t create_update_table_by_hash(
         update_fteid_hash_key(s1u_search_d.fteid.ip, s1u_search_d.fteid.teid, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_S1U key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_S1U update_action=%lx\n" , actionType);
-
-        table_control.action_up = update_s1u_table;
     }
     else if( TABLE_S6A == table_type)
     {
@@ -1622,8 +1508,6 @@ mp_error_t create_update_table_by_hash(
         update_s6a_hash_key(&s6a_key, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_S1U key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_S1U update_action=%lx\n" , actionType);
-
-        table_control.action_up = update_s6a_table;
     }
     else if( TABLE_S1_ENODEB_MME == table_type)
     {
@@ -1636,9 +1520,6 @@ mp_error_t create_update_table_by_hash(
         update_s1_mme_hash_key(s1_mme_search_d.enode_ip, s1_mme_search_d.enode_ue_s1ap_id, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_S1_ENODEB_MME key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_S1_ENODEB_MME update_action=%lx\n" , actionType);
-
-        table_control.action_up = update_s1_mme_table;
-
     }
     else if( TABLE_S_TIMSI == table_type)
     {
@@ -1665,10 +1546,14 @@ mp_error_t create_update_table_by_hash(
         return ret;
     }
 
-    index->en       = ENABLE;
-    index->index    = (table_control.bucket)->index;
-    index->bearerid = 0;
-    index->node     = table_control.node;
+    if(NULL != table_control.bucket)
+    {
+        index->en       = ENABLE;
+        index->index    = (table_control.bucket)->index;
+        index->bearerid = 0;
+        index->node     = table_control.node;
+    }
+
     
     return ret;
 }

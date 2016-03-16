@@ -10,10 +10,6 @@
 #define NAS_KEY_LEN 32
 
 
-struct pbuf
-{
-
-};
 typedef enum
 {
     EEA0_TYPE,

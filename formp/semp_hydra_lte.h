@@ -153,7 +153,9 @@ typedef   uint8_t    lte_rand_t[LTE_RAND_LEN] ;
 #define LTE_GUTI_LEN  10
 typedef   uint8_t    lte_guti_t[LTE_GUTI_LEN] ;
 
-#define LTE_TAI_MAX_LEN 5
+#define LTE_TAI_MAX_LEN 5   //LTE_TAI_MAX_LEN = LTE_PLMN_MAX_LEN + LTE_TAC_MAX_LEN
+#define LTE_PLMN_MAX_LEN 3
+#define LTE_TAC_MAX_LEN 2
 typedef   uint8_t   lte_tai_t[LTE_TAI_MAX_LEN];
 
 #define LTE_STMSI_LEN  5
@@ -294,10 +296,22 @@ typedef struct{
 typedef enum {
     EMM_MSG_SERVICE_REQUEST   = 0x0,
     EMM_MSG_ATTACH_REQUEST    = 0x41,
-    EMM_MSG_TRACK_AREA_UPDATE = 0x48,    
+    EMM_MSG_ATTACH_ACCEPT       = 0x42,
+    EMM_MSG_TAU_REQUEST         = 0x48,
+    EMM_MSG_TAU_ACCEPT          = 0x49,
     EMM_MSG_AUTH_REQUEST      = 0x52,
     EMM_MSG_IDENTIFY_RESPONSE = 0x56,
     EMM_SECURITE_COMMAND      = 0x5d,
 }EMM_Message_Type_enum;
+
+typedef enum{
+    LTE_CHECK_MASK_DISABLE,
+    LTE_CHECK_MASK_ENABLE,
+}oifgrp_lte_check_mask_en_t;
+
+typedef struct{
+    oifgrp_lte_check_mask_en_t lte_mask_en;
+    uint32_t oifgrp_index;
+}oifgrp_lte_check_mask_config_t; 
 
 #endif /* end of__SEMP_HYDRA_LTE_H__ */

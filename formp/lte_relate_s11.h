@@ -40,8 +40,6 @@ mp_code_t s11_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);
 
 mp_code_t s11_mme_table_hash(hash_key_t *key, uint32_t *hash_result);
 
-mp_code_t s11_mme_table_update_entry(void *table, void *update);
-
 #ifdef RELATE_AGING
 uint16_t s11_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);
 #endif
@@ -52,8 +50,6 @@ mp_code_t s11_sgw_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);
 
 mp_code_t s11_sgw_table_hash(hash_key_t *key, uint32_t *hash_result);
 
-mp_code_t s11_sgw_table_update_entry(void *table, void *update);
-
 #ifdef RELATE_AGING
 uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);
 #endif
@@ -63,8 +59,6 @@ uint16_t s11_sgw_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 mp_code_t s1u_table_compare(void *src, void* dst, hash_cmp_em_t *cmp);
 
 mp_code_t s1u_table_hash(hash_key_t *key, uint32_t *hash_result);
-
-mp_code_t s1u_table_update_entry(void *table, void *update);
 
 #ifdef RELATE_AGING
 uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);

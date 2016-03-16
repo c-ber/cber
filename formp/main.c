@@ -28,6 +28,7 @@
 #include "hash_alg.h"
 #include "lte_log.h"
 #include "kfifo.h"
+#include "packet_diameter.h"
 
 
 //lte_imsi_t imsi_base =  {0x44,0x50,0x14,0x09,0x17,0x02,0x00,0xf8};  /*IMSI*/
@@ -41,6 +42,15 @@ int s1u_enode_ip = 0xac145619;
 int s1u_enode_teid=0x00000042;
 int s1u_sgw_ip   = 0xac143687; //sgw ip只有一个，但隧道号有多个
 int s1u_sgw_teid = 0x00017469;
+
+/*s1关联 */
+lte_tai_t tai = {0x64, 0xf0, 0x00, 0x28, 0xb2};
+lte_guti_t guti = {0x64, 0xf0, 0x00, 0x03, 0x6e, 0x84, 0xe5, 0x12, 0x3a, 0x9a};
+lte_guti_t guti_new = {0x66, 0xf0, 0x00, 0x03, 0x6e, 0x84, 0xe5, 0x12, 0x3a, 0x99};
+uint32_t enode_ue_s1ap_id = 60;
+uint32_t mme_ue_s1ap_id   = 1526759438;
+lte_rand_t rand_base = {0xd3, 0x63, 0x43, 0xd4, 0xfa, 0xd2, 0x05, 0xef,
+                        0x10, 0xe1, 0x09, 0xbd, 0xf6, 0xaa, 0x2a, 0x20};
 
 //IMSI           : 440541907120008
 //MME IP         : 2.57.20.172
@@ -256,11 +266,157 @@ void test_s6a_response()
     }
 }
 
+/**/
+void test_s1_1()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    s1ap.nas.EMM_message_type = EMM_MSG_ATTACH_REQUEST;
+    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+    s1ap.mme_ip = s11_mme_ip;
+    s1ap.enode_ip = s1u_enode_ip;
+    memcpy(s1ap.tai, tai, sizeof(tai));
+    //s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
+    s1ap.nas.type_of_identity = TYPE_IMSI;
+
+    memcpy(s1ap.nas.init_identify.imsi, imsi_base, sizeof(lte_imsi_t));
+    //memcpy(s1ap.nas.init_identify.guti, guti, sizeof(lte_guti_t));
+
+    ret = lte_s1ap_initialUEMessage(&s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 1 ,code[%d]\n", ret);
+    }
+
+}
+void test_s1_1_old()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    s1ap.nas.EMM_message_type = EMM_MSG_ATTACH_REQUEST;
+    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+    s1ap.mme_ip = s11_mme_ip;
+    s1ap.enode_ip = s1u_enode_ip;
+    memcpy(s1ap.tai, tai, sizeof(tai));
+    s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
+    //s1ap.nas.type_of_identity = TYPE_IMSI;
+
+    //memcpy(s1ap.nas.init_identify.imsi, imsi_base, sizeof(lte_imsi_t));
+    memcpy(s1ap.nas.init_identify.guti, guti, sizeof(lte_guti_t));
+
+    ret = lte_s1ap_initialUEMessage(&s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 1 ,code[%d]\n", ret);
+    }
+
+}
+void test_s1_2()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    char packet_ptr[5] = {0};
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    s1ap.nas.EMM_message_type = 0x42;
+    s1ap.nas.ciphered_flag = false;
+    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+
+    s1ap.enode_ip = s1u_enode_ip;
+    s1ap.mme_ip   = s11_mme_ip;
+
+    memcpy(s1ap.nas.guti, guti, sizeof(lte_guti_t));
+    ret = lte_s1ap_InitialContextSetup(packet_ptr, &s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 2 ,code[%d]\n", ret);
+    }
+}
+
+void test_s1_2_new_guti()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    char packet_ptr[5] = {0};
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    s1ap.nas.EMM_message_type = 0x42;
+    s1ap.nas.ciphered_flag = false;
+    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+
+    s1ap.enode_ip = s1u_enode_ip;
+    s1ap.mme_ip   = s11_mme_ip;
+
+    memcpy(s1ap.nas.guti, guti_new, sizeof(lte_guti_t));
+    ret = lte_s1ap_InitialContextSetup(packet_ptr, &s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 2 ,code[%d]\n", ret);
+    }
+}
+
+void test_s1_3()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    s1ap.nas.EMM_message_type = EMM_MSG_IDENTIFY_RESPONSE;
+    s1ap.enode_ip             = s1u_enode_ip;
+    s1ap.enode_ue_s1ap_id     = enode_ue_s1ap_id;
+    s1ap.mme_ip               = s11_mme_ip;
+    s1ap.mme_ue_s1ap_id       = mme_ue_s1ap_id;
+    s1ap.nas.type_of_identity = TYPE_IMSI;
+
+    memcpy(s1ap.nas.init_identify.imsi, imsi_base, sizeof(imsi_base));
+    memcpy(s1ap.tai, tai, sizeof(tai));
+
+
+    ret = lte_s1ap_uplinkNASTransport(&s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 3 ,code[%d]\n", ret);
+    }
+
+}
+
+void test_s1_4()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    //s1ap.nas.EMM_message_type = EMM_SECURITE_COMMAND;
+    s1ap.nas.EMM_message_type = EMM_MSG_AUTH_REQUEST;
+    s1ap.enode_ip             = s1u_enode_ip;
+    s1ap.enode_ue_s1ap_id     = enode_ue_s1ap_id;
+
+    memcpy( s1ap.nas.rand, rand_base, sizeof(rand_base));
+
+    ret = lte_s1ap_downlinkNASTransport(&s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 4 ,code[%d]\n", ret);
+    }
+}
+
+void test_s1_5()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+}
 char * tablename[]={
 "TABLE_IMSI",
 "TABLE_S11_MME",
 "TABLE_S11_SGW",
 "TABLE_S1",
+"TABLE_S6A",
+"TABLE_S1_ENODEB_MME",
+"TABLE_S_TIMSI",
 "TABLE_MAX"
 };
 
@@ -274,11 +430,15 @@ void show_memory()
     hash_cell_t *hash_cell = NULL;
     struct list_head *pos = NULL, *next = NULL;
     printf("---------------------------------> memory use list:\n");
-    for(n = 0 ; n < 4; n++)
+    for(n = 0 ; n < 7; n++)
     {
         if(n == 3)
         {
             cell_num = cell_num *2;
+        }
+        else
+        {
+            cell_num = TABLE_MAGNITUDE;
         }
         hash_table_t *table = LTE_GET_TABLE_PTR(n);
         printf("\n%s:\n", tablename[n]);
@@ -332,10 +492,16 @@ void test()
         printf("cell[%02d]:\n",i);
         printf("*******************************\n");
 
-        test_s6a_response();
+        test_s1_1();
+        test_s1_2();
+        test_s1_1_old();
+        test_s1_2_new_guti();
+        test_s1_3();
+        test_s1_4();
+//        test_s6a_response();
 
 //        test32();
-//        show_memory();
+        show_memory();
 //
 //        test33();
 //        show_memory();
@@ -366,42 +532,47 @@ void test()
     //show_memory();
 }
 
-void test_capture()
+
+#define SINGLE_CORE_LOG_SIZE       1400
+
+typedef struct {
+    uint16_t pw_offset;                     /* 当前写数据的偏移 */
+    uint16_t pr_offset;                     /* 当前读数据的偏移 */
+    char     buf[SINGLE_CORE_LOG_SIZE];     /* 存放的core dump的缓冲数组 */
+} cvmx_core_clog_t;
+
+cvmx_core_clog_t core2_log[3];
+void testfor()
 {
     int i = 0;
     int j = 0;
-    uint8_t buf[3][LTE_LOG_DATA_SIZE];
-    uint8_t buf1[LTE_LOG_DATA_SIZE] = {0};
-    pkt_head_t head = {};
-    for( i = 0 ; i < 3; i++ )
+
+    for(i = 0 ; i < 2; i++)
     {
-        for( j = 0 ;j < LTE_LOG_DATA_SIZE;j++)
+        core2_log[i].pw_offset = 5;
+        for(j = 0 ; j < 5; j++)
         {
-            buf[i][j] = j+1;
+            core2_log[i].buf[j] = j;
         }
     }
-    lte_log_init();
-    lte_packet_split_write((uint8_t *)buf, 25);
-
-    printf("packet count = %d\n",lte_packet_count_get());
-    printf("packet total size = %d\n",lte_packet_total_size_get());
-
-    while(lte_packet_have_data_to_read())
+    sprintf(core2_log[2].buf ,"hello\n");
+    for(i =0 ; i < 2; i++)
     {
-        lte_packet_read(buf1, &head);
-        printf("read data, fir[%d], fin[%d],len[%d]:",
-                head.fir, head.fin, head.len);
-        for(i = 0 ; i < head.len;i++)
+        printf("pkt len = %d    ", core2_log[i].pw_offset);
+        for( j = 0 ; j < core2_log[i].pw_offset; j++)
         {
-            printf("%02x ",buf1[i]);
+            if(j % 16 == 0) printf("\n");
+            printf("%02x ", core2_log[i].buf[j]);
         }
         printf("\n");
     }
 }
 
 
+
 int main(int argc,char * argv[])
 {
+
 //    pthread_t pid = -1;
 //    pthread_create(&pid, NULL, npcp_update_cell_timer, (void *)NULL);
 

@@ -82,9 +82,11 @@ typedef enum tagS1UTableUpdateAction
     S1UT_UPDATE_AGING        = 0x0080,           //[[CN]] 更新aging       [[CN]]
     S1UT_UPDATE_TAI          = 0x0100,           //[[CN]] 更新tai         [[CN]]
     S1UT_UPDATE_GUTI         = 0x0200,           //[[CN]] 更新guti        [[CN]]
+#ifdef STAT_TEST
     S1UT_UPDATE_CREATE_REALTE= 0x0400,
     S1UT_UPDATE_B0_NUM       = 0x0800,
     S1UT_UPDATE_B1_NUM       = 0x1000
+#endif
 }S1UTableUpdateActionEnum;
 
 /*s6a表项的更新操作类型定义，每一位对应更新一个元素*/
@@ -161,7 +163,7 @@ typedef struct
     uint16_t        cell_size;              /* cell空间大小 */
     mp_code_t (*hash)(hash_key_t *key, uint32_t *index);
     mp_code_t (*compare)(void *src, void*dst, hash_cmp_em_t *cmp); /*0:equals 1:not equals*/
-    mp_code_t (*update)(void *src, void*dst);
+    mp_code_t (*update)(void *src, void*dst, uint64_t action);
     mp_code_t (*get_bucket)(uint32_t *buck);
 #ifdef RELATE_AGING
     uint16_t (*set_timer)(void *src, timer_opera_t opera, uint16_t value);
@@ -263,19 +265,24 @@ mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
                                           hash_table_index_t *index,
                                           uint16_t            tm);
 
-inline mp_code_t hash_cell_new(hash_table_t *table, hash_bucket_t *bucket, void * cell);
+mp_code_t update_imsi_table(void *dst, void *src, uint64_t action);
+mp_code_t update_s1_mme_table(void *dst, void *src, uint64_t action);
+mp_code_t update_s11_mme_table(void *dst, void *src, uint64_t action);
+mp_code_t update_s11_sgw_table(void *dst, void *src, uint64_t action);
+mp_code_t update_s1u_table(void *dst, void *src, uint64_t action);
+mp_code_t update_s6a_table(void *dst, void *src, uint64_t action);
+mp_code_t update_s_tmsi_table(void *dst, void *src, uint64_t action);
 
+#ifdef STAT_TEST
+inline mp_code_t hash_cell_new(hash_table_t *table, hash_bucket_t *bucket, void * cell);
+#endif
 /* chengshuan Add for table operation */
 
 /*更新表项内容的操作类型*/
 typedef enum
 {
     CREATE_TABLE,
-    UPDATE_IMSIT_GUTI,
-    UPDATE_IMSIT_KASME,
-    UPDATE_S1_MMET_CIPHER_ALG_TYPE,
-    UPDATE_S1_MMET_RAND,
-    UPDATE_S1_MMET_IMSI,
+    UPDATE_TABLE
 }UpdateTypeEnum;
 
 mp_error_t search_table_by_hash(

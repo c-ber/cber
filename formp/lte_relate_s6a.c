@@ -82,7 +82,7 @@ mp_code_t get_s6a_node_by_ip_hbh(ip_hbh_t *indata,lte_table_s6a_t*node)
     hash_key_t  key;
     mp_code_t rv = MP_OK;
     memset(&key,0,sizeof(key));
-    update_s6a_hash_key(indata,&key);    
+    update_s6a_hash_key(indata,&key);
     rv  = hash_cell_get_by_hash(LTE_GET_TABLE_PTR(TABLE_S6A),&key,&s6a_search_d,sizeof(s6a_search_d));
     LTE_DEBUG_PRINTF("rv  = %d\n",rv);
     if(MP_CELL_FOUND != rv)
@@ -93,7 +93,7 @@ mp_code_t get_s6a_node_by_ip_hbh(ip_hbh_t *indata,lte_table_s6a_t*node)
     LTE_DEBUG_PRINTF("hss ip:%d,mme ip:%d,hbh:%x\n",s6a_search_d.hssip,s6a_search_d.mmeip,s6a_search_d.hop_by_hop);
     memcpy(node,&s6a_search_d,sizeof(lte_table_s6a_t));
     return MP_OK;
-    
+
 }
 mp_code_t get_kasme_by_imsi(const imsi_rand_info_t *indata,lte_kasme_t *kasme,uint32_t *len)
 {
@@ -269,7 +269,7 @@ int32_t lte_s6a_dmt_auth_response(parse_diameter_t *diameter)
     s6a_search_d.aging = (uint16_t)g_aging_timer_max;
     updata_opt_mask |= S6_AT_UPDATE_AGING;
     #endif
-    rv = create_update_table_by_hash(TABLE_S6A,CREATE_TABLE,\
+    rv = create_update_table_by_hash(TABLE_S6A,UPDATE_TABLE,\
                                     updata_opt_mask,\
                                     (void *)&s6a_search_d,\
                                     sizeof(s6a_search_d),\
@@ -280,6 +280,7 @@ int32_t lte_s6a_dmt_auth_response(parse_diameter_t *diameter)
         hydra_stat_inc(stat_business_dmt_auth_req_search_s6a_fail);
         return rv;        
     }
+    hydra_stat_inc(stat_dmt_auth_response_related_pkts);
     return MP_E_NONE;
             
     
@@ -314,27 +315,7 @@ mp_code_t s6a_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
     return MP_OK;
         
 }
-mp_code_t s6a_table_update_entry(void *table, void *update)
-{
-    if(NULL == table || NULL == update ) 
-    {
-        return MP_FAIL;
-    }
-    lte_table_s6a_t *entry = (lte_table_s6a_t *)table;
-    lte_table_s6a_t *up_d =  (lte_table_s6a_t *)update;
-    entry->hssip = up_d->hssip;
-    entry->mmeip = up_d->mmeip;
-    entry->hop_by_hop = up_d->hop_by_hop;
-    memcpy(entry->imsi,up_d->imsi,sizeof(lte_imsi_t));
-    #ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-    #endif
-    LTE_DEBUG_PRINTF("entry->hssip = %x\n",entry->hssip);
-    LTE_DEBUG_PRINTF("entry->mmeip = %x\n", entry->mmeip);
-    LTE_DEBUG_PRINTF("entry->hop_by_hop=%x\n",entry->hop_by_hop);
-    return MP_OK;
-    
-}
+
 int dmt_auth_rep_action(void *table, void *update)
 {
     uint32_t i = 0;

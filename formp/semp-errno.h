@@ -52,7 +52,8 @@ typedef enum mp_error_e{
     MP_E_RAND_EINVAL          = -22,        /*invalid rand */
     MP_E_KASME_EINVAL         = -23,        /*invalid kasme */
     MP_E_NOT_VLAN_PKT         = -24,        /*in packet without vlan tag*/
-    MP_E_LIMIT                = -25 ,       /* Unknown error, Must come last */        
+    MP_E_LIMIT                = -25 ,       /* Unknown error, Must come last */ 
+    MP_E_INVALID_PACKET       = -26,        /*The packet we don't care*/
 } mp_error_t;
 
 #define MP_E_SUCCESS(rv)              ((rv) >= 0)

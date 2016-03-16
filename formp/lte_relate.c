@@ -16,7 +16,6 @@ CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX] = {};
 CVMX_SHARED  cvmx_spinlock_t imsi_delete_lock;
 volatile CVMX_SHARED  bool g_lte_start_flag = false; /* lte模块启动标志 */
 
-extern CVMX_SHARED uint64_t g_aging_timer_max;
 
 
 /***************************imsi************************/
@@ -35,9 +34,9 @@ extern CVMX_SHARED uint64_t g_aging_timer_max;
 **********************************************************************************************/
 mp_code_t  imsi_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 {
-    int rv= 0;    
+    int rv= 0;
 
-    if(NULL == src || NULL == dst || NULL == cmp) 
+    if(NULL == src || NULL == dst || NULL == cmp)
         return MP_FUN_PARAM_ERR;
 
     lte_table_imsi_t * sentry = (lte_table_imsi_t *)src;
@@ -83,36 +82,7 @@ mp_code_t imsi_table_hash(hash_key_t *key, uint32_t *hash_result)
     *hash_result = index;
     return MP_OK;
 }
-/**********************************************************************************************
-  函数名称      : imsi_table_update
-  描述          : imsi table 表项的表项更新函数
-  调用          : 
-  被调用        : dataplane_lte_init
-                  hash_table_search_update  
-  被访问的表    : 
-  被修改的表    : 
-  输入          : void *table, void *update
-  输出          : 无
-  返回          : 返回值为MP_OK
-  其他          : 
-**********************************************************************************************/
 
-mp_code_t imsi_table_update(void *table, void *update)
-{
-    
-    lte_table_imsi_t *entry =  (lte_table_imsi_t *)table;
-    lte_table_imsi_t *up_d =  (lte_table_imsi_t *)update; 
-    
-    memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
-    memcpy(entry->imei,   up_d->imei, sizeof(lte_imei_t));
-    memcpy(entry->msisdn, up_d->msisdn, sizeof(lte_msisdn_t));
-    entry->ex_field.msisdn_len = up_d->ex_field.msisdn_len;
-#ifdef RELATE_AGING
-    entry->aging = (uint16_t)g_aging_timer_max;
-#endif
-
-    return MP_OK;
-}
 #ifdef RELATE_AGING
 uint16_t imsi_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
@@ -170,26 +140,6 @@ mp_code_t s1_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
     uint32_t index = 0;
     index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
     *hash_result = index;
-    return MP_OK;
-}
-
-mp_code_t s1_mme_table_update_entry(void *table, void *update)
-{
-    
-    LTE_DEBUG_PRINTF("s1_mme_table_update_entry called !\n" );
-
-    lte_table_s1_mme_enodeb_t *entry =  (lte_table_s1_mme_enodeb_t *)table;
-    lte_table_s1_mme_enodeb_t *up_d =  (lte_table_s1_mme_enodeb_t *)update; 
-    
-    entry->enode_ip              = up_d->enode_ip;
-    entry->enode_ue_s1ap_id      = up_d->enode_ue_s1ap_id;
-    entry->mme_ip                = up_d->mme_ip;
-    entry->mme_ue_s1ap_id        = up_d->mme_ue_s1ap_id;
-
-    memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
-    memcpy(entry->rand,   up_d->rand, sizeof(lte_rand_t));
-    memcpy(entry->old_guti, up_d->old_guti, sizeof(lte_guti_t));
-
     return MP_OK;
 }
 
@@ -255,17 +205,6 @@ mp_code_t s_tmsi_table_hash(hash_key_t *key, uint32_t *hash_result)
     return MP_OK;
 }
 
-mp_code_t s_tmsi_table_update_entry(void *table, void *update)
-{
-    
-    lte_table_s_tmsi_t *entry =  (lte_table_s_tmsi_t *)table;
-    lte_table_s_tmsi_t *up_d =  (lte_table_s_tmsi_t *)update; 
-    
-    memcpy(entry->imsi,   up_d->imsi, sizeof(lte_imsi_t));
-    memcpy(entry->s_tmsi, up_d->s_tmsi, sizeof(lte_guti_t));
-
-    return MP_OK;
-}
 /***************************S-TMSI end************************/
 
 inline void update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *key)
@@ -298,29 +237,6 @@ inline void update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key)
     key->size = 1;
     key->data[0] = *(uint64_t*)(( &(tmp[0])));
     return ;
-}
-
-int inline update_imsi_s6a_index(void *table_item,void *update )
-{
-    if(NULL == table_item\
-       ||NULL == update)
-    {
-        return MP_E_PARAM;
-    }
-    lte_table_imsi_t *p_table = (lte_table_imsi_t *)table_item;
-    lte_table_imsi_t *p_update = (lte_table_imsi_t *)update;
-    memcpy(p_table->imsi,p_update->imsi,sizeof(p_table->imsi));
-    p_table->pos_s6a.index = p_update->pos_s6a.index;
-    LTE_DEBUG_PRINTF("s6a index:%x\n",p_table->pos_s6a.index);
-    p_table->pos_s6a.en = p_update->pos_s6a.en;
-    LTE_DEBUG_PRINTF("s6a en:%x\n",p_table->pos_s6a.en);
-    p_table->pos_s6a.node = p_update->pos_s6a.node;
-    LTE_DEBUG_PRINTF("s6a addr:%p\n",p_table->pos_s6a.node);
-
-#ifdef RELATE_AGING
-    p_table->aging = (uint16_t)g_aging_timer_max;
-#endif
-    return MP_E_NONE;
 }
 
 
@@ -408,19 +324,13 @@ mp_error_t lte_s1ap_relate_process(void *packet_ptr, parse_s1ap_t *s1ap)
     }
     LTE_DEBUG_PRINTF("Procedure Code=%d\n", s1ap->procecode);
     mp_error_t rv = MP_E_NONE; 
-
     switch(s1ap->procecode)
     {
         case  id_initialUEMessage:
             rv = lte_s1ap_initialUEMessage(s1ap); //parse imsi or old_guti, create imsiT and S1-MME table
             break;
         case  id_InitialContextSetup:
-            hydra_stat_inc(stat_pkts_InitialContextSetup);
             rv =  lte_s1ap_InitialContextSetup(packet_ptr, s1ap);//parse GUTI , put into imsi table
-            if(MP_E_NONE != rv)
-            {
-                hydra_stat_inc(stat_pkts_InitialContextSetup_failed);        /*InitialContextSetup relate failed*/
-            }
             break;
         case  id_uplinkNASTransport:
             rv = lte_s1ap_uplinkNASTransport(s1ap); //parse identity response packet, 
@@ -429,7 +339,7 @@ mp_error_t lte_s1ap_relate_process(void *packet_ptr, parse_s1ap_t *s1ap)
             rv = lte_s1ap_downlinkNASTransport(s1ap); //parse imsi or old_guti, create imsiT or S1-MME table
             break;
         case  id_UEContextRelease:
-            if ( UP_LINK_DIRECTION == s1ap->direction ) // UEContextRelease that from eNodeB to MME is the successfullOutcome
+            if ( UP_LINK == s1ap->direction ) // UEContextRelease that from eNodeB to MME is the successfullOutcome
             {
                 rv = lte_s1ap_UEContextRelease(s1ap); //delete imsi table and related tables
             }
@@ -565,7 +475,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_IMSI].max_bucket   = IMSI_TABLE_SIZE;
     lte_tables_info[TABLE_IMSI].compare      = imsi_table_compare;
     lte_tables_info[TABLE_IMSI].hash         = imsi_table_hash;
-    lte_tables_info[TABLE_IMSI].update       = imsi_table_update;
+    lte_tables_info[TABLE_IMSI].update       = update_imsi_table;
 //    lte_tables_info[TABLE_IMSI].pool         = CVMX_FPA_LTE_RELATE256_POOL;
     lte_tables_info[TABLE_IMSI].cell_size    = HASH_ENTRY_VALID_SIZE_128;
     strcpy(lte_tables_info[TABLE_IMSI].name, "TABLE_IMSI");
@@ -585,7 +495,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S11_MME].max_bucket   = S11_MME_TABLE_SIZE;
     lte_tables_info[TABLE_S11_MME].compare      = s11_mme_table_compare;
     lte_tables_info[TABLE_S11_MME].hash         = s11_mme_table_hash;
-    lte_tables_info[TABLE_S11_MME].update       = s11_mme_table_update_entry;
+    lte_tables_info[TABLE_S11_MME].update       = update_s11_mme_table;
 //    lte_tables_info[TABLE_S11_MME].pool         = CVMX_FPA_LTE_RELATE128_POOL0;
     lte_tables_info[TABLE_S11_MME].cell_size    = HASH_ENTRY_VALID_SIZE_128;
     strcpy(lte_tables_info[TABLE_S11_MME].name, "TABLE_S11_MME");
@@ -606,7 +516,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S11_SGW].max_bucket   = S11_SGW_TABLE_SIZE;
     lte_tables_info[TABLE_S11_SGW].compare      = s11_sgw_table_compare;
     lte_tables_info[TABLE_S11_SGW].hash         = s11_sgw_table_hash;
-    lte_tables_info[TABLE_S11_SGW].update       = s11_sgw_table_update_entry;
+    lte_tables_info[TABLE_S11_SGW].update       = update_s11_sgw_table;
 //    lte_tables_info[TABLE_S11_SGW].pool         = CVMX_FPA_LTE_RELATE128_POOL0;
     lte_tables_info[TABLE_S11_SGW].cell_size    = HASH_ENTRY_VALID_SIZE_128;
     strcpy(lte_tables_info[TABLE_S11_SGW].name, "TABLE_S11_SGW");
@@ -626,7 +536,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S1U].max_bucket   = S1_U_TABLE_SIZE;
     lte_tables_info[TABLE_S1U].compare      = s1u_table_compare;
     lte_tables_info[TABLE_S1U].hash         = s1u_table_hash;
-    lte_tables_info[TABLE_S1U].update       = s1u_table_update_entry;
+    lte_tables_info[TABLE_S1U].update       = update_s1u_table;
 //    lte_tables_info[TABLE_S1].pool         = CVMX_FPA_LTE_GTPU_POOL;
     lte_tables_info[TABLE_S1U].cell_size    = HASH_ENTRY_VALID_SIZE_128;
     strcpy(lte_tables_info[TABLE_S1U].name, "TABLE_S1U");
@@ -649,7 +559,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S6A].max_bucket =  S6A_TABLE_SIZE;  
     lte_tables_info[TABLE_S6A].compare = s6a_table_compare;
     lte_tables_info[TABLE_S6A].hash    = s6a_table_hash;
-    lte_tables_info[TABLE_S6A].update  = s6a_table_update_entry;  
+    lte_tables_info[TABLE_S6A].update  = update_s6a_table;  
 //    lte_tables_info[TABLE_S6A].pool =  CVMX_FPA_LTE_RELATE256_POOL;
     lte_tables_info[TABLE_S6A].cell_size = HASH_ENTRY_VALID_SIZE_256;
     strcpy(lte_tables_info[TABLE_S6A].name, "TABLE_S6A");
@@ -676,7 +586,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S1_ENODEB_MME].max_bucket =  S1_MME_ENOB_TABLE_SIZE;  
     lte_tables_info[TABLE_S1_ENODEB_MME].compare = s1_mme_table_compare;
     lte_tables_info[TABLE_S1_ENODEB_MME].hash    = s1_mme_table_hash;
-    lte_tables_info[TABLE_S1_ENODEB_MME].update  = s1_mme_table_update_entry;  
+    lte_tables_info[TABLE_S1_ENODEB_MME].update  = update_s1_mme_table;  
 //    lte_tables_info[TABLE_S1_ENODEB_MME].pool =  CVMX_FPA_LTE_RELATE128_POOL1;
     strcpy(lte_tables_info[TABLE_S1_ENODEB_MME].name, "TABLE_S1_ENODEB_MME");
 #ifdef RELATE_AGING
@@ -697,7 +607,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S_TIMSI].max_bucket =  S1_STMSI_ENOB_TABLE_SIZE;  
     lte_tables_info[TABLE_S_TIMSI].compare = s_tmsi_table_compare;
     lte_tables_info[TABLE_S_TIMSI].hash    = s_tmsi_table_hash;
-    lte_tables_info[TABLE_S_TIMSI].update  = s_tmsi_table_update_entry;  
+    lte_tables_info[TABLE_S_TIMSI].update  = update_s_tmsi_table;  
 //    lte_tables_info[TABLE_S_TIMSI].pool =  CVMX_FPA_LTE_RELATE128_POOL1;
     strcpy(lte_tables_info[TABLE_S_TIMSI].name, "TABLE_S_TIMSI");
 

@@ -16,6 +16,7 @@
 #define RELATE_PACKET_ENTRY_H_
 
 #include "semp_hydra_relate.h"
+#include "packet_gtpv2c.h"
 
 #define NAS_NOT_PROTECT         0
 #define NAS_INTERAG_PROTECT     1
@@ -49,6 +50,12 @@
 #define AVP_CODE_KASME              (1450)
 #define AVP_V_FLAG_SET              (0x80)
 
+struct pbuf
+{
+    void *ptr;                     /*当前协议的头部指针*/
+    uint16_t  len;                 /*this buffer len*/
+    uint16_t  ptr_offset;          /**/
+};
 
 typedef struct
 {
@@ -217,11 +224,14 @@ typedef struct
     uint16_t    cipher_alg_type;    //Type of ciphering algorithm
     uint16_t    nas_pkt_off;
     uint16_t    nas_pkt_len;
-    uint16_t    nas_cipher_off;     //offset to cipher data
+    //uint16_t    nas_cipher_off;     //offset to cipher data
+    uint8_t *   nas_cipher_ptr;     //pointer to cipher data
     uint16_t    nas_cipher_len;     //length of the cipher data
     lte_rand_t  rand;               //rand value from the NAS PDU
     uint8_t     ciphered_flag;      //flag indicate if the message has been ciphered
     uint8_t     sequence_no;
+    uint8_t     submit_flag;        //whether submit to contrl core
+    lte_guti_t  guti;               //store guti in nas
     union{
         lte_guti_t  guti;
         lte_imsi_t  imsi;
@@ -560,5 +570,118 @@ enum _ProtocolIE_ID_enum {
   id_ReceiveStatusOfULPDCPSDUsExtended = 181
 };
 
+
+#define HEADER_OUTER  0
+#define HEADER_INNER  1
+
+
+#define MAX_VLAN_ID  4096
+
+#define PARSE_DEBUG 0
+
+/*update Offset*/
+#define UPDATE_PBUF_OFFSET(_pbuf, _off)          ((_pbuf)->ptr_offset+=(_off))
+/*reverse Update Offset*/
+#define UPDATE_PBUF_REVERSE_OFFSET(_pbuf, _off)          ((_pbuf)->ptr_offset -=(_off))
+
+/*****Format****/
+/*Cur's Format*/
+#define PBUF_CUR_FORMAT(_type, _ptr, _p)         (_ptr = (_type)(_p->ptr_offset+(char *)_p->ptr))
+/*offset of Cur's  Format*/
+#define PBUF_CUR_OFFSET_FORMAT(_type, _ptr, _p,_len)         (_ptr = (_type)((_p)->ptr_offset + _len +(char *)_p->ptr))
+/*offset of start's Format*/
+#define PBUF_OFF_FORMAT(_type, _ptr, _p,_len)    (_ptr = (_type)( (_len)+(char *)_p->ptr))
+
+/*****PTR****/
+#define PBUF_PTR(_p, _len)                       ( (_len)+(char *)_p->ptr)
+#define PBUF_VOID_CUR_PTR(_p)                   (( (_p)->ptr_offset) + ((_p)->ptr) )
+
+/*****GET OFFSET****/
+#define PBUF_CUR_OFFSET(_p)                       ((_p)->ptr_offset)
+#define PBUF_OFF_OFFSET(_p, _len)                 ((_p)->ptr_offset+ (_len))
+
+/*****GET LEFT LEN****/
+#define PBUF_LEFT_LEN(_p)      ( (_p)->len- (_p)->ptr_offset)
+
+
+#define CHECK_PBUF_LEN(_p, _len) \
+do{ \
+    if(_p->ptr_offset + (_len) > _p->len) \
+    {\
+        LTE_DEBUG_PRINTF("Prase : buffer not enough<%d|%d> %s.%d\n", (int)(_len), (int)_p->len-(int)_p->ptr_offset, __func__, __LINE__); \
+        return MP_E_EXCEED;\
+    }\
+}while(0)
+
+
+#define PBUF_LENGTH_ASSURE(_p)     (_p->ptr_offset < _p->len)
+
+
+
+
+
+
+#if PARSE_DEBUG
+
+#define PARSE_DEBUG_PRINT(fmt, _arg...)  \
+     printf("%s.%d: " fmt, __func__, __LINE__, ##_arg)
+
+#define  PARSE_PRINTF_IMSI(_imsi)  do {\
+        printf("IMSI=%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
+        (int)_imsi[0],_imsi[1],(int)_imsi[2],(int)_imsi[3],\
+        (int)_imsi[4],(int)_imsi[5],(int)_imsi[6],(int)_imsi[7],__func__, __LINE__);\
+        }while(0)
+
+
+#define PBUF_DUMP(_p, _len) \
+do{\
+    int i = 0;\
+    uint8_t *ot = NULL;\
+    CHECK_PBUF_LEN(_p, _len);\
+    PBUF_CUR_FORMAT(uint8_t *, ot, _p);\
+    printf("ptr= %p, offset = %d\n", _p->ptr, _p->ptr_offset);\
+    for(i = 0; i < _len; i++) \
+    {\
+        if (i % 15 == 0)\
+            printf("\n");\
+        printf("%.2x ", ot[i]);\
+    }\
+    printf("\n");\
+}while(0)
+
+
+
+#else
+    #define  PARSE_PRINTF_IMSI(_imsi)
+    #define PARSE_DEBUG_PRINT(_arg...)
+    #define PBUF_DUMP(_p, _len)
+
+#endif
+
+
+
+#define MASTER_PARAM_CHECK(_W, _P, _M)\
+do {\
+    if (cvmx_unlikely((NULL == _W) || (NULL == _P) || (NULL == _M)))  \
+    {\
+        return MP_E_PARAM;\
+    }\
+}while(0);
+
+
+
+
+
+//_packet_entry_parse(cvmx_wqe_t *work, mpp_control_st *mpp);
+
+
+#define SET_LTE_IDENTIFY_RESULT(_mpp, _v) (_mpp->pktinfo.result = (_v))
+#define SET_LTE_TEID(_mpp, _v) (_mpp->pktinfo.gtpu.teid = (_v))
+
+enum
+{
+    UP_LINK     = 1,
+    DOWN_LINK   = 0,
+};
 
 #endif /* RELATE_PACKET_ENTRY_H_ */

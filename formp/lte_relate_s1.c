@@ -26,11 +26,23 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
         return MP_E_PARAM;
     }
     mp_error_t rv = MP_E_NONE;
+    parse_nas_t nas = s1ap->nas;
 
     // 1.if s1ap packet has imsi info, create imsi table by imsi information directly
     // 2.if s1ap packet has old guti info, search imsi from S-TMSI table by old guti, and create imsi table by imsi
-
     hydra_stat_inc(stat_pkts_s1ap_initialUEMessage);
+    
+    /* InitialUEMessage 承载的信令中，我们主要关注的有两个: a. Attach Request, b. TAU Request 也就是Tracking Area Update */
+    /* Attach Request 信令(NAS层)，其中有可能带有imsi或者old_guti */
+    /* TAU Request 信令(NAS层)，一般只带有old_guti，除了这两种报文之外的报文，目前暂时不用处理 */
+    /* chengshuan 2016.01.28 */
+    if ((EMM_MSG_ATTACH_REQUEST != nas.EMM_message_type) && (EMM_MSG_TAU_REQUEST != nas.EMM_message_type))
+    {
+        LTE_DEBUG_PRINTF("Not Attach Request and TAU Request packet! \n");
+        hydra_stat_inc(stat_pkts_s1ap_invalid_initialUEMessage);
+        return MP_E_NONE;
+    }
+    hydra_stat_inc(stat_pkts_AttachRequest);
 
     /* step 0. S1-MME */
     hash_table_index_t s1_mme_index             = {};
@@ -50,7 +62,6 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
     s1_mme_search_d.guti_flag           = FALSE;
     action_s1_mme |= S1_MMET_UPDATE_GUTI_FLAG;
 
-    parse_nas_t nas = s1ap->nas;
     LTE_DEBUG_PRINTF("initialUEMessage: Check info nas.ciphered_flag = %d, nas.type_of_identity = %d \n", nas.ciphered_flag, nas.type_of_identity);
 
     if( TRUE == nas.ciphered_flag )
@@ -135,7 +146,6 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
     hash_table_index_t imsi_index       = {};
     uint64_t action_imsi = 0;
 
-    hydra_stat_inc(stat_pkts_s1ap_initialUEMessage);
     // set s1_mme index to imsi table
     SET_TABLE_INDEX( (&(imsi_search_d.s1_mme)), s1_mme_index.index, s1_mme_index.node);
     action_imsi |= IMSIT_UPDATE_S1_POS;
@@ -167,6 +177,17 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     mp_error_t rv = MP_E_NONE;
 
     parse_nas_t nas = s1ap->nas;
+    lte_guti_t  guti = {};
+
+    /* Attach Accept (NAS层)报文是由InitialContextSetup承载，我们需要的GUTI是在Attach Accept中，非Attach Accept报文不用处理 */
+    /* chengshuan 2016.01.28 */
+    if ((EMM_MSG_ATTACH_ACCEPT != nas.EMM_message_type) 
+                                 && (nas.ciphered_flag == FALSE))
+    {
+        LTE_DEBUG_PRINTF("Not Attach Accept packet! \n");
+        hydra_stat_inc(stat_pkts_NotAttachAccept);
+        return MP_E_NONE;
+    }
 
     if (nas.ciphered_flag == FALSE)
     {
@@ -251,7 +272,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
 
     // 1. calling NAS API for GUTI
     // 2.0 decrypt the NAS PDU
-    LTE_DEBUG_PRINTF("NAS data offset: nas.nas_cipher_off = %d !\n",nas.nas_cipher_off);
+    //LTE_DEBUG_PRINTF("NAS data offset: nas.nas_cipher_off = %d !\n",nas.nas_cipher_off);
 
     nas_info_t nas_src = {};
     nas_plain_t nas_dst = {};
@@ -261,10 +282,11 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     nas_src.bear_id = s1ap->bear_id;
     nas_src.dir = s1ap->direction;
     nas_src.data_len = nas.nas_cipher_len;
-    nas_src.data = (uint8_t*)(packet_ptr + nas.nas_cipher_off);
+    //nas_src.data = (uint8_t*)(packet_ptr + nas.nas_cipher_off);
+    nas_src.data = nas.nas_cipher_ptr;
     nas_src.type = s1_mme_cell.cipher_alg_type;
     memcpy(nas_src.kasme, imsi_cell.kasme, sizeof(lte_kasme_t));
-    LTE_DEBUG_PRINTF("NAS data offset: nas.nas_cipher_off = %d  nas.nas_cipher_len = %d !\n",nas.nas_cipher_off,nas.nas_cipher_len);
+    LTE_DEBUG_PRINTF("NAS data  nas.nas_cipher_len = %d !\n",nas.nas_cipher_len);
     LTE_DEBUG_PRINTF("NAS src data structure: sequence_no = %d, bear_id = %d, dir = %d, data_len = %d, data = %p, type = %d !\n",
                              nas_src.sequence_no, nas_src.bear_id, nas_src.dir, nas_src.data_len, nas_src.data, nas_src.type);
 #if LTE_DEBUG
@@ -276,36 +298,41 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
         }
 #endif
 
-    if(nas.ciphered_flag == FALSE)
-    {
-        nas_dst.data = nas_src.data;
-        nas_dst.len = nas_src.data_len;
-    }
-    else
+
+    if(ENABLE == nas.ciphered_flag)
     {
         nas_dst.data = dst_data;
         nas_dst.len = 0;
 
-        rv = nas_pdu_decrypt(&nas_src, &nas_dst);
+        rv = nas_pdu_decrypt(&nas_src, &nas_dst); //解密报文
         if( MP_E_NONE != rv )
         {
             LTE_DEBUG_PRINTF("Decrypt failed ! rv = %d\n", rv);
             hydra_stat_inc(stat_decrypt_failed);
             return rv;
+        } 
+        // 2.1 parse guti from the plain data
+        rv = nas_pdu_parse_guti(&nas_dst, &guti);
+        if(MP_E_INVALID_PACKET == rv)
+        {
+            LTE_DEBUG_PRINTF("We don't care the packet! rv = %d\n", rv);
+            hydra_stat_inc(stat_pkts_NotAttachAccept);
+            return MP_E_NONE; /*不直接返回rv是这种包我们不关心，不用计入到关联失败的计数中*/
+        }
+        else if( MP_E_NONE != rv )
+        {
+            hydra_stat_inc(stat_pkts_AttachAccept); /*虽然解析失败，但还是attach accept报文*/
+            LTE_DEBUG_PRINTF("relate s1:Parse GUTI failed ! rv = %d\n", rv);
+            hydra_stat_inc(stat_parse_guti_failed);
+            return rv;
         }
     }
-    
-
-    // 2.1 parse guti from the plain data
-    lte_guti_t guti = {};
-    rv = nas_pdu_parse_guti(&nas_dst, &guti);
-    if( MP_E_NONE != rv )
+    else
     {
-        LTE_DEBUG_PRINTF("Parse GUTI failed ! rv = %d\n", rv);
-        hydra_stat_inc(stat_parse_guti_failed);
-        return rv;
+        memcpy(&guti, &nas.guti, sizeof(lte_guti_t));
     }
 
+    hydra_stat_inc(stat_pkts_AttachAccept);/*放在这里可以防止加密报文中有不是attach accept报文的*/
     PRINTF_GUTI(guti);
 
     lte_guti_t guti_null = {0};
@@ -322,7 +349,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     uint64_t action_imsi = 0;
 
     action_imsi |= IMSIT_UPDATE_GUTI;
-    rv = create_update_table_by_hash(TABLE_IMSI, UPDATE_IMSIT_GUTI, action_imsi, (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index);
+    rv = create_update_table_by_hash(TABLE_IMSI, UPDATE_TABLE, action_imsi, (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index);
     if (MP_E_NONE != rv)
     {
         LTE_DEBUG_PRINTF("Update imsi table guti failed! \n");
@@ -340,7 +367,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     {
         LTE_DEBUG_PRINTF("Compare the old_guti with the guti !\n");
         rv = memcmp((void*)guti, (void*)s1_mme_cell.old_guti, sizeof(lte_guti_t));
-        if(0 == rv)   
+        if(0 == rv)
         {
             /* guti are the same */
             LTE_DEBUG_PRINTF("The old_guti in S1-MME table is the same as which InitialContextSetup message take !\n");
@@ -403,7 +430,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     PRINTF_IMSI( s_tmsi_table_d.imsi );
     hydra_stat_inc(stat_pkts_create_stmsi_table);
 
-    rv = create_update_table_by_hash(TABLE_S_TIMSI, CREATE_TABLE, action_imsi, (void*)&s_tmsi_table_d, sizeof(lte_table_s_tmsi_t), &s_tmsi_index);
+    rv = create_update_table_by_hash(TABLE_S_TIMSI, CREATE_TABLE, action_tmsi, (void*)&s_tmsi_table_d, sizeof(lte_table_s_tmsi_t), &s_tmsi_index);
     if(MP_E_NONE != rv)
     {
         LTE_DEBUG_PRINTF("Create S-TMSI table failed!\n");
@@ -464,6 +491,7 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
             memcpy(s1_mme_table_d.imsi, nas.init_identify.imsi, sizeof(lte_imsi_t));
             action_s1_mme |= S1_MMET_UPDATE_IMSI;
             PRINTF_IMSI(s1_mme_table_d.imsi);
+            hydra_stat_inc(stat_relate_identity_response_imsi);
         }
         else
         {
@@ -514,7 +542,7 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
                     return rv;
                 }
                 // calling diamter API to delete s6a related tables.
-                rv = del_s6a_node_by_imsi(s1_mme_cell.imsi, sizeof(s1_mme_cell.imsi));
+                //rv = del_s6a_node_by_imsi(s1_mme_cell.imsi, sizeof(s1_mme_cell.imsi));
                 if( MP_E_NONE != rv )
                 {
                     LTE_DEBUG_PRINTF("Clear relate s6a table failed! rv = %d\n", rv);
@@ -592,12 +620,16 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
     s1_mme_table_d.guti_flag           = FALSE;
     parse_nas_t nas                    = s1ap->nas;
 
+
+    LTE_DEBUG_PRINTF("ip=%d,id=%d\n" , s1_mme_table_d.enode_ip , s1_mme_table_d.enode_ue_s1ap_id );
+    
     update_s1_mme_hash_key(s1_mme_table_d.enode_ip, s1_mme_table_d.enode_ue_s1ap_id, &key_s1_mme);
     LTE_DEBUG_PRINTF("key=%lx\n" , key_s1_mme.data[0]);
     LTE_DEBUG_PRINTF("EMM_message_type=%x\n" , nas.EMM_message_type);
 
     if (EMM_SECURITE_COMMAND == nas.EMM_message_type)
     {
+        hydra_stat_inc(stat_relate_security_command);
         //Security mode command, parse type of ciphering algorithm
         s1_mme_table_d.cipher_alg_type = nas.cipher_alg_type;
         action_s1_mme |= S1_MMET_UPDATE_ALG_TYPE;
@@ -605,7 +637,7 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
         hydra_stat_inc(stat_pkts_s1ap_alg_type_set);
 
         // update the Ciphering Algorithm type into S1-MME table
-        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
+        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, UPDATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
         if (MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Update S1-MME table cipher alg type failed! \n");
@@ -614,11 +646,12 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
     }
     else if (EMM_MSG_AUTH_REQUEST == nas.EMM_message_type)
     {
+        hydra_stat_inc(stat_relate_auth_request);
         //Authentication request, parse rand and fill into s1_mme table
         memcpy(&(s1_mme_table_d.rand), &nas.rand, sizeof(lte_rand_t));
         action_s1_mme |= S1_MMET_UPDATE_RAND;
         // update rand into S1-MME table at the same time search imsi info from s1_mme
-        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, CREATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
+        rv = create_update_table_by_hash(TABLE_S1_ENODEB_MME, UPDATE_TABLE, action_s1_mme, (void*)&s1_mme_table_d, sizeof(lte_table_s1_mme_enodeb_t), &s1_mme_index);
         if (MP_E_NONE != rv)
         {
             LTE_DEBUG_PRINTF("Update S1-MME table rand failed! \n");
@@ -734,7 +767,8 @@ mp_error_t lte_s1ap_UEContextRelease(parse_s1ap_t *s1ap)
     hash_table_index_t          index_s1_mme    = {};
     s1_mme_table_d.enode_ip            = s1ap->enode_ip;
     s1_mme_table_d.enode_ue_s1ap_id    = s1ap->enode_ue_s1ap_id;
-    
+
+    hydra_stat_inc(stat_relate_UeContxtRelease);//只统计UEContextReleaseComplete
     update_s1_mme_hash_key(s1ap->enode_ip, s1ap->enode_ue_s1ap_id, &(key_s1_mme));
     LTE_DEBUG_PRINTF("key=%lx\n" , key_s1_mme.data[0]);
 
