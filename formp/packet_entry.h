@@ -239,6 +239,12 @@ typedef struct
     enum type_identity_em type_of_identity;  /* Indicating intialiaUEMessage packet has imsi or old_GUTI, 1: for imsi, 0: for old_guti */
 }parse_nas_t;
 
+typedef struct
+{
+    uint32_t    tip;
+    uint32_t    teid;
+}parse_rab_t;
+
 typedef  struct
 {
     uint8_t     direction;  /* packet direction, 0: up direction from eNodeB to MME, 1: down direction, from MME to eNodeB */
@@ -252,8 +258,9 @@ typedef  struct
     uint32_t    mme_ip;
     lte_tai_t   tai;
     parse_nas_t nas;
+    uint8_t     nas_exist;
+    parse_rab_t rab_info;
 }parse_s1ap_t;
-
 
 
 

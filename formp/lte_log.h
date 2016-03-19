@@ -26,11 +26,37 @@
 #include    "semp_hydra_relate.h"
 
 
+/**************************  常见的日志内容宏定义 ******************************/
+#define LOG_CONTENT_NULL_POINT          "null point exception\n"
+#define LOG_CONTENT_ALLOC_FAIL          "alloc memory fail\n"
+#define LOG_CONTENT_FREE_MEMORY_FAIL    "free memory fail\n"
+
+
+
 //#define LTE_LOG_INPUT_SERIAL
 #define LTE_LOG_INPUT_MEMERY
 //#define LTE_LOG_INPUT_NONE
 
+/******************************************************************************/
+/********************  对应cavium api库的coredump打印代码 **********************/
+/******************************************************************************/
+#define BASE_CORE                  0  /*从某个核开始*/
+#define ALL_CORE_NUM               48
+#define SINGLE_CORE_LOG_SIZE       1400
+
+/* 一般这种日志就写一次，不需要循环写 */
+
+typedef struct {
+    uint16_t pw_offset;                     /* 当前写数据的偏移 */
+    uint16_t pr_offset;                     /* 当前读数据的偏移 */
+    char     buf[SINGLE_CORE_LOG_SIZE];     /* 存放的core dump的缓冲数组 */
+} cvmx_core_clog_t;
+
+
+
+/******************************************************************************/
 /***************************** 扩展日志缓存功能 ********************************/
+/******************************************************************************/
 #define LTE_LOG_CACHE       "lte_log_cache"
 
 #ifdef CAP_PACKET_VERSION
@@ -49,12 +75,10 @@
 #define IS_LIST_HEAD(cur) ( ((cur) == FIFO_HEAD)? 1 : 0 )
 #define IS_LIST_TAIL(cur) ( ((cur) == FIFO_TAIL)? 1 : 0 )
 
-
-
 typedef uint8_t log_data_t[LTE_LOG_DATA_SIZE];
 
 #define CAPTURE_PKT_MAX_SIZE     8192 /* 即使采用分帧，也要限制最大报文长度 */
-/*本次设计，采用固定长度存放报文, 简单而稳定，鉴于内存够用
+/*本次设计，采用固定长度存放报文
 首帧标志FIR、末帧标志FIN，FIR：置“1”，报文的第一帧。FIN：置“1”，报文的最后一帧。
 FIR、FIN组合状态所表示的含义见下表。
 FIR    FIN    应用说明
@@ -63,6 +87,7 @@ FIR    FIN    应用说明
   1      0    多帧：第1帧，有后续帧
   1      1    单帧
 */
+
 typedef struct _log_pkt
 {
     struct
@@ -85,7 +110,6 @@ typedef struct log_cache_kfifo
     uint32_t   pkt_total_bytes; /* 当前存储的总字节数 */
     cvmx_spinlock_t wlock;   /* protects concurrent modifications */
 }kfifo_t;
-/*********************************** END **************************************/
 
 
 
@@ -109,8 +133,18 @@ typedef struct log_cache_kfifo
 /**********************************************************************/
 
 
+/* 通用的日志输出的接口函数定义如下：
+ *     宏函数名为 LOG_PRINT
+ *     输入参数：
+ *     1、模块ID，定义详见结构体 log_module_t
+ *     2、日志等级，定义详见结构体 log_level_t
+ *     3、日志内容
+ *     示例：
+ *     LOG_PRINT(M_AGING, LV_ERROR, "hello, world\n"); 参数1为老化模块，参数2代表info级别
+ *     注意，为方便日志格式设置，由调用者自行配置换行符\n
+ * */
+
 #ifdef LTE_LOG_INPUT_SERIAL
-/* 模块ID， 日志等级， 日志内容*/
 #define LOG_PRINT(mid, level, fmt, ...) \
     do{\
         if(IS_LOG_OPEN(mid))\
@@ -167,4 +201,5 @@ int lte_packet_total_size_get();
 mp_code_t lte_packet_reset();
 inline mp_code_t lte_packet_split_write(uint8_t* buf, uint16_t len);
 inline mp_code_t lte_packet_read(uint8_t* buf, pkt_head_t *head);
+
 #endif /* MODULES_LTE_LTE_LOG_H_ */

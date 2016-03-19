@@ -27,6 +27,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap);
 mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap);
 mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap);
 mp_error_t lte_s1ap_UEContextRelease(parse_s1ap_t *s1ap);
+mp_error_t lte_s1ap_ERABSetup(parse_s1ap_t *s1ap);
 
 
 

@@ -16,6 +16,7 @@ CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX] = {};
 CVMX_SHARED  cvmx_spinlock_t imsi_delete_lock;
 volatile CVMX_SHARED  bool g_lte_start_flag = false; /* lte模块启动标志 */
 
+extern CVMX_SHARED uint64_t g_aging_timer_max;
 
 
 /***************************imsi************************/
@@ -34,10 +35,11 @@ volatile CVMX_SHARED  bool g_lte_start_flag = false; /* lte模块启动标志 */
 **********************************************************************************************/
 mp_code_t  imsi_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 {
-    int rv= 0;
+    int rv= 0;    
 
-    if(NULL == src || NULL == dst || NULL == cmp)
-        return MP_FUN_PARAM_ERR;
+    CVMX_MP_POINT_CHECK(src, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(dst, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(cmp, M_S11, LV_ERROR);
 
     lte_table_imsi_t * sentry = (lte_table_imsi_t *)src;
     lte_table_imsi_t * dentry = (lte_table_imsi_t *)dst;     
@@ -74,8 +76,8 @@ mp_code_t  imsi_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 
 mp_code_t imsi_table_hash(hash_key_t *key, uint32_t *hash_result)
 {
-    if(NULL == key || NULL == hash_result)
-        return MP_FUN_PARAM_ERR;
+    CVMX_MP_POINT_CHECK(key, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(hash_result, M_S11, LV_ERROR);
 
     uint32_t index = 0;
     index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
@@ -87,7 +89,10 @@ mp_code_t imsi_table_hash(hash_key_t *key, uint32_t *hash_result)
 uint16_t imsi_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
     lte_table_imsi_t *entry =  (lte_table_imsi_t *)cell;
+
+    CVMX_MP_POINT_CHECK(cell, M_S11, LV_ERROR);
     LTE_DEBUG_PRINTF("imsi: aging = %d\n", entry->aging);
+
     switch( opera )
     {
         case TIMER_REPLACE:
@@ -108,9 +113,9 @@ uint16_t imsi_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 /***************************s1-mme************************/
 mp_code_t s1_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 {  
-
-    if(NULL == src || NULL == dst || NULL == cmp) 
-        return MP_FUN_PARAM_ERR;
+    CVMX_MP_POINT_CHECK(src, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(dst, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(cmp, M_S1, LV_ERROR);
     
     lte_table_s1_mme_enodeb_t * sentry = (lte_table_s1_mme_enodeb_t *)src;
     lte_table_s1_mme_enodeb_t * dentry = (lte_table_s1_mme_enodeb_t *)dst;     
@@ -134,8 +139,8 @@ mp_code_t s1_mme_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 
 mp_code_t s1_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
 {
-    if(NULL == key || NULL == hash_result)
-        return MP_FUN_PARAM_ERR;
+    CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(hash_result, M_S1, LV_ERROR);
 
     uint32_t index = 0;
     index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
@@ -147,7 +152,10 @@ mp_code_t s1_mme_table_hash(hash_key_t *key, uint32_t *hash_result)
 uint16_t s1_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 {
     lte_table_s1_mme_enodeb_t *entry =  (lte_table_s1_mme_enodeb_t *)cell;
+
+    CVMX_MP_POINT_CHECK(cell, M_S1, LV_ERROR);
     LTE_DEBUG_PRINTF("s1 mme: aging = %d\n", entry->aging);
+
     switch( opera )
     {
         case TIMER_REPLACE:
@@ -167,9 +175,9 @@ uint16_t s1_mme_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
 /***************************S-TMSI************************/
 mp_code_t s_tmsi_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 {  
-
-    if(NULL == src || NULL == dst || NULL == cmp) 
-        return MP_FUN_PARAM_ERR;
+    CVMX_MP_POINT_CHECK(src, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(dst, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(cmp, M_S1, LV_ERROR);
     
     lte_table_s_tmsi_t * sentry = (lte_table_s_tmsi_t *)src;
     lte_table_s_tmsi_t * dentry = (lte_table_s_tmsi_t *)dst;     
@@ -196,8 +204,8 @@ mp_code_t s_tmsi_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
 
 mp_code_t s_tmsi_table_hash(hash_key_t *key, uint32_t *hash_result)
 {
-    if(NULL == key || NULL == hash_result)
-        return MP_FUN_PARAM_ERR;
+    CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(hash_result, M_S1, LV_ERROR);
 
     uint32_t index = 0;
     index = semp_hash_data64(key->data[0], 0xFFFFFFFF);
@@ -205,38 +213,65 @@ mp_code_t s_tmsi_table_hash(hash_key_t *key, uint32_t *hash_result)
     return MP_OK;
 }
 
+#ifdef RELATE_AGING
+uint16_t s_tmsi_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value)
+{
+    return value;
+    /*
+    lte_table_s_tmsi_t *entry =  (lte_table_s_tmsi_t *)cell;
+    LTE_DEBUG_PRINTF("s_tmsi: aging = %d\n", entry->aging);
+    switch( opera )
+    {
+        case TIMER_REPLACE:
+            entry->aging = value;
+            break;
+        case TIMER_REDUCE:
+            entry->aging = entry->aging?entry->aging - value:entry->aging;
+            break;
+        default:
+            break;
+    }
+    return entry->aging;*/
+}
+#endif
 /***************************S-TMSI end************************/
 
-inline void update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *key)
+inline mp_code_t update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *key)
 {
+    CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
     key->size = 1;
-    key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);
-    return ;
+    //key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);//大端模式
+    key->data[0] = ((uint64_t)teid<<32) | (uint64_t)(ip);//小端模式
+    return MP_OK;
 }
 
 
-inline void update_imsi_hash_key(lte_imsi_t imsi,  hash_key_t *key)
+inline mp_code_t update_imsi_hash_key(lte_imsi_t imsi,  hash_key_t *key)
 {
+    CVMX_MP_POINT_CHECK(key, M_S11, LV_ERROR);
     key->size = 1;
-    //key->data[0] = (uint64_t)imsi;
     key->data[0] = *(uint64_t*)(( &(imsi[0])));
-    return ;
+    return MP_OK;
 }
 
-inline void update_s1_mme_hash_key(uint32_t enodeip, uint32_t enode_ueid, hash_key_t *key)
+inline mp_code_t update_s1_mme_hash_key(uint32_t enodeip, uint32_t enode_ueid, hash_key_t *key)
 {
+    CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
     key->size = 1;
     key->data[0] = ((uint64_t)enodeip<<32) | (uint64_t)(enode_ueid);
-    return ;
+    return MP_OK;
 }
 
-inline void update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key)
+inline mp_code_t update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key)
 {
     uint8_t tmp[8] = {0};
+
+    CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
+
     memcpy(tmp, s_tmsi, sizeof(lte_s_tmsi_t));
     key->size = 1;
     key->data[0] = *(uint64_t*)(( &(tmp[0])));
-    return ;
+    return MP_OK;
 }
 
 
@@ -293,17 +328,26 @@ mp_code_t lte_gtpc_process(parse_gtpc_t *gtpc)
         case  GTP_MSG_MODIFY_BEARER_RSP: 
             rv =  lte_s11_gtpc_modify_bearer_response(gtpc);
             break;
+        case GTP_MSG_CREATE_BEARER_REQ:
+            rv = lte_s11_gtpc_create_bearer_request(gtpc);
+            break;
+
+        case GTP_MSG_CREATE_BEARER_RSP:
+            rv = lte_s11_gtpc_create_bearer_response(gtpc);
+            break;
             
         case GTP_MSG_DELETE_SES_REQ:
             rv = lte_s11_gtpc_delete_session_req(gtpc); 
             break;
         case GTP_MSG_DELETE_SES_RSP:
-           rv = lte_s11_gtpc_delete_session_rsp(gtpc); 
-           break;
+            rv = lte_s11_gtpc_delete_session_rsp(gtpc); 
+            break;
 
         case GTP_MSG_DELETE_BEARER_REQ:
+            break;
             
         case GTP_MSG_DELETE_BEARER_RSP:
+            break;
          default:            
             break;
     }
@@ -318,10 +362,9 @@ mp_code_t lte_gtpc_process(parse_gtpc_t *gtpc)
 
 mp_error_t lte_s1ap_relate_process(void *packet_ptr, parse_s1ap_t *s1ap)
 {
-    if(( NULL == packet_ptr ) || ( NULL == s1ap ))
-    {
-        return MP_E_PARAM;
-    }
+    CVMX_MP_POINT_CHECK(packet_ptr, M_S1, LV_ERROR);
+    CVMX_MP_POINT_CHECK(s1ap, M_S1, LV_ERROR);
+
     LTE_DEBUG_PRINTF("Procedure Code=%d\n", s1ap->procecode);
     mp_error_t rv = MP_E_NONE; 
     switch(s1ap->procecode)
@@ -344,7 +387,11 @@ mp_error_t lte_s1ap_relate_process(void *packet_ptr, parse_s1ap_t *s1ap)
                 rv = lte_s1ap_UEContextRelease(s1ap); //delete imsi table and related tables
             }
             break;
-         default:            
+        // E-RAB setup request/response
+        case id_E_RABSetup:
+            rv = lte_s1ap_ERABSetup(s1ap);
+            break;
+        default:            
             break;
     }
 
@@ -359,6 +406,8 @@ mp_error_t lte_s1ap_relate_process(void *packet_ptr, parse_s1ap_t *s1ap)
 mp_error_t lte_dmt_relevance_process(parse_diameter_t *diameter)
 {
     mp_error_t rv = MP_E_NONE;
+
+
     switch(diameter->dmt_type)
     {
         case DMT_REQ_PKT:
@@ -391,6 +440,8 @@ mp_code_t lte_relevance_process(cvmx_wqe_t *work, mpp_control_st *mpp)
 {
     mp_code_t ret = MP_OK;
     prase_protocol_em pro; 
+
+    CVMX_MP_POINT_CHECK(mpp, M_SYS, LV_ERROR);
 
     if( cvmx_unlikely(mpp->pktinfo.result != PARSE_SUCCESS) )
     {
@@ -589,6 +640,7 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S1_ENODEB_MME].update  = update_s1_mme_table;  
 //    lte_tables_info[TABLE_S1_ENODEB_MME].pool =  CVMX_FPA_LTE_RELATE128_POOL1;
     strcpy(lte_tables_info[TABLE_S1_ENODEB_MME].name, "TABLE_S1_ENODEB_MME");
+    lte_tables_info[TABLE_S1_ENODEB_MME].cell_size    = HASH_ENTRY_VALID_SIZE_128;
 #ifdef RELATE_AGING
     lte_tables_info[TABLE_S1_ENODEB_MME].set_timer =s1_mme_cell_set_timer;
 #endif
@@ -610,7 +662,10 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_S_TIMSI].update  = update_s_tmsi_table;  
 //    lte_tables_info[TABLE_S_TIMSI].pool =  CVMX_FPA_LTE_RELATE128_POOL1;
     strcpy(lte_tables_info[TABLE_S_TIMSI].name, "TABLE_S_TIMSI");
-
+    lte_tables_info[TABLE_S_TIMSI].cell_size    = HASH_ENTRY_VALID_SIZE_128;
+#ifdef RELATE_AGING
+    lte_tables_info[TABLE_S_TIMSI].set_timer =s_tmsi_cell_set_timer;
+#endif
     cvmx_spinlock_init(&(imsi_delete_lock));
     
 #if 0

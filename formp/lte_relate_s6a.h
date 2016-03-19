@@ -11,7 +11,7 @@ extern mp_code_t get_kasme_by_imsi(const imsi_rand_info_t *indata,lte_kasme_t *k
 
 extern mp_code_t del_s6a_node_by_imsi(lte_imsi_t imsi,const uint32_t len );
 
-extern inline void update_s6a_hash_key(ip_hbh_t *indata,  hash_key_t *key);
+extern inline mp_code_t update_s6a_hash_key(ip_hbh_t *indata,  hash_key_t *key);
 
 extern int32_t lte_s6a_dmt_auth_request(parse_diameter_t *diameter);
 
@@ -29,7 +29,7 @@ extern uint16_t s6a_cell_set_timer(void *cell, timer_opera_t opera, uint16_t val
 
 extern mp_error_t lte_s6a_dmt_auth_response(parse_diameter_t *diameter);
 
-extern inline void update_s6a_hash_key(ip_hbh_t *indata,  hash_key_t *key);
+extern inline mp_code_t update_s6a_hash_key(ip_hbh_t *indata,  hash_key_t *key);
 
 extern int dmt_auth_rep_action(void *table, void *update);
 

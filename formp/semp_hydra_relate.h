@@ -71,6 +71,37 @@
    } while (0)
 #endif
 
+#ifndef CVMX_MP_POINT_CHECK
+#define CVMX_MP_POINT_CHECK(p, mid, lv)                     \
+   do {                                                     \
+      if ( cvmx_unlikely(NULL == (p)) ){                    \
+         LOG_PRINT(mid, lv, LOG_CONTENT_NULL_POINT);        \
+         return MP_NULL_POINT;                              \
+      }                                                     \
+   } while (0)
+#endif
+
+#ifndef CVMX_MP_POINT_CHECK_RET_P
+#define CVMX_MP_POINT_CHECK_RET_P(p, mid, lv)               \
+   do {                                                     \
+      if ( cvmx_unlikely(NULL == (p)) ){                    \
+         LOG_PRINT(mid, lv, LOG_CONTENT_NULL_POINT);        \
+         return NULL;                                       \
+      }                                                     \
+   } while (0)
+#endif
+
+#ifndef CVMX_MP_POINT_CHECK_UNLOCK
+#define CVMX_MP_POINT_CHECK_UNLOCK(p, mid, lv)              \
+   do {                                                     \
+      if ( cvmx_unlikely(NULL == (p)) ){                    \
+         LTE_HASH_TABLE_UNLOCK(bucket);                     \
+         LOG_PRINT(mid, lv, LOG_CONTENT_NULL_POINT);        \
+         return MP_NULL_POINT;                              \
+      }                                                     \
+   } while (0)
+#endif
+
 /******************* end  ***********************************************/
 
 /* 参数value为变量*/
@@ -139,11 +170,8 @@
 #define HEX_IMSI_LEN                            18   /* 用于输入0xffffffff11223344格式*/
 
 #define LTE_LOG_HEAD_SIZE                        4           //统一头的长度
-#ifdef CAP_PACKET_VERSION
-#define LTE_LOG_DATA_SIZE                        8           //统一内容长度
-#else
-#define LTE_LOG_DATA_SIZE                        252         //统一内容长度
-#endif
+#define LTE_LOG_DATA_SIZE                        1404        //统一内容长度
+
 /******************* end  ***********************************************/
 
 
@@ -217,6 +245,12 @@ typedef struct
      uint64_t total_fail_num;
      uint64_t total_succ_num;
 #endif
+
+     uint64_t   s6a_auth_req_num;
+     uint64_t   s6a_auth_res_num;
+     uint64_t   s6a_auth_req_related_num;
+     uint64_t   s6a_auth_res_related_num;
+
      uint64_t   s1ap_initialUEMessage;              /*initialUEMessage*/
      uint64_t   s1ap_ciphered_initialUEMessage;
      uint64_t   s1ap_imsi_initialUEMessage;
@@ -232,8 +266,10 @@ typedef struct
      uint64_t   s1ap_uplinkNASTransport_update_imsi;
 
 /*For debug S1-MME guti decrypt*/
-    uint64_t   s1ap_InitialContextSetup;
-    uint64_t   s1ap_InitialContextSetup_failed;
+    uint64_t    AttachRequest;
+    uint64_t    NotAttachRequest;
+    uint64_t    AttachAccept;
+    uint64_t    NotAttachAccept;
     uint64_t   s1ap_InitialContextSetup_no_ciphered;
     uint64_t   decrypt_failed;
     uint64_t   parse_guti_failed;
@@ -244,6 +280,25 @@ typedef struct
     uint64_t   search_imsi_failed_2;
     uint64_t   search_kasme_failed_1;
     uint64_t   imsi_is_0;
+
+    uint64_t RablistLengthOver255;
+    uint64_t NaspduLengthOver255;
+
+    uint64_t nas_attach_request_oldGuti;
+    uint64_t nas_attach_request_imsi;
+    uint64_t nas_tau_request_oldGuti;
+    uint64_t nas_tau_request_imsi;
+    uint64_t nas_identity_response_imsi;
+    uint64_t nas_authentication_request;
+    uint64_t nas_security_command;
+    uint64_t nas_attach_accept;
+    uint64_t ue_context_release_complete;
+
+    uint64_t relate_identity_response_imsi;
+    uint64_t relate_security_command;
+    uint64_t relate_auth_request;
+    uint64_t relate_UeContxtRelease;
+    
 
 }lte_relate_stat_t;
 
@@ -263,6 +318,10 @@ typedef enum
     TABLE_MAX
 }table_name_t;
 
+#define TABLE_S1U_SGW TABLE_S1U
+#define TABLE_S1U_ENB TABLE_S1U
+#define TABLE_S1_MME  TABLE_S1_ENODEB_MME
+
 /* 搜表方式 */
 typedef enum
 {
@@ -272,40 +331,21 @@ typedef enum
 
 
 //专门为每个表以后扩展字段提供接口
-typedef union
-{
-    /* S11_MME_TABLE */
-    struct
-    {
-        uint32_t     imsi_bkt;
-        uint32_t     s11_sgw_bkt;
-        uint32_t     s1u_bkt;
-    }s11_mme;
-    /* S11_SGW_TABLE */
-    struct
-    {
-        uint32_t     imsi_bkt;
-        uint32_t     s11_mme_bkt;
-        uint32_t     s1u_bkt;
-    }s11_sgw;
-    /* S1_TABLE */
-    struct
-    {
-        lte_imsi_t   imsi;
-        lte_imei_t   imei;
-        lte_msisdn_t msisdn;
-        uint16_t     msisdn_len;
-        lte_guti_t   guti;
-        lte_tai_t    tai;
-    }s1;
-}cell_type_t;
 
 /*通过ip和teid哈希查询的共用结构体 */
 typedef struct
 {
     uint32_t     ip_v4;         /* ipv4 */
     lte_teid_t   teid;          /* TEID */
-    cell_type_t  ctype;         /* 三个表是采用的ip和teid,这个成员用于区分这三个表 */
+    lte_imsi_t   imsi;
+    struct
+    {
+        lte_imei_t   imei;
+        lte_msisdn_t msisdn;
+        uint16_t     msisdn_len;
+        lte_guti_t   guti;
+        lte_tai_t    tai;
+    }s1;
 }it_cell_t;
 
 /* 要显示的表项 */
@@ -326,6 +366,8 @@ typedef union
         uint16_t     msisdn_len;
         uint16_t     guti_len;
         uint16_t     tai_len;
+        uint32_t     s1u_sgw_bkt;
+        uint32_t     s1u_enb_bkt;
     }im;
     
     /*s1_enode_mme table*/
@@ -340,6 +382,7 @@ typedef union
         lte_guti_t      old_guti;
         uint32_t        cipher_alg_type;
         uint32_t        guti_flag;
+        lte_tai_t       tai;
     }id;
 
     /*s_timsi table*/
@@ -432,10 +475,11 @@ typedef struct
 /* 日志等级 */
 typedef enum
 {
-    LV_INFO = (1 << 0), /* 可能刷屏，主要写一些关联流程的节点，用于少量报文测试 */
-    LV_WARN = (1 << 1), /* 警告信息，比如有bcd格式的报文什么，
+    LV_DBG  = (1 << 0), /* 用于调试子模块功能，粒度最小，建议少量报文测试 */
+    LV_INFO = (1 << 1), /* 解析和关联中的流程打印，用于现网问题分析 */
+    LV_WARN = (1 << 2), /* 警告信息，比如有bcd格式的报文什么，
                          * 或者一些异常返回的提示信息 */
-    LV_ERROR= (1 << 2), /* 严重问题，比如遇到空指针了，
+    LV_ERROR= (1 << 3), /* 严重问题，比如遇到空指针了，
                          * 本该找到的cell找不到了等严重的逻辑错误和系统错误 */
 }log_level_t;
 
@@ -446,6 +490,8 @@ typedef enum
 #define MODULE_LTE_S1               0x0000004
 #define MODULE_LTE_S6A              0x0000008
 #define MODULE_LTE_TRNSF            0x0000010
+#define MODULE_LTE_PARSE            0x0000020
+#define MODULE_LTE_SYSTEM           0x0000040
 
 /* 模块ID */
 typedef enum
@@ -454,7 +500,9 @@ typedef enum
     M_S11   = MODULE_LTE_S11,         /* s11关联模块    */
     M_S1    = MODULE_LTE_S1,          /* s1关联模块     */
     M_S6A   = MODULE_LTE_S6A,         /* s6a关联模块    */
-    M_TRNSF = MODULE_LTE_TRNSF        /* 转发模块       */
+    M_TRNSF = MODULE_LTE_TRNSF,       /* 转发模块       */
+    M_PARSE = MODULE_LTE_PARSE,       /* 协议解析模块    */
+    M_SYS   = MODULE_LTE_SYSTEM       /* 系统及共用模块  */
 }log_module_t;
 
 /* 日志开关 */
@@ -481,9 +529,36 @@ typedef struct
 
 typedef struct _log_str
 {
-    uint32_t len;
-    uint8_t  va[LTE_LOG_DATA_SIZE];
+    pkt_head_t head;
+    uint16_t   core_num;
+    uint8_t    va[LTE_LOG_DATA_SIZE];
 }log_str_t;
+
+#define      GET_DEBUG_INFO_MAX_NUM       (1400-sizeof(uint8_t)-sizeof(uint8_t))
+/*added by ruansong for:获取debug打印信息*/
+typedef struct _debug_log_info
+{
+    uint8_t     isFinish;         //标志是否已读取完当前核全部的打印：0为未完成，1为已完成
+    uint8_t     log_num;          //装载了的log打印数量
+    char        debug_info[GET_DEBUG_INFO_MAX_NUM];//log打印装载区域
+}debug_log_info_t;
+
+//每个核区域缓存的控制块
+typedef struct _core_debug_info_t
+{
+    uint8_t *   start_addr;                          //每个核的读写起始地址
+    uint32_t    read_index;                         //当前的读索引ID，从0开始
+    uint64_t    read_count;                         //当前的读统计数，从0开始
+    uint32_t    write_index;                        //当前的写索引ID，从0开始
+    uint64_t    write_count;                        //当前的写统计数，从0开始
+}core_debug_cache_info_t;
+
+
+typedef enum tagDebugLogSwitch
+{
+    EN_TYPE_DEBUG_SWITCH_OFF = 0,
+    EN_TYPE_DEBUG_SWITCH_ON = 1
+}EM_DEBUG_SWITCH_TYPE;
 
 
 /*抓包控制设置*/
@@ -491,6 +566,7 @@ typedef enum
 {
     GET_PKT_COUNT_AND_SIZE, /*获取当前报文总数和总大小*/
     RESET_PKT_CACHE,
+    STOP_CAPTURE,
     START_CAPTURE_GTPC,
     START_CAPTURE_GTPU,  /*抓完后需要关闭抓包*/
 }pkt_cap_ctrl_t;

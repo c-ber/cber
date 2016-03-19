@@ -9,29 +9,56 @@
 #include "list.h"
 #include "semp_hydra_relate.h"
 
-#define AGING_INIT_TIME       10    /* 计数器初始值<范围:1 到 65535> */
-#define AGING_SCAN_INTE       5     /* 老化功能扫描默认间隔时间 */
+#define AGING_INIT_TIME       15    /* 计数器初始值<范围:1 到 65535> */
+#define AGING_SCAN_INTE       20     /* 老化功能扫描默认间隔时间 */
 
 #define HASH_TAB_UPDTAE_NONE    0   //不更新hash表项的任何内容
 
 /*imsi表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagImsiTableUpdateAction
 {
-    IMSIT_UPDATE_IMSI       = 0x0001,           //[[CN]] 更新imsi       [[CN]]
-    IMSIT_UPDATE_IMEI       = 0x0002,           //[[CN]] 更新imei       [[CN]]
-    IMSIT_UPDATE_MSISDN     = 0x0004,           //[[CN]] 更新msisdn     [[CN]]
-    IMSIT_UPDATE_S11_POS    = 0x0008,           //[[CN]] 更新s11_pos    [[CN]]
-    IMSIT_UPDATE_SGW_POS    = 0x0010,           //[[CN]] 更新sgw_pos    [[CN]]
-    IMSIT_UPDATE_S6A_POS    = 0x0020,           //[[CN]] 更新s6a_pos    [[CN]]
-    IMSIT_UPDATE_S1_POS     = 0x0040,           //[[CN]] 更新s1_pos     [[CN]]
-    IMSIT_UPDATE_PDN        = 0x0080,           //[[CN]] 更新pdn        [[CN]]
-    IMSIT_UPDATE_EX_FIELD   = 0x0100,           //[[CN]] 更新扩展字段   [[CN]]
-    IMSIT_UPDATE_GUTI       = 0x0200,           //[[CN]] 更新GUTI       [[CN]]
-    IMSIT_UPDATE_TAI        = 0x0400,           //[[CN]] 更新TAI        [[CN]]
-    IMSIT_UPDATE_ALG        = 0x0800,           //[[CN]] 更新算法类型   [[CN]]
-    IMSIT_UPDATE_KASME      = 0x1000,           //[[CN]] 更新kasme      [[CN]]
-    IMSIT_UPDATE_AGING      = 0x2000,           //[[CN]] 更新老化时间      [[CN]]
- }ImsiTableUpdateActionEnum;
+    IMSIT_UPDATE_IMSI               = 0x0001,           //[[CN]] 更新imsi                  [[CN]]
+    IMSIT_UPDATE_IMEI               = 0x0002,           //[[CN]] 更新imei                  [[CN]]
+    IMSIT_UPDATE_MSISDN             = 0x0004,           //[[CN]] 更新msisdn                [[CN]]
+    IMSIT_UPDATE_EX_FIELD           = 0x0008,           //[[CN]] 更新扩展字段              [[CN]]
+    IMSIT_UPDATE_GUTI               = 0x0010,           //[[CN]] 更新GUTI                  [[CN]]
+    IMSIT_UPDATE_TAI                = 0x0020,           //[[CN]] 更新TAI                   [[CN]]
+    IMSIT_UPDATE_PDN                = 0x0040,           //[[CN]] 更新PDN                   [[CN]]
+    IMSIT_UPDATE_ALG                = 0x0080,           //[[CN]] 更新algorithm type        [[CN]]
+    IMSIT_UPDATE_KASME              = 0x0100,           //[[CN]] 更新kasme                 [[CN]]
+    IMSIT_UPDATE_POS_S11_MME        = 0x0200,           //[[CN]] 更新s11_mme table index   [[CN]]
+    IMSIT_UPDATE_POS_S11_SGW        = 0x0400,           //[[CN]] 更新s11_sgw table index   [[CN]]
+    IMSIT_UPDATE_POS_S1U_SGW        = 0x0800,           //[[CN]] 更新s1u_sgw table index   [[CN]]
+    IMSIT_UPDATE_POS_S1U_ENB        = 0x1000,           //[[CN]] 更新s1u_eNB table index   [[CN]]
+    IMSIT_UPDATE_POS_S6A            = 0x2000,           //[[CN]] 更新s6a table table index [[CN]]
+    IMSIT_UPDATE_POS_S1_MME         = 0x4000,           //[[CN]] 更新s1_mme table index    [[CN]]
+    IMSIT_UPDATE_MASK               = 0x8000,           //[[CN]] 更新mask                  [[CN]]
+    IMSIT_UPDATE_AGING              = 0x10000,          //[[CN]] 更新老化时间              [[CN]]
+}ImsiTableUpdateActionEnum;
+
+typedef enum tagImsiTableContentValidMask
+{
+    IMSIT_IMSI_VALID           = 0x0001,           //[[CN]]  IMSI 有效         [[CN]]
+    IMSIT_IMEI_VALID           = 0x0002,           //[[CN]] IMEI 有效          [[CN]]
+    IMSIT_MSISDN_VALID         = 0x0004,           //[[CN]] MSISDN 有效        [[CN]]
+    IMSIT_EX_FIELD_VALID       = 0x0008,           //[[CN]] EX_FIELD有效       [[CN]]
+    IMSIT_GUTI_VALID           = 0x0010,           //[[CN]] GUTI有效           [[CN]]
+    IMSIT_TAI_VALID            = 0x0020,           //[[CN]] TAI有效            [[CN]]
+    IMSIT_PDN_VALID            = 0x0040,           //[[CN]] PDN有效            [[CN]]
+    IMSIT_POS_S11_MME_VALID    = 0x0080,           //[[CN]] s11_mme index 有效 [[CN]]
+    IMSIT_POS_S11_SGW_VALID    = 0x0100,           //[[CN]] s11_sgw index 有效 [[CN]]
+    IMSIT_POS_S1U_SGW_VALID    = 0x0200,           //[[CN]] s1u_sgw index有效  [[CN]]
+    IMSIT_POS_S1U_ENB_VALID    = 0x0400,           //[[CN]] s1u_eNB index有效  [[CN]]
+    IMSIT_POS_S6A_VALID        = 0x0800,           //[[CN]] s6a  index有效     [[CN]]
+    IMSIT_POS_S1_MME_VALID     = 0x1000,           //[[CN]] s1_mme index 有效  [[CN]]
+}ImsiTableContentValidMaskEnum;
+
+#define UPDATE_IMSIT_FIELD(field, action, dst, src, len) \
+    memcpy(dst, src, len);\
+    action |= IMSIT_UPDATE_##field;
+
+
+
 
 /*s1_mme表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagS1_MMETableUpdateAction
@@ -45,28 +72,37 @@ typedef enum tagS1_MMETableUpdateAction
     S1_MMET_UPDATE_OLD_GUTI         = 0x0040,           //[[CN]] 更新old_guti       [[CN]]
     S1_MMET_UPDATE_ALG_TYPE         = 0x0080,           //[[CN]] 更新算法类型       [[CN]]
     S1_MMET_UPDATE_GUTI_FLAG        = 0x0100,           //[[CN]] 更新guti flag      [[CN]]
+    S1_MMET_UPDATE_TAI              = 0x0200,           //[[CN]] 更新TAI            [[CN]]
+    S1_MMET_UPDATE_MASK             = 0x0400,           //[[CN]] 更新mask          [[CN]]
+    S1_MMET_UPDATE_AGING            = 0x0800,           //[[CN]] 更新aging          [[CN]]
  }S1_MMETableUpdateActionEnum;
+ 
+typedef enum tagS1MMETableContentValidMask
+{
+    S1_MMET_IMSI_VALID             = 0x0001,           //[[CN]] 有效性 imsi           [[CN]]
+    S1_MMET_MME_IP_VALID           = 0x0002,           //[[CN]] 有效性 mme ip         [[CN]]
+    S1_MMET_MME_UE_ID_VALID        = 0x0004,           //[[CN]] 有效性 mme ue id      [[CN]]
+    S1_MMET_RAND_VALID             = 0x0008,           //[[CN]] 有效性 rand           [[CN]]
+    S1_MMET_OLD_GUTI_VALID         = 0x0010,           //[[CN]] 有效性 old_guti       [[CN]]
+    S1_MMET_ALG_TYPE_VALID         = 0x0020,           //[[CN]] 有效性 算法类型       [[CN]]
+    S1_MMET_GUTI_FLAG_VALID        = 0x0040,           //[[CN]] 有效性 guti flag      [[CN]]
+    S1_MMET_TAI_VALID              = 0x0080,           //[[CN]] 有效性 TAI            [[CN]]
+}S1MMETableContentValidMaskEnum;
 
 /* s11-mme 表项的更新操作类型定义，每一位对应更新一个元素 */
 typedef enum tagS11_MMETableUpdateAction
 {
     S11_MMET_UPDATE_FTEID        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
-    S11_MMET_UPDATE_POS_SGW      = 0x0002,           //[[CN]] 更新pos_sgw     [[CN]]
-    S11_MMET_UPDATE_POS_IMSI     = 0x0004,           //[[CN]] 更新pos_imsi    [[CN]]
-    S11_MMET_UPDATE_POS_S1U      = 0x0008,           //[[CN]] 更新pos_s1u     [[CN]]
-    S11_MMET_UPDATE_NEWEST_SEQ   = 0x0010,           //[[CN]] 更新newest_seq  [[CN]]
-    S11_MMET_UPDATE_AGING        = 0x0020,           //[[CN]] 更新aging       [[CN]]
+    S11_MMET_UPDATE_IMSI         = 0x0002,           //[[CN]] 更新imsi        [[CN]]
+    S11_MMET_UPDATE_AGING        = 0x0004,           //[[CN]] 更新aging       [[CN]]
 }S11_MMETableUpdateActionEnum;
 
 /*s11-sgw表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagS11_SGWTableUpdateAction
 {
     S11_SGWT_UPDATE_FTEID        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
-    S11_SGWT_UPDATE_POS_MME      = 0x0002,           //[[CN]] 更新pos_mme     [[CN]]
-    S11_SGWT_UPDATE_POS_IMSI     = 0x0004,           //[[CN]] 更新pos_imsi    [[CN]]
-    S11_SGWT_UPDATE_POS_S1U      = 0x0008,           //[[CN]] 更新pos_s1u     [[CN]]
-    S11_SGWT_UPDATE_NEWEST_SEQ   = 0x0010,           //[[CN]] 更新newest_seq  [[CN]]
-    S11_SGWT_UPDATE_AGING        = 0x0020,           //[[CN]] 更新aging       [[CN]]
+    S11_SGWT_UPDATE_IMSI         = 0x0002,           //[[CN]] 更新imsi        [[CN]]
+    S11_SGWT_UPDATE_AGING        = 0x0004,           //[[CN]] 更新aging       [[CN]]
 }S11_SGWTableUpdateActionEnum;
 
 /*s1u表项的更新操作类型定义，每一位对应更新一个元素*/
@@ -74,20 +110,32 @@ typedef enum tagS1UTableUpdateAction
 {
     S1UT_UPDATE_FTEID        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
     S1UT_UPDATE_UE_IP        = 0x0002,           //[[CN]] 更新ue_ip       [[CN]]
-    S1UT_UPDATE_BEARERID     = 0x0004,           //[[CN]] 更新bearerid    [[CN]]
-    S1UT_UPDATE_IMSI         = 0x0008,           //[[CN]] 更新imsi        [[CN]]
-    S1UT_UPDATE_IMEI         = 0x0010,           //[[CN]] 更新imei        [[CN]]
-    S1UT_UPDATE_MSISDN       = 0x0020,           //[[CN]] 更新msisdn      [[CN]]
-    S1UT_UPDATE_EX_FIELD     = 0x0040,           //[[CN]] 更新ex_field    [[CN]]
-    S1UT_UPDATE_AGING        = 0x0080,           //[[CN]] 更新aging       [[CN]]
-    S1UT_UPDATE_TAI          = 0x0100,           //[[CN]] 更新tai         [[CN]]
-    S1UT_UPDATE_GUTI         = 0x0200,           //[[CN]] 更新guti        [[CN]]
+    S1UT_UPDATE_IMSI         = 0x0004,           //[[CN]] 更新imsi        [[CN]]
+    S1UT_UPDATE_IMEI         = 0x0008,           //[[CN]] 更新imei        [[CN]]
+    S1UT_UPDATE_MSISDN       = 0x0010,           //[[CN]] 更新msisdn      [[CN]]
+    S1UT_UPDATE_EX_FIELD     = 0x0020,           //[[CN]] 更新ex_field    [[CN]]
+    S1UT_UPDATE_AGING        = 0x0040,           //[[CN]] 更新aging       [[CN]]
+    S1UT_UPDATE_TAI          = 0x0080,           //[[CN]] 更新tai         [[CN]]
+    S1UT_UPDATE_GUTI         = 0x0100,           //[[CN]] 更新guti        [[CN]]
+    S1UT_UPDATE_MASK         = 0x0200,
 #ifdef STAT_TEST
     S1UT_UPDATE_CREATE_REALTE= 0x0400,
     S1UT_UPDATE_B0_NUM       = 0x0800,
     S1UT_UPDATE_B1_NUM       = 0x1000
 #endif
 }S1UTableUpdateActionEnum;
+
+
+
+typedef enum tagS1uTableContentValidMask
+{
+    S1UT_IMSI_VALID            = 0x0001,           //[[CN]]  IMSI 有效         [[CN]]
+    S1UT_IMEI_VALID            = 0x0002,           //[[CN]] IMEI 有效          [[CN]]
+    S1UT_MSISDN_VALID          = 0x0004,           //[[CN]] MSISDN 有效        [[CN]]
+    S1UT_EX_FIELD_VALID        = 0x0008,           //[[CN]] EX_FIELD有效       [[CN]]
+    S1UT_GUTI_VALID            = 0x0010,           //[[CN]] GUTI有效           [[CN]]
+    S1UT_TAI_VALID             = 0x0020,           //[[CN]] TAI有效            [[CN]]
+}S1uTableContentValidMaskEnum;
 
 /*s6a表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagS6_ATableUpdateAction
@@ -117,12 +165,20 @@ typedef enum
 
 
 /* lte hash table cell */
-#define ENTRY_CELL_DATA_SIZE 14
-typedef struct hash_cell_s 
+#define ENTRY_CELL_DATA_SIZE_128 14
+#define ENTRY_CELL_DATA_SIZE_256 30
+typedef struct
 {
     struct list_head node;                 /* 双向链表指针 16字节*/
-    uint64_t entry[ENTRY_CELL_DATA_SIZE];  /* Cell数据 14*8 = 112 字节*/
-}__attribute__((packed)) hash_cell_t; /* 128字节 */
+    uint64_t entry[ENTRY_CELL_DATA_SIZE_256];  /* Cell数据 14*8 = 112 字节*/
+}__attribute__((packed)) hash_cell_t; /* 256字节 */
+
+typedef struct
+{
+    struct list_head node;                 /* 双向链表指针 16字节*/
+    uint64_t entry[ENTRY_CELL_DATA_SIZE_128];  /* Cell数据 14*8 = 112 字节*/
+}__attribute__((packed)) hash_cell_128_t; /* 256字节 */
+
 #define HASH_ENTRY_VALID_SIZE_128  (128-16)
 #define HASH_ENTRY_VALID_SIZE_256  (256-16)
 
@@ -261,6 +317,10 @@ mp_code_t hash_cell_get_by_hash( hash_table_t *table, hash_key_t *key,
 mp_code_t hash_cell_delete_by_hash( hash_table_t *table,
                                     hash_key_t   *key );
 
+mp_code_t hash_cell_update_timer_by_hash(hash_table_t *table,
+                                         hash_key_t   *key,
+                                         uint16_t      tm);
+
 mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
                                           hash_table_index_t *index,
                                           uint16_t            tm);
@@ -273,6 +333,8 @@ mp_code_t update_s1u_table(void *dst, void *src, uint64_t action);
 mp_code_t update_s6a_table(void *dst, void *src, uint64_t action);
 mp_code_t update_s_tmsi_table(void *dst, void *src, uint64_t action);
 
+
+
 #ifdef STAT_TEST
 inline mp_code_t hash_cell_new(hash_table_t *table, hash_bucket_t *bucket, void * cell);
 #endif
@@ -284,16 +346,6 @@ typedef enum
     CREATE_TABLE,
     UPDATE_TABLE
 }UpdateTypeEnum;
-
-mp_error_t search_table_by_hash(
-                            table_name_t table_type,             /* [in] 需要查找的表的类型 */
-                            hash_key_t key,                      /* [in] hash key */
-                            void* compare_d,                     /* [in] compare_d for table control*/
-                            void* data,                         /* [out] 表项内容 */
-                            uint8_t* len,                        /* [out] 表项长度，校验类型用 */
-                            uint8_t* result,                      /* [out] 查找结果，是否找到对应key的表项 */
-                            hash_table_index_t* index            /* [out] index of the table if found */
-                            );
 
 mp_error_t search_table_by_index(
                             table_name_t table_type,             /* [in] 需要查找的表的类型 */

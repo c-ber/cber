@@ -156,25 +156,42 @@ typedef struct
      (_hash_indexs)->en = ENABLE;  \
      }while(0)
 
+#define MAX_NUM_BEARER 2
+typedef enum 
+{
+    BEAR_DEFAULT = 0,
+    BEAR_DEDICATED
+}LTE_BEAR_TYPE;
+
 /* imsi 表项 */
 typedef struct 
 {
-    lte_imsi_t      imsi;
-    lte_imei_t      imei;
-    lte_msisdn_t    msisdn;
-    
-    hash_table_index_t         pos_mme;
-    hash_table_index_t         pos_sgw;
-    hash_table_index_t         pos_s6a; 
-    hash_table_index_t         s1_mme;      //s1_mme table index, chengshuan added 2015.10.28
+    // identity info
+    lte_imsi_t                  imsi;
+    lte_imei_t                  imei;
+    lte_msisdn_t                msisdn;
+    extend_field_t              ex_field;
 
-    lte_pdn_t       pdn;
-    uint16_t        aging;
-    extend_field_t  ex_field;
-    lte_guti_t      guti;                   //GUTI value, chengshuan added 2015.10.28
-    lte_tai_t       tai;                    //TAI value, chengshuan added 2015.10.28
-    uint8_t         alg_type;               //type of algorithm, chengshuan added 2015.10.28
-    lte_kasme_t     kasme;                  //KASME value, chengshuan added 2015.10.28
+    // location info
+    lte_guti_t                  guti;
+    lte_tai_t                   tai;
+
+    lte_pdn_t                   pdn;
+
+    // encryption info
+    uint8_t                     alg_type;
+    lte_kasme_t                 kasme;
+
+    // sub-tables index
+    hash_table_index_t          pos_s11_mme;
+    hash_table_index_t          pos_s11_sgw;
+    hash_table_index_t          pos_s1u_sgw[MAX_NUM_BEARER];    // uplink
+    hash_table_index_t          pos_s1u_eNB[MAX_NUM_BEARER];    // downlink
+    hash_table_index_t          pos_s6a; 
+    hash_table_index_t          pos_s1_mme;      
+
+    uint32_t                    mask;                           // indicate table entry field validity
+    uint16_t                    aging;
 }__attribute__((packed)) lte_table_imsi_t ;
 
 
@@ -184,28 +201,16 @@ typedef struct
 
 
 #define MAX_PDN 4
-/* s11-mme 表项 */
+/* s11-mme Table and s11-sgw table */
 typedef struct
 {
     lte_fteid_t         fteid;
-    hash_table_index_t  pos_sgw;
-    hash_table_index_t  pos_imsi;
-    hash_table_index_t  pos_s1u[MAX_PDN];
-    uint32_t            newest_seq;
+    lte_imsi_t          imsi;
     uint16_t            aging;
-}__attribute__((packed)) lte_table_ctrl_mme_t ;
+}__attribute__((packed)) lte_table_s11_mme_t, lte_table_s11_sgw_t ;
 
 
-/* s11-sgw 表项 */
-typedef struct
-{
-    lte_fteid_t         fteid;              //8字节
-    hash_table_index_t  pos_mme;            //12字节
-    hash_table_index_t  pos_imsi;           //12字节
-    hash_table_index_t  pos_s1u[MAX_PDN];   //12*4 =48字节
-    uint32_t            newest_seq;         //4字节
-    uint16_t            aging;              //2字节      累计86字节
-}__attribute__((packed)) lte_table_ctrl_sgw_t ;
+
 
 typedef enum
 {
@@ -217,7 +222,6 @@ typedef struct
 {
     lte_fteid_t         fteid;              //8字节
     uint32_t            ue_ip;              //4字节
-    uint8_t             bearerid;           //1字节
     lte_imsi_t          imsi;               //8字节
     lte_imei_t          imei;               //8字节
     lte_msisdn_t        msisdn;             //8字节
@@ -225,6 +229,8 @@ typedef struct
     uint16_t            aging;              //2字节
     lte_tai_t           tai;                //5字节
     lte_guti_t          guti;               //12字节
+    uint32_t            mask;               // 4 字节
+
 #ifdef STAT_TEST
     uint8_t is_create_relate;     /* bit0:建立了完整关联表
                                      bit1:未建立过完整关联表 */
@@ -232,7 +238,7 @@ typedef struct
     uint64_t b1_relate_gtpu_num;  /* 未建立过完整关联表:关联的gtp-u报文个数 */
 #endif
 
-}__attribute__((packed)) lte_table_s1u_t ;
+}__attribute__((packed)) lte_table_s1u_t, lte_table_s1u_sgw_t, lte_table_s1u_eNB_t;
 
 
 
@@ -268,8 +274,10 @@ typedef struct
     uint32_t        cipher_alg_type;    //Type of ciphering algorithm
     uint32_t        guti_flag:1;        //Indicate the table has old_guti or not
     uint32_t        reserved:31;
+    lte_tai_t       tai;
+    uint32_t        mask;
     uint16_t        aging;
-}__attribute__((packed)) lte_table_s1_mme_enodeb_t ;
+}__attribute__((packed)) lte_table_s1_mme_enodeb_t, lte_table_s1_mme_t ;
 
 
 /* s_tmsi 表项 */
@@ -299,8 +307,8 @@ SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_imsi_t, HASH_ENTRY_VALID_SIZE_256)
 //SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_tunnel_t, HASH_ENTRY_VALID_SIZE)
 SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_s1_mme_enodeb_t, HASH_ENTRY_VALID_SIZE_128)
 SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_s1u_t,   HASH_ENTRY_VALID_SIZE_128)
-SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_ctrl_sgw_t, HASH_ENTRY_VALID_SIZE_128)
-SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_ctrl_mme_t, HASH_ENTRY_VALID_SIZE_128)
+SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_s11_sgw_t, HASH_ENTRY_VALID_SIZE_128)
+SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_s11_mme_t, HASH_ENTRY_VALID_SIZE_128)
 
 
 
@@ -310,15 +318,130 @@ SIZE_OF_TYPE_NOT_LARGER_THAN(lte_table_ctrl_mme_t, HASH_ENTRY_VALID_SIZE_128)
 /**************************************************************************/
 mp_code_t dataplane_lte_relate_init();
 mp_code_t lte_relevance_process(cvmx_wqe_t *work, mpp_control_st *mpp);
-inline void update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *key);
-inline void update_imsi_hash_key(lte_imsi_t imsi,  hash_key_t *key);
-inline void update_s1_mme_hash_key(uint32_t enodeip, uint32_t enode_ueid, hash_key_t *key);
-inline void update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key);
+inline mp_code_t update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *key);
+inline mp_code_t update_imsi_hash_key(lte_imsi_t imsi,  hash_key_t *key);
+inline mp_code_t update_s1_mme_hash_key(uint32_t enodeip, uint32_t enode_ueid, hash_key_t *key);
+inline mp_code_t update_s_tmsi_hash_key(lte_s_tmsi_t s_tmsi, hash_key_t *key);
 
-inline mp_code_t lte_mme_delete_s1u(lte_table_ctrl_mme_t*table_mme_e, uint8_t bearerid);
-inline mp_code_t lte_sgw_delete_s1u(lte_table_ctrl_sgw_t*table_sgw_e, uint8_t bearerid);
-
+inline mp_code_t lte_delete_s1u_by_imsi(lte_table_imsi_t *table_imsi_e, uint8_t bearerid);
 
 
+
+// check imsi field valid
+#define UPDATE_IMSIT_OF(field, dst, src, len, table, action)\
+    memcpy(dst, src, len);\
+    action |= IMSIT_UPDATE_##field
+
+#define CHECK_UPDATE_IMSI_OF_IMSI(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_IMSI_VALID))\
+    {\
+        memcpy(table.imsi, value, sizeof(lte_imsi_t));\
+        action |= IMSIT_UPDATE_IMSI;\
+    }
+    
+#define CHECK_UPDATE_IMSI_OF_IMEI(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_IMEI_VALID))\
+    {\
+        memcpy(table.imei , value, sizeof(lte_imei_t));\
+        action |= IMSIT_UPDATE_IMEI;\
+    }
+
+#define CHECK_UPDATE_IMSI_OF_MSISDN(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_MSISDN_VALID))\
+    {\
+        memcpy(table.msisdn , value, sizeof(lte_msisdn_t));\
+        action |= IMSIT_UPDATE_MSISDN;\
+    }
+
+#define CHECK_UPDATE_IMSI_OF_GUTI(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_GUTI_VALID))\
+    {\
+        memcpy(table.guti, value, sizeof(lte_guti_t));\
+        action |= IMSIT_UPDATE_GUTI;\
+    }
+
+#define CHECK_UPDATE_IMSI_OF_TAI(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_TAI_VALID))\
+    {\
+        memcpy(table.tai,  value,  sizeof(lte_tai_t));\
+        action |= IMSIT_UPDATE_TAI;\
+    }
+    
+#define CHECK_UPDATE_IMSI_OF_EX_FIELD(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_EX_FIELD_VALID))\
+    {\
+        table.ex_field.msisdn_len = value;\
+        action |= IMSIT_UPDATE_EX_FIELD;\
+    }
+
+#define CHECK_UPDATE_IMSI_OF_POS_S6A(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_POS_S6A_VALID))\
+    {\
+        table.pos_s6a = value;\
+        action |= IMSIT_UPDATE_POS_S6A;\
+    }
+#define CHECK_UPDATE_IMSI_OF_POS_S1_MME(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_POS_S1_MME_VALID))\
+    {\
+        table.pos_s1_mme = value;\
+        action |= IMSIT_UPDATE_POS_S1_MME;\
+    }
+#define CHECK_UPDATE_IMSI_OF_POS_S11_MME(cell, table, value, action)\
+    if (!(cell.mask & IMSIT_POS_S11_MME_VALID))\
+    {\
+        table.pos_s11_mme = value;\
+        action |= IMSIT_UPDATE_POS_S11_MME;\
+    }
+#define CHECK_UPDATE_IMSI_OF_POS_S11_SGW(cell, table, value, action)\
+        if (!(cell.mask & IMSIT_POS_S11_SGW_VALID))\
+        {\
+            table.pos_s11_sgw = value;\
+            action |= IMSIT_UPDATE_POS_S11_SGW;\
+        }
+
+
+// check S1U field valid
+#define CHECK_UPDATE_S1U_OF_IMSI(cell, table, value, action)\
+    if (!(cell.mask & S1UT_IMSI_VALID))\
+    {\
+        memcpy(table.imsi, value, sizeof(lte_imsi_t));\
+        action |= S1UT_UPDATE_IMSI;\
+    }
+    
+#define CHECK_UPDATE_S1U_OF_IMEI(cell, table, value, action)\
+    if (!(cell.mask & S1UT_IMEI_VALID))\
+    {\
+        memcpy(table.imei , value, sizeof(lte_imei_t));\
+        action |= S1UT_UPDATE_IMEI;\
+    }
+
+#define CHECK_UPDATE_S1U_OF_MSISDN(cell, table, value, action)\
+    if (!(cell.mask & S1UT_MSISDN_VALID))\
+    {\
+        memcpy(table.msisdn , value, sizeof(lte_msisdn_t));\
+        action |= S1UT_UPDATE_MSISDN;\
+    }
+
+#define CHECK_UPDATE_S1U_OF_GUTI(cell, table, value, action)\
+    if (!(cell.mask & S1UT_GUTI_VALID))\
+    {\
+        memcpy(table.guti, value, sizeof(lte_guti_t));\
+        action |= S1UT_UPDATE_GUTI;\
+    }
+
+#define CHECK_UPDATE_S1U_OF_TAI(cell, table, value, action)\
+    if (!(cell.mask & S1UT_TAI_VALID))\
+    {\
+        memcpy(table.tai,  value,  sizeof(lte_tai_t));\
+        action |= S1UT_UPDATE_TAI;\
+    }
+    
+#define CHECK_UPDATE_S1U_OF_EX_FIELD(cell, table, value, action)\
+    if (!(cell.mask & S1UT_EX_FIELD_VALID))\
+    {\
+        table.ex_field.msisdn_len = value;\
+        action |= S1UT_UPDATE_EX_FIELD;\
+    }
+    
 #endif
 

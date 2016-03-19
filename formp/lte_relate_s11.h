@@ -66,9 +66,8 @@ uint16_t s1u_cell_set_timer(void *cell, timer_opera_t opera, uint16_t value);
 
 
 
-inline mp_code_t lte_sgw_update_s1u(const struct list_head  *   node,
-                             struct list_head* s1u_node,
-                             uint32_t s1u_buck_offset, uint8_t bearerid);
+inline mp_code_t lte_update_s1u_bearer(hash_table_index_t *pos_index, uint32_t index, 
+                                           struct list_head    *node, uint8_t bearerid);
 
 //inline mp_code_t lte_mme_update_s1u(lte_table_ctrl_mme_t * mme_e,
 //                             struct list_head* s1u_node,
@@ -87,6 +86,10 @@ mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc);
 mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc);
 
 mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc);
+
+mp_code_t lte_s11_gtpc_create_bearer_request(parse_gtpc_t *gtpc);
+
+mp_code_t lte_s11_gtpc_create_bearer_response(parse_gtpc_t *gtpc);
 
 mp_code_t lte_s11_gtpc_delete_session_req(parse_gtpc_t *gtpc);
 

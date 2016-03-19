@@ -486,7 +486,7 @@ void test()
     lte_aging_t ag;
     ag.rt_min_time = 0;
 
-    for( i = 0 ; i < 5; i++)
+    for( i = 0 ; i < 1; i++)
     {
         printf("*******************************\n");
         printf("cell[%02d]:\n",i);
@@ -494,27 +494,28 @@ void test()
 
         test_s1_1();
         test_s1_2();
-        test_s1_1_old();
-        test_s1_2_new_guti();
+//        test_s1_1_old();
+//        test_s1_2_new_guti();
         test_s1_3();
         test_s1_4();
 //        test_s6a_response();
 
-//        test32();
+//        show_memory();
+        test32();
         show_memory();
-//
-//        test33();
-//        show_memory();
-//
-//
-//        test34();
-//        show_memory();
-//
-//        test35();
-//        show_memory();
-//
-//        npcp_show_relate_info(imsi_base);
-//
+
+        test33();
+        //show_memory();
+
+
+        test34();
+        //show_memory();
+
+        test35();
+        show_memory();
+
+        npcp_show_relate_info(imsi_base);
+
 //        test_gtp_u();
 
 //            test_s6a_request();
@@ -531,43 +532,6 @@ void test()
     //test_delete();
     //show_memory();
 }
-
-
-#define SINGLE_CORE_LOG_SIZE       1400
-
-typedef struct {
-    uint16_t pw_offset;                     /* 当前写数据的偏移 */
-    uint16_t pr_offset;                     /* 当前读数据的偏移 */
-    char     buf[SINGLE_CORE_LOG_SIZE];     /* 存放的core dump的缓冲数组 */
-} cvmx_core_clog_t;
-
-cvmx_core_clog_t core2_log[3];
-void testfor()
-{
-    int i = 0;
-    int j = 0;
-
-    for(i = 0 ; i < 2; i++)
-    {
-        core2_log[i].pw_offset = 5;
-        for(j = 0 ; j < 5; j++)
-        {
-            core2_log[i].buf[j] = j;
-        }
-    }
-    sprintf(core2_log[2].buf ,"hello\n");
-    for(i =0 ; i < 2; i++)
-    {
-        printf("pkt len = %d    ", core2_log[i].pw_offset);
-        for( j = 0 ; j < core2_log[i].pw_offset; j++)
-        {
-            if(j % 16 == 0) printf("\n");
-            printf("%02x ", core2_log[i].buf[j]);
-        }
-        printf("\n");
-    }
-}
-
 
 
 int main(int argc,char * argv[])

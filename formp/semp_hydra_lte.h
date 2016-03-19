@@ -5,20 +5,19 @@
 #include "cvmx_common.h"
 
 #define RELATE_AGING           /* 老化模块宏开关   */
-#define STAT_TEST            /* 现网调试功能开关 */
-#define CAP_PACKET_VERSION   /* 抓包功能调试开关 */
+//#define STAT_TEST            /* 现网调试功能开关 */
+//#define CAP_PACKET_VERSION   /* 抓包功能调试开关 */
+#define LTE_DEBUG 0
 
-#define  LTE_DEBUG_PRINTF1(fmt, _arg...)
 
-#define LTE_DEBUG 1
 #if LTE_DEBUG
 
+    
     #define LTE_DEBUG_PRINTF(fmt, _arg...)   printf("(%s) +%d " fmt ,__func__, __LINE__, ##_arg )
-
 
     #define  PRINTF_S_TMSI(_stmsi)  do {\
         printf("S-TMSI=%02x-%02x-%02x-%02x-%02x, (%s) +%d\n",\
-        (int)_stmsi[0],_stmsi[1],(int)_stmsi[2],(int)_stmsi[3],(int)_stmsi[4],\
+        (int)(_stmsi)[0],(_stmsi)[1],(int)(_stmsi)[2],(int)(_stmsi)[3],(int)(_stmsi)[4],\
         __func__, __LINE__);\
         }while(0)
 
