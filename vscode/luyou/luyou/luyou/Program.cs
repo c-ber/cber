@@ -13,13 +13,45 @@ namespace luyou
     {
         public static ArrayList list = new ArrayList();
 
+        private static bool filter_ip(string ip_src)
+        {
+            string[] ips = ip_src.Split('.');
+            for(int i = 0 ; i < 4; i++)
+            {
+                if (Int32.Parse(ips[i]) == 255)
+                {
+                    return false;
+                }
+                if (Int32.Parse(ips[0]) == 192 || Int32.Parse(ips[0]) == 202
+                    || Int32.Parse(ips[0]) == 0)
+                {
+                    return false;
+                }
+                if (Int32.Parse(ips[3]) == 1)
+                {
+                    return false;
+                }
+
+            }
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (String.Equals(ip_src, list[i].ToString()))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         private static void search_ip(string str)
         {
             MatchCollection mc = Regex.Matches(str, @"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}");
 
             for (int i = 0; i < mc.Count; i++)
             {
-                list.Add(mc[i]);
+                if (filter_ip(mc[i].ToString()))
+                {
+                    list.Add(mc[i]);
+                }
             }
             
         }
@@ -46,15 +78,13 @@ namespace luyou
             Stream streamResponse = response.GetResponseStream();
             StreamReader streamRead = new StreamReader(streamResponse, System.Text.Encoding.GetEncoding(-0));
             string readBuff = streamRead.ReadLine();
-            Console.WriteLine("The contents of the Html page are.......\n");
             do
             {
-                Console.Write(readBuff);
-                Console.WriteLine();
+                //Console.Write(readBuff);
+                //Console.WriteLine();
                 search_ip(readBuff);
                 readBuff = streamRead.ReadLine();
             } while (!streamRead.EndOfStream);
-            Console.WriteLine();
             // Close the Stream object.
             streamResponse.Close();
             streamRead.Close();
@@ -121,6 +151,12 @@ namespace luyou
             http_test1(url);
             http_test2(url);
             http_test3("http://192.168.1.1/userRpm/StatusRpm.htm");
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Console.Write(list[0].ToString());
+                Console.WriteLine();
+            }
         }
     }
 }
