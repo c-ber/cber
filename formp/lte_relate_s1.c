@@ -112,6 +112,9 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
             LTE_DEBUG_PRINTF("Didn't find the related imsi from S-TMSI table!\n");
             hydra_stat_inc(stat_pkts_s1ap_not_found_imsi_from_STMSI);
             result = FALSE;
+
+            s1_mme_search_d.timsi_flag = FALSE;
+            action_s1_mme |= S1_MMET_UPDATE_TIMSI_FLAG;
         }
         else
         {
@@ -119,6 +122,10 @@ mp_error_t lte_s1ap_initialUEMessage(parse_s1ap_t *s1ap)
             PRINTF_IMSI(s_tmsi_cell.imsi);
             memcpy(&s1_mme_search_d.imsi, &s_tmsi_cell.imsi, sizeof(lte_imsi_t));
             action_s1_mme |= S1_MMET_UPDATE_IMSI;
+
+        
+            s1_mme_search_d.timsi_flag = TRUE;
+            action_s1_mme |= S1_MMET_UPDATE_TIMSI_FLAG;
         }
 
     }
@@ -389,6 +396,25 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
         hydra_stat_inc(stat_pkts_s1ap_guti_invalid);
         return MP_E_INTERNAL;
     }
+
+
+    CHECK_UPDATE_S1U_OF_GUTI(s1u_sgw_cell, s1u_sgw_search_d, guti, action_s1u_sgw);
+    s1u_sgw_search_d.fteid.ip = s1ap->rab_info.tip;
+    s1u_sgw_search_d.fteid.teid = s1ap->rab_info.teid;
+    action_s1u_sgw |= S1UT_UPDATE_FTEID;
+    
+    s1u_sgw_search_d.aging = (uint16_t)g_aging_timer_max;
+    action_s1u_sgw |= S1UT_UPDATE_AGING;
+    
+    rv = create_update_table_by_hash(TABLE_S1U_SGW, CREATE_TABLE, action_s1u_sgw, (void *)&s1u_sgw_search_d,
+                                     sizeof(lte_table_s1u_t), &index_s1u_sgw);
+    if (MP_OK != rv)
+    {
+        LTE_DEBUG_PRINTF("initial context request: Search S1U table <Failed>\n");
+        hydra_stat_inc(stat_pkts_s1u_table_failed_2);
+        return rv;
+    }
+    
     
     // 3. update imsi table, fill GUTI
     hash_table_index_t imsi_index       = {};
@@ -401,6 +427,19 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
 
     imsi_table_d.aging = (uint16_t)g_aging_timer_max;
     action_imsi |= IMSIT_UPDATE_AGING;
+
+    if (!(imsi_cell.mask & IMSIT_POS_S1U_SGW_VALID))
+    {
+        /* if deal with InitialContextSetupRequest Message before CreateSessionResponse Message,
+         * then create s1u-sgw table here, but now there is not bearerid, we need to assign the <default bearer id: 5>
+         */
+        rv = lte_update_s1u_bearer(imsi_table_d.pos_s1u_sgw, index_s1u_sgw.index, index_s1u_sgw.node, DEFAULT_BEARER_ID);
+        if(MP_OK != rv)
+        {
+            return rv;
+        }
+        action_imsi |= IMSIT_UPDATE_POS_S1U_SGW;
+    }
     
     rv = create_update_table_by_hash(TABLE_IMSI, UPDATE_TABLE, action_imsi, 
                                      (void*)&imsi_table_d, sizeof(lte_table_imsi_t), &imsi_index);
@@ -410,21 +449,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
         return rv;
     }
     
-    CHECK_UPDATE_S1U_OF_GUTI(s1u_sgw_cell, s1u_sgw_search_d, imsi_cell.guti, action_s1u_sgw);
-    s1u_sgw_search_d.fteid.ip = s1ap->rab_info.tip;
-    s1u_sgw_search_d.fteid.teid = s1ap->rab_info.teid;
     
-    rv = create_update_table_by_hash(TABLE_S1U_SGW, CREATE_TABLE, action_s1u_sgw, (void *)&s1u_sgw_search_d,
-                                     sizeof(lte_table_s1u_t), &index_s1u_sgw);
-    if (MP_OK != rv)
-    {
-        LTE_DEBUG_PRINTF("Create Session response: Search S1U table <Failed>\n");
-        hydra_stat_inc(stat_pkts_s1u_table_failed_2);
-        return rv;
-    }
-    
-    
-
     /* Step 1. Compare the old GUTI with the GUTI get from the NAS PDU */
     /* if it's not same, delete old_GUTI in S-TMSI table */
     /* and create the S-TMSI table with the new GUTI value */
@@ -432,7 +457,7 @@ mp_error_t lte_s1ap_InitialContextSetup(void *packet_ptr, parse_s1ap_t *s1ap)
     PRINTF_GUTI(s1_mme_cell.old_guti);
     LTE_DEBUG_PRINTF("s1_mme_cell.guti_flag = %d! \n", s1_mme_cell.guti_flag);
 
-    if( (TRUE == s1_mme_cell.guti_flag) && (NULL != s1_mme_cell.old_guti) )
+    if (TRUE == s1_mme_cell.timsi_flag)
     {
         LTE_DEBUG_PRINTF("Compare the old_guti with the guti !\n");
         rv = memcmp((void*)guti, (void*)s1_mme_cell.old_guti, sizeof(lte_guti_t));
@@ -516,7 +541,6 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
         // identity_response message would take imsi information
 
         LTE_DEBUG_PRINTF("Searching S1-MME table for imsi!\n");
-        uint8_t cell_len = 0;
         hash_key_t key_s1_mme={};
         lte_table_s1_mme_enodeb_t   s1_mme_table_d  = {};
         lte_table_s1_mme_enodeb_t   s1_mme_cell     = {};
@@ -556,11 +580,6 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
         if(MP_CELL_FOUND == rv)
         {
             //Found the related imsi from S1-MME table
-            if( cell_len != sizeof(lte_table_s1_mme_enodeb_t) )
-            {
-                LTE_DEBUG_PRINTF("The table size searched is wrong! rv = %d\n", rv);
-                return MP_E_INTERNAL;
-            }
 
             // Compare if S1-MME has the same imsi as identity_response message take 
             rv = memcmp((void*)s1_mme_cell.imsi, (void*)nas.init_identify.imsi, sizeof(lte_imsi_t));
@@ -570,7 +589,7 @@ mp_error_t lte_s1ap_uplinkNASTransport(parse_s1ap_t *s1ap)
                 LTE_DEBUG_PRINTF("The imsi saved is the same as which Identity_response message take !\n");
                 return MP_E_NONE;
             }
-            else
+            else if (s1_mme_cell.mask & S1_MMET_IMSI_VALID)
             {
                 LTE_DEBUG_PRINTF("The imsi saved is not same as which Identity_response message take! Create new imsi table and delete old one\n");
                 PRINTF_IMSI(s1_mme_cell.imsi);
@@ -778,6 +797,7 @@ mp_error_t lte_s1ap_downlinkNASTransport(parse_s1ap_t *s1ap)
         action_imsi |= IMSIT_UPDATE_AGING;
 
         /* update kasme into imsi table */
+        action_imsi |= IMSIT_UPDATE_IMSI;
         rv = create_update_table_by_hash(TABLE_IMSI, CREATE_TABLE, action_imsi, 
                                          (void*)&imsi_cell, sizeof(lte_table_imsi_t), &imsi_index);
         if (MP_OK != rv)

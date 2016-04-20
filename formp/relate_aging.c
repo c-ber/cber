@@ -44,12 +44,10 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
 
     /* 调用哈希查询接口，查询imsi表 */
     update_imsi_hash_key(imsi, &(key));
-    LTE_IMSI_TABLE_DELETE_LOCK;
     ret = hash_cell_get_by_hash( LTE_GET_TABLE_PTR(TABLE_IMSI),
                                  &(key), &imsi_cell, sizeof(lte_table_imsi_t) );
     if(MP_CELL_FOUND != ret)
     {
-        LTE_IMSI_TABLE_DELETE_UNLOCK;
         return MP_FAIL;
     }
 
@@ -65,7 +63,6 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
 
     /*采用哈希方式删除imsi总表*/
     hash_cell_delete_by_hash(LTE_GET_TABLE_PTR(TABLE_IMSI),&(key));
-    LTE_IMSI_TABLE_DELETE_UNLOCK;
 
     return MP_OK;
 }
@@ -118,7 +115,7 @@ mp_code_t lte_aging_relate_update_timer_by_imsi(lte_imsi_t imsi)
 static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
 {
     int i = 0;
-    uint8_t tim = 0;
+    uint16_t tim = 0;
     hash_bucket_t    *bucket    = NULL;
     hash_cell_t *hash_cell = NULL;
     struct list_head *pos = NULL, *next = NULL;
@@ -156,7 +153,6 @@ static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
             {
                 /* 删除cell,这里要用统一接口，待优化 */
                 __list_del( hash_cell->node.prev, hash_cell->node.next);
-                MP_MEMSET_P( hash_cell_t, hash_cell );
                 HASH_CELL_FREE(bucket, table->pool, hash_cell);
             }
 #endif
@@ -167,52 +163,7 @@ static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
     return MP_OK;
 }
 
-/******************************************************************************
- * 函数名称    : lte_aging_search_imsi_table
- * 功能        : 扫描imsi表,更新计数器，老化删除表
- * 参数        :
- * 返回        : 错误码，见错误码定义
-******************************************************************************/
-static mp_code_t lte_aging_search_imsi_table( hash_table_t *table )
-{
-    int i = 0;
-    uint8_t tim = 0;
-    hash_bucket_t    *bucket    = NULL;
-    hash_cell_t *hash_cell = NULL;
-    struct list_head *pos  = NULL;
-    struct list_head *next = NULL;
-    lte_table_imsi_t  imsi_cell={};
-//    lte_imsi_t imsi = {0x64,0x00,0x78,0x59,0x32,0x50,0x07,0xf6};
 
-    CVMX_MP_POINT_CHECK(table, M_AGING, LV_ERROR);
-    CVMX_MP_POINT_CHECK(table->first_bucket, M_AGING, LV_ERROR);
-
-    for ( i = 0; i < table->max_bucket; i++ )
-    {
-        bucket = table->first_bucket + i;
-        CVMX_MP_POINT_CHECK(bucket, M_AGING, LV_ERROR);
-
-
-        list_for_each_safe( pos, next, &(bucket->head) )
-        {
-            hash_cell = list_entry(pos, hash_cell_t, node);
-
-            CVMX_MP_POINT_CHECK_UNLOCK(hash_cell,        M_AGING, LV_ERROR);
-            CVMX_MP_POINT_CHECK_UNLOCK(table->set_timer, M_AGING, LV_ERROR);
-
-            tim = table->set_timer((void *)hash_cell->entry, TIMER_REDUCE, 1);
-            memcpy(&imsi_cell, (hash_cell->entry), sizeof(lte_table_imsi_t));
-
-            if( tim <= LTE_AGING_TIMER_LOWER_LIMIT)//删除关联子表
-            {
-                lte_aging_clear_relate_by_imsi(imsi_cell.imsi);
-            }
-        }
-
-    }
-
-    return MP_OK;
-}
 
 /******************************************************************************
  * 函数名称    : lte_aging_search_table
@@ -223,7 +174,7 @@ static mp_code_t lte_aging_search_imsi_table( hash_table_t *table )
 static mp_code_t lte_aging_search_table( hash_table_t *table )
 {
     int i = 0;
-    uint8_t tim = 0;
+    uint16_t tim = 0;
     hash_bucket_t    *bucket    = NULL;
     hash_cell_t *hash_cell = NULL;
     struct list_head *pos = NULL, *next = NULL;
@@ -248,7 +199,6 @@ static mp_code_t lte_aging_search_table( hash_table_t *table )
             if( tim <= LTE_AGING_TIMER_LOWER_LIMIT)//删除cell
             {
                 __list_del( hash_cell->node.prev, hash_cell->node.next);
-                MP_MEMSET_P( hash_cell_t, hash_cell );
                 HASH_CELL_FREE(bucket, table->pool, hash_cell);
             }
         }
@@ -301,13 +251,12 @@ mp_code_t lte_full_table_update_timer( hash_table_t *table,
 ******************************************************************************/
 mp_code_t lte_aging_process_check()
 {
-    LOG_PRINT(M_AGING, LV_INFO, "Entry to aging process!\n");
     /* 如果配置了老化时间为0， 则关闭老化功能 */
     if( 0 != g_max_relate_lifetime  &&  true == g_lte_start_flag )
     {
         /*遍历整个关联表*/
         lte_aging_search_s1u_table( LTE_GET_TABLE_PTR(TABLE_S1U) );
-        lte_aging_search_imsi_table(LTE_GET_TABLE_PTR(TABLE_IMSI) );
+        lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_IMSI) );
         //lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_IMSI) );
         lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_SGW) );
         lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_MME) );

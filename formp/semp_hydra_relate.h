@@ -162,7 +162,7 @@
 #define IP_STR_MAX_LEN                          17
 
 #define TABLE_MAGNITUDE                         2           /* 表尺寸的数量级 */
-#define IMSI_TABLE_SIZE                         (1*TABLE_MAGNITUDE)
+#define IMSI_TABLE_SIZE                         (1*TABLE_MAGNITUDE*2)
 #define S11_MME_TABLE_SIZE                      (1*TABLE_MAGNITUDE)
 #define S11_SGW_TABLE_SIZE                      (1*TABLE_MAGNITUDE)
 #define S1_U_TABLE_SIZE                         (2*TABLE_MAGNITUDE)

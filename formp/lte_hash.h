@@ -73,8 +73,9 @@ typedef enum tagS1_MMETableUpdateAction
     S1_MMET_UPDATE_ALG_TYPE         = 0x0080,           //[[CN]] 更新算法类型       [[CN]]
     S1_MMET_UPDATE_GUTI_FLAG        = 0x0100,           //[[CN]] 更新guti flag      [[CN]]
     S1_MMET_UPDATE_TAI              = 0x0200,           //[[CN]] 更新TAI            [[CN]]
-    S1_MMET_UPDATE_MASK             = 0x0400,           //[[CN]] 更新mask          [[CN]]
+    S1_MMET_UPDATE_MASK             = 0x0400,           //[[CN]] 更新mask           [[CN]]
     S1_MMET_UPDATE_AGING            = 0x0800,           //[[CN]] 更新aging          [[CN]]
+    S1_MMET_UPDATE_TIMSI_FLAG       = 0X1000,           //[[CN]] 更新timsi flag     [[CN]]
  }S1_MMETableUpdateActionEnum;
  
 typedef enum tagS1MMETableContentValidMask
@@ -87,6 +88,7 @@ typedef enum tagS1MMETableContentValidMask
     S1_MMET_ALG_TYPE_VALID         = 0x0020,           //[[CN]] 有效性 算法类型       [[CN]]
     S1_MMET_GUTI_FLAG_VALID        = 0x0040,           //[[CN]] 有效性 guti flag      [[CN]]
     S1_MMET_TAI_VALID              = 0x0080,           //[[CN]] 有效性 TAI            [[CN]]
+    S1_MMET_TIMSI_FLAG_VALID       = 0X0100,           //[[CN]] 有效性 TIMSI flag     [[CN]] 
 }S1MMETableContentValidMaskEnum;
 
 /* s11-mme 表项的更新操作类型定义，每一位对应更新一个元素 */
@@ -165,20 +167,12 @@ typedef enum
 
 
 /* lte hash table cell */
-#define ENTRY_CELL_DATA_SIZE_128 14
-#define ENTRY_CELL_DATA_SIZE_256 30
-typedef struct
+#define ENTRY_CELL_DATA_SIZE 14
+typedef struct hash_cell_s 
 {
     struct list_head node;                 /* 双向链表指针 16字节*/
-    uint64_t entry[ENTRY_CELL_DATA_SIZE_256];  /* Cell数据 14*8 = 112 字节*/
-}__attribute__((packed)) hash_cell_t; /* 256字节 */
-
-typedef struct
-{
-    struct list_head node;                 /* 双向链表指针 16字节*/
-    uint64_t entry[ENTRY_CELL_DATA_SIZE_128];  /* Cell数据 14*8 = 112 字节*/
-}__attribute__((packed)) hash_cell_128_t; /* 256字节 */
-
+    uint64_t entry[ENTRY_CELL_DATA_SIZE];  /* Cell数据 14*8 = 112 字节*/
+}__attribute__((packed)) hash_cell_t; /* 128字节 */
 #define HASH_ENTRY_VALID_SIZE_128  (128-16)
 #define HASH_ENTRY_VALID_SIZE_256  (256-16)
 
@@ -300,7 +294,9 @@ typedef struct
 
 mp_code_t hash_table_search_update(hash_table_t *table, hash_table_control_t *control);
 mp_code_t hash_table_search_destroy(hash_table_t *table, hash_table_control_t *control);
-hash_cell_t *hash_table_search_by_index_and_offset(hash_table_t *table, uint32_t index, uint32_t offset); 
+mp_code_t hash_table_search_by_index_and_offset(hash_table_t *table,
+                                        uint32_t index, uint32_t  column, 
+                                        void *odata, uint32_t olen);
 mp_code_t hash_table_get_bucket_depth_by_index(hash_table_t *table, uint32_t index, uint32_t *depth);
 mp_code_t hash_table_flush(hash_table_t *table);
 mp_code_t hash_table_cell_delete(hash_table_t *table, uint32_t offset,

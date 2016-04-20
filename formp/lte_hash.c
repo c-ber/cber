@@ -230,6 +230,12 @@ mp_code_t update_s1_mme_table(void *dst, void *src, uint64_t action)
         s1_mme_dst->mask = s1_mme_src->mask;
     }
 
+    if (S1_MMET_UPDATE_TIMSI_FLAG & action)
+    {
+        s1_mme_dst->timsi_flag = s1_mme_src->timsi_flag;
+        s1_mme_dst->mask |= S1_MMET_TIMSI_FLAG_VALID;
+    }
+
     return MP_OK;
 }
 
@@ -486,7 +492,6 @@ mp_code_t hash_table_flush(hash_table_t *table)
             hash_cell = list_entry(pos, hash_cell_t, node);
             CVMX_MP_POINT_CHECK_UNLOCK(hash_cell, M_S11, LV_ERROR);
             __list_del( hash_cell->node.prev, hash_cell->node.next);
-            memset(hash_cell, 0x0, sizeof(hash_cell_t));
             HASH_CELL_FREE(bucket, table->pool, hash_cell);
         }
 
@@ -522,7 +527,6 @@ mp_code_t hash_table_cell_delete(hash_table_t *table, uint32_t offset, struct li
             __list_del( cnode->prev, cnode->next);
             hash_cell = list_entry(cnode, hash_cell_t, node);
             CVMX_MP_POINT_CHECK_UNLOCK(hash_cell, M_S11, LV_ERROR);
-            memset(hash_cell, 0x0, sizeof(hash_cell_t));
             HASH_CELL_FREE(bucket, table->pool, hash_cell);
             break;        
         }
@@ -583,7 +587,6 @@ mp_code_t hash_table_search_destroy(hash_table_t *table,
             if(HASH_CMP_SAME == control->search)
             {
                 __list_del( hash_cell->node.prev, hash_cell->node.next);
-                memset(hash_cell, 0x0, sizeof(hash_cell_t));
                 HASH_CELL_FREE(bucket, table->pool, hash_cell);
                 break;
             }
@@ -675,14 +678,7 @@ mp_code_t hash_table_search_update(hash_table_t *table,
         if(ENABLE == control->new_enable)
         {
             /*new The cell*/
-            if( table == LTE_GET_TABLE_PTR(TABLE_IMSI) )
-            {
-                hash_cell = (hash_cell_t *)HASH_CELL_NEW(table->pool);
-            }
-            else
-            {
-                hash_cell = (hash_cell_t *)((hash_cell_128_t *)HASH_CELL_NEW(table->pool));
-            }
+            hash_cell = (hash_cell_t *)HASH_CELL_NEW(table->pool);
             if( NULL  == hash_cell)
             {
                 LTE_HASH_TABLE_UNLOCK(bucket);
@@ -707,11 +703,20 @@ mp_code_t hash_table_search_update(hash_table_t *table,
                 LTE_DEBUG_PRINTF("FPA Memory not available for CVMX_FPA_LTE_POOL %s.%d\n", __func__, __LINE__);
                 return MP_NULL_POINT;
             }
+            if( HASH_ENTRY_VALID_SIZE_256 == table->cell_size )
+            {
+                memset( hash_cell, 0, TABLE_CELL_MAX_LEN);
+            }
+            else
+            {
+                memset( hash_cell, 0, sizeof(hash_cell_t));
+            }
+
             control->node =   &(hash_cell->node);
             control->bucket = bucket; 
             list_add( &(hash_cell->node),&bucket->head);
             bucket->bucket_depth++;
-            LTE_DEBUG_PRINTF("%s: compare: <New>\n", table->name);
+            LTE_DEBUG_PRINTF("depth: %ld, %s: compare: <New>\n", bucket->bucket_depth, table->name);
         }
         else
         {
@@ -764,29 +769,33 @@ mp_code_t hash_table_get_bucket_depth_by_index(hash_table_t *table,
     LTE_HASH_TABLE_LOCK(bucket);
     *depth = bucket->bucket_depth;
     LTE_HASH_TABLE_UNLOCK(bucket);
+    LTE_DEBUG_PRINTF("====index: %d=====depth: %d==================\n", index, *depth);
     return MP_OK;
 }
 
 /* 用于给命令行提供的根据行列索引查表 */
-hash_cell_t *hash_table_search_by_index_and_offset(hash_table_t *table,
-                                        uint32_t index, uint32_t  column) 
+mp_code_t hash_table_search_by_index_and_offset(hash_table_t *table,
+                                        uint32_t index, uint32_t  column, 
+                                        void *odata, uint32_t olen) 
 {
+    mp_code_t ret = MP_OK;
     hash_bucket_t * bucket = NULL;
     struct list_head *pos = NULL, *next = NULL;
     hash_cell_t * cell= NULL;
     int i= 0;
 
-    CVMX_MP_POINT_CHECK_RET_P(table, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(table, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(odata, M_S11, LV_ERROR);
 
     LTE_DEBUG_PRINTF("table=%s, index=%d, clomu=%d\n",table->name, index,  column);
     if(index > table->max_bucket)
     {
-        return NULL;
+        return MP_SPACE_NOT_ENOUGH;
     }
   
     bucket = table->first_bucket + index;
 
-    CVMX_MP_POINT_CHECK_RET_P(bucket, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(bucket, M_S11, LV_ERROR);
 
     LTE_HASH_TABLE_LOCK(bucket);
     list_for_each_safe(pos, next, &(bucket->head))
@@ -795,19 +804,16 @@ hash_cell_t *hash_table_search_by_index_and_offset(hash_table_t *table,
         if(i ==  column)
         {
            cell =  list_entry(pos, hash_cell_t, node); 
+           memcpy(odata, cell->entry, MP_MIN(olen, table->cell_size));
            LTE_HASH_TABLE_UNLOCK(bucket);
-           return cell;
+           return MP_CELL_FOUND;
             
         }
         i++;
     }
     LTE_HASH_TABLE_UNLOCK(bucket);
-    return cell;               
+    return ret;               
 }
-
-
-
-
      
 void *hash_table_index_to_entry(hash_table_t *table, hash_table_index_t *index)
 {
@@ -875,7 +881,6 @@ mp_code_t hash_table_remove_entry_by_index(hash_table_t *table, hash_table_index
         {
             __list_del( node->prev, node->next);
             hash_cell = list_entry(node, hash_cell_t, node);
-            memset(hash_cell, 0x0, sizeof(hash_cell_t));
             HASH_CELL_FREE(bucket, table->pool, hash_cell);
             LTE_HASH_TABLE_UNLOCK(bucket);
             return MP_OK;
@@ -1288,7 +1293,6 @@ mp_code_t hash_cell_delete_by_hash( hash_table_t *table,
         if(HASH_CMP_SAME == cmp_rlt)
         {
             __list_del( pos->prev, pos->next);
-            memset(src_cell, 0x0, sizeof(hash_cell_t));
             HASH_CELL_FREE(bucket, table->pool, src_cell);
             LTE_HASH_TABLE_UNLOCK(bucket);
             return MP_OK;

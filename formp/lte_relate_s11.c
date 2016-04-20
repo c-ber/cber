@@ -803,6 +803,21 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
         return rv;
     }
 
+
+    /*
+     * 现网中modify Bearer request报文较频繁，
+     * 有可能modify bearer报文会改动teid，所以需要重新建表
+     * 避免在后面的modify Bearer request报文来的时候查找s11-sgw失败，
+     * 同理modify bearer response 报文查找s11-mme 也会失败
+     * 此处需要更新s11-sgw和s11-mme表的老化时间，
+     */
+
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S11_SGW),
+                                    &(imsi_cell.pos_s11_sgw), g_aging_timer_max);
+
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S11_MME),
+                                    &(imsi_cell.pos_s11_mme), g_aging_timer_max);
+
     // create s1u_eNB table entry
     uint64_t action_s1u_enodeb = 0;
     lte_table_s1u_t s1u_search_d = {};
@@ -840,7 +855,7 @@ mp_code_t lte_s11_gtpc_modify_bearer_requst(parse_gtpc_t *gtpc)
         action_s1u_enodeb |= S1UT_UPDATE_GUTI;
     }
     
-    if (imsi_cell.mask & IMSIT_IMSI_VALID)
+    if (imsi_cell.mask & IMSIT_TAI_VALID)
     {
         memcpy(s1u_search_d.tai,  imsi_cell.tai,  sizeof(lte_tai_t));
         action_s1u_enodeb |= S1UT_UPDATE_TAI;
@@ -977,12 +992,13 @@ mp_code_t lte_s11_gtpc_modify_bearer_response(parse_gtpc_t *gtpc)
     rv = hash_cell_get_by_index(LTE_GET_TABLE_PTR(TABLE_S1U_SGW), &imsi_cell.pos_s1u_sgw[BEAR_DEFAULT], 
                                 (void *)&s1u_sgw_cell, sizeof(lte_table_s1u_t));
     
+    s1u_search_d.fteid.ip   =  gtpc->fteid[S1U_SGW].ip;
+    s1u_search_d.fteid.teid =  gtpc->fteid[S1U_SGW].teid;
+    
     // if no found, then create s1U-sgw table entry
     if (MP_NOT_FOUND == rv)
     {
         
-        s1u_search_d.fteid.ip   =  gtpc->fteid[S1U_SGW].ip;
-        s1u_search_d.fteid.teid =  gtpc->fteid[S1U_SGW].teid;
         action_s1u_sgw |= S1UT_UPDATE_FTEID;
 
         s1u_search_d.ue_ip   =      imsi_cell.pdn.pdn_addr;

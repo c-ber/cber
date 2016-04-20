@@ -75,7 +75,7 @@
 /*************************Size of 256B******************************************/
 #define S6A_TABLE_OFFSET  (IMSI_TABLE_SIZE+S11_MME_TABLE_SIZE+ \
                         S11_SGW_TABLE_SIZE+S1_U_TABLE_SIZE+S1_MME_ENOB_TABLE_SIZE+ S1_STMSI_ENOB_TABLE_SIZE )
-#define S6A_TABLE_SIZE    (1*TABLE_MAGNITUDE)
+#define S6A_TABLE_SIZE    (1*TABLE_MAGNITUDE*2) //因为是256
 #define S6A_TABLE_START   (S6A_TABLE_OFFSET)
 #define S6A_TABLE_END     (S6A_TABLE_OFFSET+ S6A_TABLE_SIZE) 
 
@@ -83,6 +83,7 @@
 
 
 #define LTE_HASH_TABLE_SIZE           (8*TABLE_MAGNITUDE)
+#define LTE_HASH_CELL_NUMBER          (8*TABLE_MAGNITUDE)
 #define LTE_HASH_CELL_SIZE            (1)
 
 #define LTE_TABLE_SIZE_TOTAL  (S6A_TABLE_SIZE+IMSI_TABLE_SIZE+ \
@@ -93,6 +94,8 @@
 
 /*禁止同步*/
 #define HASH_CELL_NEW(_pool)         (malloc(sizeof(hash_cell_t)))
+#define HASH_CELL_NEW_256(_pool)     (malloc(sizeof(hash_cell_t)*2))
+
 #define HASH_CELL_FREE(bucket, _pool, _ptr_)   do {\
         free(_ptr_ );\
         _ptr_ = NULL;\
@@ -156,6 +159,7 @@ typedef struct
      (_hash_indexs)->en = ENABLE;  \
      }while(0)
 
+#define DEFAULT_BEARER_ID 5
 #define MAX_NUM_BEARER 2
 typedef enum 
 {
@@ -273,7 +277,8 @@ typedef struct
     lte_guti_t      old_guti;
     uint32_t        cipher_alg_type;    //Type of ciphering algorithm
     uint32_t        guti_flag:1;        //Indicate the table has old_guti or not
-    uint32_t        reserved:31;
+    uint32_t        timsi_flag:1;       // indicate timsi table exist or not
+    uint32_t        reserved:30;
     lte_tai_t       tai;
     uint32_t        mask;
     uint16_t        aging;
@@ -443,5 +448,6 @@ inline mp_code_t lte_delete_s1u_by_imsi(lte_table_imsi_t *table_imsi_e, uint8_t 
         action |= S1UT_UPDATE_EX_FIELD;\
     }
     
+
 #endif
 

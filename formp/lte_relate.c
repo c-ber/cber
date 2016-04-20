@@ -13,10 +13,9 @@ CVMX_SHARED core_pktcap_t pkt_cap[48] = {};
 
 CVMX_SHARED  hash_bucket_t *lte_tables = NULL;
 CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX] = {};
-CVMX_SHARED  cvmx_spinlock_t imsi_delete_lock;
+
 volatile CVMX_SHARED  bool g_lte_start_flag = false; /* lte模块启动标志 */
 
-extern CVMX_SHARED uint64_t g_aging_timer_max;
 
 
 /***************************imsi************************/
@@ -240,8 +239,7 @@ inline mp_code_t update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *k
 {
     CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
     key->size = 1;
-    //key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);//大端模式
-    key->data[0] = ((uint64_t)teid<<32) | (uint64_t)(ip);//小端模式
+    key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);
     return MP_OK;
 }
 
@@ -527,8 +525,8 @@ mp_code_t dataplane_lte_relate_init()
     lte_tables_info[TABLE_IMSI].compare      = imsi_table_compare;
     lte_tables_info[TABLE_IMSI].hash         = imsi_table_hash;
     lte_tables_info[TABLE_IMSI].update       = update_imsi_table;
-//    lte_tables_info[TABLE_IMSI].pool         = CVMX_FPA_LTE_RELATE256_POOL;
-    lte_tables_info[TABLE_IMSI].cell_size    = HASH_ENTRY_VALID_SIZE_128;
+    //lte_tables_info[TABLE_IMSI].pool         = CVMX_FPA_LTE_RELATE256_POOL;
+    lte_tables_info[TABLE_IMSI].cell_size    = HASH_ENTRY_VALID_SIZE_256;
     strcpy(lte_tables_info[TABLE_IMSI].name, "TABLE_IMSI");
 #ifdef RELATE_AGING
     lte_tables_info[TABLE_IMSI].set_timer    = imsi_cell_set_timer;
@@ -666,7 +664,6 @@ mp_code_t dataplane_lte_relate_init()
 #ifdef RELATE_AGING
     lte_tables_info[TABLE_S_TIMSI].set_timer =s_tmsi_cell_set_timer;
 #endif
-    cvmx_spinlock_init(&(imsi_delete_lock));
     
 #if 0
     mp_code_t ret;

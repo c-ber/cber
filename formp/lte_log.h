@@ -118,8 +118,6 @@ typedef struct log_cache_kfifo
 #define MID_BIT_NUM    24
 #define VA_LEVEL ( ((lte_log_flag_read() & 0xFF000000) >> MID_BIT_NUM) & 0xff)
 #define VA_MODULE   (lte_log_flag_read() & 0x00FFFFFF)
-
-
 /**********************************************************************/
 
 
@@ -172,10 +170,10 @@ do{\
 }while(0)
 #endif
 
+
 #ifdef LTE_LOG_INPUT_NONE
 #define LOG_PRINT(mid, level, fmt, ...)
 #endif
-
 
 #define LTE_LOG_SWT_LOCK(lock)  do{ \
     cvmx_spinlock_lock(&(lock));  \
@@ -185,6 +183,11 @@ do{\
     cvmx_spinlock_unlock(&(lock));  \
 }while(0)
 
+
+
+/******************************************************************************/
+/***************************** 头文件中函数声明 ********************************/
+/******************************************************************************/
 
 inline mp_code_t lte_log_flag_write(log_module_t mid, log_level_t lv, log_en_t en);
 inline uint32_t  lte_log_flag_read();

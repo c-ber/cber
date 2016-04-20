@@ -27,7 +27,6 @@ typedef struct
 
 extern CVMX_SHARED  hash_bucket_t *lte_tables;
 extern CVMX_SHARED  hash_table_t   lte_tables_info[TABLE_MAX];
-extern CVMX_SHARED  cvmx_spinlock_t imsi_delete_lock;
 
 extern CVMX_SHARED uint64_t g_scan_interval;
 extern CVMX_SHARED uint64_t g_aging_timer_max;

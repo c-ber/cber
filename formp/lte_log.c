@@ -1,4 +1,4 @@
-/****************************************************************************** 
+/******************************************************************************
 
 版权所有（C），2001-2015年，恒扬科技股份有限公司
 
@@ -24,14 +24,10 @@ CVMX_SHARED cvmx_spinlock_t   g_lte_log_spinlock;
 
 CVMX_SHARED kfifo_t fifo = {}; /* 环形队列数据结构，用于日志缓冲区*/
 
-inline void lte_log_destory()
-{
-    if(fifo.buffer != NULL)
-        free(fifo.buffer);
-}
 
 inline int lte_log_init()
 {
+    //fifo.buffer = (log_pkt_t*)semp_named_shared_memblock_get(LTE_LOG_CACHE);//cavium
     fifo.buffer = (log_pkt_t*)malloc(LTE_TOTAL_SIZE * sizeof(log_pkt_t));
     fifo.size = LTE_TOTAL_SIZE;
     fifo.pwrite_cur = fifo.buffer;
