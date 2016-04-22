@@ -492,27 +492,27 @@ void test()
         printf("cell[%02d]:\n",i);
         printf("*******************************\n");
 
-        test_s1_1();
-        test_s1_2();
+        //test_s1_1();
+        //test_s1_2();
 //        test_s1_1_old();
 //        test_s1_2_new_guti();
-        test_s1_3();
-        test_s1_4();
+        //test_s1_3();
+        //test_s1_4();
 //        test_s6a_response();
 
 //        show_memory();
         test32();
-        show_memory();
+        //show_memory();
 
         test33();
-        //show_memory();
+        show_memory();
 
 
         test34();
         //show_memory();
 
         test35();
-        show_memory();
+        //show_memory();
 
         npcp_show_relate_info(imsi_base);
 
@@ -527,7 +527,7 @@ void test()
 
     }
 
-    npcp_update_cell_timer(NULL);
+    //npcp_update_cell_timer(NULL);
 
     //test_delete();
     //show_memory();
@@ -558,10 +558,10 @@ int main(int argc,char * argv[])
 //    pthread_t pid = -1;
 //    pthread_create(&pid, NULL, npcp_update_cell_timer, (void *)NULL);
 
-    //dataplane_lte_relate_init();
-    //test();
+    dataplane_lte_relate_init();
+    test();
 
-    testdpi();
+//    testdpi();
 
     //pthread_join(pid,NULL);
 

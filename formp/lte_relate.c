@@ -239,7 +239,8 @@ inline mp_code_t update_fteid_hash_key(uint32_t ip, uint32_t teid, hash_key_t *k
 {
     CVMX_MP_POINT_CHECK(key, M_S1, LV_ERROR);
     key->size = 1;
-    key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);
+    //key->data[0] = ((uint64_t)ip<<32) | (uint64_t)(teid);//´ó¶Ë
+    key->data[0] = ((uint64_t)teid<<32) | (uint64_t)(ip);//Ğ¡¶Ë
     return MP_OK;
 }
 
@@ -495,7 +496,7 @@ mp_code_t dataplane_lte_relate_init()
     /*create Hash table*/
     //char * P1 = (char *)malloc(88);
     //lte_tables = (hash_bucket_t*)semp_named_shared_memblock_get(LTE_HASH_TABLES);
-    lte_tables = (hash_bucket_t*)malloc( sizeof(hash_bucket_t)*LTE_HASH_TABLE_SIZE );
+    lte_tables = (hash_bucket_t*)malloc( sizeof(hash_bucket_t)*LTE_TABLE_SIZE_TOTAL );
 
    
     if(NULL == lte_tables)    

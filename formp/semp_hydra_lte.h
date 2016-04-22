@@ -7,7 +7,7 @@
 #define RELATE_AGING           /* 老化模块宏开关   */
 //#define STAT_TEST            /* 现网调试功能开关 */
 //#define CAP_PACKET_VERSION   /* 抓包功能调试开关 */
-#define LTE_DEBUG 0
+#define LTE_DEBUG 1
 
 
 #if LTE_DEBUG

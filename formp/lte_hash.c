@@ -678,7 +678,14 @@ mp_code_t hash_table_search_update(hash_table_t *table,
         if(ENABLE == control->new_enable)
         {
             /*new The cell*/
-            hash_cell = (hash_cell_t *)HASH_CELL_NEW(table->pool);
+            if( HASH_ENTRY_VALID_SIZE_256 == table->cell_size )
+            {
+                hash_cell = (hash_cell_t *)malloc(sizeof(hash_cell_t)*2);
+            }
+            else
+            {
+                hash_cell = (hash_cell_t *)HASH_CELL_NEW(table->pool);
+            }
             if( NULL  == hash_cell)
             {
                 LTE_HASH_TABLE_UNLOCK(bucket);
