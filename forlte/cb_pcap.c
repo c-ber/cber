@@ -12,7 +12,7 @@ int have_found = 0;
 /*这个功能暂时不许要了，用wireshark可以做到 */
 cb_code_t gtpc_msg_check(uint8_t * pbuf, int slen, int msg, int vlan_vir)
 {
-    uint8_t str_imsi[32] = "460028891556126";
+    uint8_t str_imsi[32] = "460087952305706";
     uint8_t d_imsi[IE_IMSI] = {0x01,0x00,0x8,0x00};
     int pos = 0;
     str_to_proto(str_imsi, strlen(str_imsi), d_imsi+4);
@@ -94,23 +94,29 @@ cb_code_t parse_gtpc(uint8_t * pbuf, int slen)
     }
 
     //判断端口
-//#define NET_BYTE_NORMAL
+
     memcpy(&sport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN, 2);
     memcpy(&dport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN + 2, 2);
 
-#ifndef NET_BYTE_NORMAL /*今天碰到一个端口号逆序的，应该都是这样的*/
+#define NET_BYTE_NORMAL
+#ifdef NET_BYTE_NORMAL /*调整网络序*/
     exchange((uint8_t*)(&sport), sizeof(uint16_t));
     exchange((uint8_t*)(&dport), sizeof(uint16_t));
 #endif
+
     if( !(sport == GTPC_PORT || dport == GTPC_PORT) )
     {
         LOG_DEBUG("not gtpc\n");
         return CB_FAIL;
     }
-
+    uint8_t gtp_ver = *(pbuf + L2_ALL_LEN + vlan_vir + L3_ALL_LEN + L4_ALL_LEN);
+    if( (gtp_ver >> 5) != 0x01 )
+    {
+        return CB_FAIL;
+    }
     ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + L3_ALL_LEN + L4_ALL_LEN + MSG_TYPE_OFFSET);
     //if( CB_OK != gtpc_msg_check(pbuf, slen, ctmp, vlan_vir) )
-    if( ctmp < 32 || ctmp > 37  )/* 这里是排除不要的报文 */
+    if( ctmp != 16  )/* 这里是排除不要的报文 */
     {
         return CB_FAIL;
     }
@@ -119,12 +125,19 @@ cb_code_t parse_gtpc(uint8_t * pbuf, int slen)
 
     return CB_OK;
 }
+
+void find_s1ap_nas()
+{
+
+}
 cb_code_t parse_s1ap(uint8_t * pbuf, int slen)
 {
     uint8_t ctmp = 0;
     uint16_t sport = 0;
     uint16_t dport = 0;
     uint32_t ppi = 0;
+    uint8_t  procedureCode = 0;
+    uint32_t is_s1ap = 0;
 
     int vlan_vir = 0;
     if(slen <= 0x42 || slen == 110)
@@ -151,6 +164,13 @@ cb_code_t parse_s1ap(uint8_t * pbuf, int slen)
     //判断端口
     memcpy(&sport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN, 2);
     memcpy(&dport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN + 2, 2);
+
+#define NET_BYTE_NORMAL
+#ifdef NET_BYTE_NORMAL /*调整网络序*/
+    exchange((uint8_t*)(&sport), sizeof(uint16_t));
+    exchange((uint8_t*)(&dport), sizeof(uint16_t));
+#endif
+
     if( !(sport == S1AP_PORT || dport == S1AP_PORT) )
     {
         LOG_DEBUG("not S1AP\n");
@@ -168,14 +188,114 @@ cb_code_t parse_s1ap(uint8_t * pbuf, int slen)
             if(ppi == PPI_TYPE_S1AP)
             {
                 LOG_DEBUG("find s1ap ok. \n");
-                return CB_OK;
+                is_s1ap = 1;
+                procedureCode = *(pbuf + chunk_start + CHUNK_SIZE*(chunk_num-1) + PCODE_OFFSET);
+                //return CB_OK;
             }
         }
         chunk_num++;
     }
 
+    if( is_s1ap && procedureCode == id_InitialContextSetup )
+    {
+        //find_s1ap_nas();
+        return CB_OK;
+    }
     return CB_FAIL;
 }
+cb_code_t parse_diameter(uint8_t * pbuf, int slen)
+{
+    uint8_t ctmp = 0;
+    uint16_t sport = 0;
+    uint16_t dport = 0;
+    uint32_t ppi = 0;
+
+    int vlan_vir = 0;
+    if( slen <= 0x42 )
+    {
+        LOG_DEBUG("not lte s1ap, slen[%d] < 0x42\n", slen);
+        return CB_FAIL;
+    }
+
+    //判断n层vlan ,eth_type
+    while( (*(pbuf + ETH_TYPE_OFFSET + vlan_vir )) == ETH_TYPE_VLAN )
+    {
+        vlan_vir += VLAN_PRI_LEN;
+    }
+
+
+    //判断sctp
+    ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + PROTOCAL_OFFSET);
+    if( ctmp != PROTOCOL_SCTP )
+    {
+        LOG_DEBUG("not sctp");
+        return CB_FAIL;
+    }
+
+    //判断端口
+    memcpy(&sport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN, 2);
+    memcpy(&dport, pbuf+ L2_ALL_LEN + vlan_vir + L3_ALL_LEN + 2, 2);
+
+#define NET_BYTE_NORMAL
+#ifdef NET_BYTE_NORMAL /*调整网络序*/
+    exchange((uint8_t*)(&sport), sizeof(uint16_t));
+    exchange((uint8_t*)(&dport), sizeof(uint16_t));
+#endif
+
+    if( !(sport == DIAMETER_PORT || dport == DIAMETER_PORT) )
+    {
+        LOG_DEBUG("not diameter\n");
+        return CB_FAIL;
+    }
+
+    return CB_OK;
+}
+cb_code_t parse_ip(uint8_t * pbuf, int slen)
+{
+    uint8_t ctmp = 0;
+    uint16_t sport = 0;
+    uint16_t dport = 0;
+
+    int vlan_vir = 0;
+    if(slen < 48)
+    {
+        LOG_DEBUG("not lte gtpc, slen[%d] < 48\n", slen);
+        return CB_FAIL;
+    }
+
+    //判断n层vlan ,eth_type
+    while( (*(pbuf + ETH_TYPE_OFFSET + vlan_vir )) == ETH_TYPE_VLAN )
+    {
+        vlan_vir += VLAN_PRI_LEN;
+    }
+
+
+    //判断udp
+    ctmp = *(pbuf + L2_ALL_LEN + vlan_vir + PROTOCAL_OFFSET);
+    if( ctmp != PROTOCOL_SCTP )
+    {
+        LOG_DEBUG("not sctp");
+        return CB_FAIL;
+    }
+    uint32_t dip = 0;
+    uint32_t sip = 0;
+
+    //ip
+    memcpy(&sip, pbuf+ L2_ALL_LEN + vlan_vir + SIP_OFFSET, 4);
+    memcpy(&dip, pbuf+ L2_ALL_LEN + vlan_vir + DIP_OFFSET, 4);
+
+    sip = htonl(sip);
+    dip = htonl(dip);
+    //if( sip != 0x6441d168 || dip != 0x6441f7c5 ) // enodeb --> mme
+    if( dip != 0x6441d168 || sip != 0x6441f7c5 )  //mme --> enodeb
+    {
+        LOG_DEBUG("not need ip\n");
+        return CB_FAIL;
+    }
+
+    return CB_OK;
+}
+
 cb_code_t parse_gtpu(uint8_t * pbuf, int slen)
 {
     uint8_t ctmp = 0;
@@ -287,7 +407,7 @@ void pcap_search(char *input_file)
         {
             break;
         }
-#define PARSE_GTPC
+//#define PARSE_GTPC
         //协议解析
 #ifdef PARSE_GTPC
         if(data_acl_len > 100 || data_acl_len < 360)
@@ -297,10 +417,11 @@ void pcap_search(char *input_file)
                 have_found++;
                 fwrite(pcap_data_header, DATA_HEADER_LEN, 1, fout);
                 fwrite(data, data_acl_len, 1, fout);
+                //printf("the %d packet\n",p_id);
             }
         }
 #endif
-//#define PARSE_S1AP
+#define PARSE_S1AP
 #ifdef PARSE_S1AP
         if( CB_OK == parse_s1ap(data, data_acl_len) )
         {
@@ -309,6 +430,17 @@ void pcap_search(char *input_file)
             fwrite(data, data_acl_len, 1, fout);
         }
 #endif
+
+//#define PARSE_DIAMETER
+#ifdef PARSE_DIAMETER
+        if( CB_OK == parse_diameter(data, data_acl_len) )
+        {
+            have_found++;
+            fwrite(pcap_data_header, DATA_HEADER_LEN, 1, fout);
+            fwrite(data, data_acl_len, 1, fout);
+        }
+#endif
+
 //#define PARSE_GTPU
 #ifdef PARSE_GTPU
         if( CB_OK == parse_gtpu(data, data_acl_len) )
@@ -318,6 +450,23 @@ void pcap_search(char *input_file)
             fwrite(data, data_acl_len, 1, fout);
         }
 #endif
+
+//#define PARSE_IP
+#ifdef PARSE_IP
+        if( CB_OK == parse_ip(data, data_acl_len) )
+        {
+            have_found++;
+            if( have_found == 1308 ||
+                    have_found == 7931 ||
+                    have_found == 10131 )
+            {
+                printf("pid = %d\n", p_id);
+            }
+            fwrite(pcap_data_header, DATA_HEADER_LEN, 1, fout);
+            fwrite(data, data_acl_len, 1, fout);
+        }
+#endif
+
         p_id++;
         LOG_DEBUG("\n\n");
     }

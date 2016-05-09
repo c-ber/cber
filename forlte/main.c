@@ -2,27 +2,22 @@
 #include    <stdlib.h>
 #include    <time.h>
 #include    <string.h>
-#include    <sys/types.h>
-#include    <sys/stat.h>
 #include    <stdarg.h>
 #include    <signal.h>
-#include    <sys/wait.h>
 #include    <pthread.h>
 #include    <fcntl.h>
 #include    <errno.h>
 #include    <dirent.h>
 #include    <ctype.h>
+#include    <unistd.h>
 
-#include <unistd.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <time.h>
-#include <netinet/in.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <assert.h>
 
+#include    <sys/socket.h>
+#include    <sys/types.h>
+#include    <netinet/in.h>
+#include    <sys/wait.h>
+#include    <sys/stat.h>
+#include    <assert.h>
 
 #include "cb_pcap.h"
 
@@ -33,8 +28,14 @@
 
 int pox_system(const char *format, ...);
 
+void test()
+{
+
+}
 int main(int argc,char * argv[])
 {
+//    test();
+//    return 0;
 	printf("test start\n");
 	char input_file[256] = {0};
 
@@ -45,7 +46,7 @@ int main(int argc,char * argv[])
 	}
 	else
 	{
-	    strcpy(input_file, FILE_PATH);
+	    strcpy(input_file, "lte.pcap");//FILE_PATH);
 	}
 
 #ifdef FIND_FTEID
@@ -53,9 +54,13 @@ int main(int argc,char * argv[])
 #else
 
 #ifdef ADD_PCAP
+    #ifdef add_ori
 	/* 解决分帧 */
 	pcap_add_merge("lte_pkt.log");//pcap_add的头格式这个函数已经不能再用
 	pcap_add("merge_pkt.tmp");
+    #else
+	    pcap_add("core.pkt");
+    #endif
 #else
 
 #ifdef DEL_CRC

@@ -4,8 +4,8 @@ PUBSO = alg
 
 CC = gcc
 
-CFLAGS = -g -Wall
-INCL = -I. 
+CFLAGS = -g #-Wall
+INCL = -I. -I../
 LIBS = -lpthread
 
 SOURCES := $(wildcard *.c)
@@ -19,7 +19,7 @@ $(PUBSO):$(OBJS)
 	$(CC)  -o $@ $(OBJS) -L../libs $(LIBS)
 	
 .c.o:
-	$(CC) -g $(CFLAG) -c $< $(INCL)
+	$(CC) $(CFLAGS) -c $< $(INCL)
 	
 clean:
 	rm -f *.o $(PUBSO) *.bak

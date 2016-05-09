@@ -163,7 +163,9 @@ namespace snake
                 }
             }
         }
-
+        /// <summary>
+        /// 需要传参告诉移动方向
+        /// </summary>
         private void move()//只移动一步，之后更新方向
         {
             //0:上,1:下,2:左,3:右

@@ -36,6 +36,9 @@
 
 #define IMSI_OFFSET       0x10
 #define PROTOCAL_OFFSET   0X09
+#define SIP_OFFSET        0x0C
+#define DIP_OFFSET        (SIP_OFFSET + 0x04)
+
 #define PORT_OFFSET       0x00
 #define ETH_TYPE_OFFSET   0X0C
 #define MSG_TYPE_OFFSET   0x01
@@ -48,13 +51,19 @@
 #define GTPU_PORT         2152
 
 
-#define S1AP_PORT         0x3c8e
+#define DIAMETER_PORT     3868
+#define S1AP_PORT         36412
 #define CHUNK_TYPE_DATA   0
 #define CHUNK_SIZE        0x10
 #define PPI_OFFSET        0x0c
+#define PPT_SIZE          0X04
+#define PCODE_OFFSET      (PPI_OFFSET+PPT_SIZE+1)
 #define PPI_TYPE_S1AP     0x12000000
 
 
+#define  id_InitialContextSetup  9
+#define  id_uplinkNASTransport   13
+#define  id_downlinkNASTransport 11
 
 
 //#define FILE_PATH           "1eth0.50gb.pcap"
