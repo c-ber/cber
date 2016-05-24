@@ -24,6 +24,7 @@
 #include <assert.h>
 
 #include "semp_comm_dpi.h"
+#include "dpi.h"
 
 void test()
 {
@@ -34,7 +35,14 @@ void test()
     ft.dst_port = 1;
     ft.protocol = 6;
 
+    dpi_skb_t skb = {};
+    skb.care_pkt = PKT_CARE;
+    skb.network_header = NULL;
+    skb.network_header_len = 1;
 
+
+
+    dataplane_dpi_processs(&skb, &ft);
 }
 
 int main(int argc,char * argv[])

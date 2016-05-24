@@ -15,6 +15,7 @@
 
 #include "dpi.h"
 
+CVMX_SHARED hash_bucket_t *dpi_buckets = NULL;
 
 mp_code_t dataplane_dpi_init()
 {
@@ -52,14 +53,46 @@ void printf_dpi_skb(dpi_skb_t *skb)
  *
  * 返回        : 错误码，创建成功返回MP_OK,失败返回XFAILURE
 ******************************************************************************/
-mp_code_t session_manage()
+mp_code_t session_manage_process()
 {
     mp_code_t ret = MP_OK;
 
     return ret;
 }
 
-mp_code_t dataplane_dpi_processs(dpi_skb_t *skb)
+mp_code_t session_manage_init()
+{
+    mp_code_t ret = MP_OK;
+
+    hash_bucket_t *bucket = NULL;
+    int i = 0;
+    
+    //dpi_buckets = (hash_bucket_t*)semp_named_shared_memblock_get(LTE_HASH_TABLES);
+    dpi_buckets = (hash_bucket_t*)malloc( sizeof(hash_bucket_t)*FIVE_TUPLE_BUCKET_MAX_SIZE );
+
+   
+    if( NULL == dpi_buckets )
+    {
+        printf("DPI session init failed\n");
+        return MP_TABLE_FULL;
+    }
+
+
+    memset(dpi_buckets, 0x00, sizeof(hash_bucket_t)*FIVE_TUPLE_BUCKET_MAX_SIZE);
+    
+    for( i = 0; i < FIVE_TUPLE_BUCKET_MAX_SIZE; i++ )
+    {
+          bucket = dpi_buckets + i;
+          cvmx_spinlock_init(&(bucket->lock));
+          bucket->index = i;
+          INIT_LIST_HEAD(&bucket->head);
+    }
+
+    return ret;
+}
+
+
+mp_code_t dataplane_dpi_processs(dpi_skb_t *skb, five_tuple_t *ft)
 {
     mp_code_t ret = MP_OK;
 

@@ -19,10 +19,11 @@
 #include "util.h"
 #include "dpi_mm.h"
 #include "r2_list.h"
+#include "list.h"
 
 
 mp_code_t dataplane_dpi_init();
-mp_code_t dataplane_dpi_processs(dpi_skb_t *skb);
+mp_code_t dataplane_dpi_processs(dpi_skb_t *skb, five_tuple_t *ft);
 
 
 struct flow_element
@@ -50,6 +51,19 @@ struct flow_element
 
     unsigned char athx;
 };
+
+
+#define FIVE_TUPLE_BUCKET_MAX_SIZE  10
+
+typedef struct{
+    struct list_head    head;                  /* 桶子的双向链表指针 */
+    uint64_t            bucket_depth;          /* 桶深度，即包含的cell个数 */
+    uint64_t            total_cell;            /* 已建立的五元组数 */
+    uint64_t            del_cell;              /* 已老化的五元组数 */
+    cvmx_spinlock_t     lock;                  /* 操作锁 */
+    uint32_t            index;                 /* 当前bucket的索引 */
+}hash_bucket_t;
+
 
 
 #endif /* MODULES_DPI_DPI_H_ */
