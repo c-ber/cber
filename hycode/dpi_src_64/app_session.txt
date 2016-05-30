@@ -1,0 +1,89 @@
+typedef struct _app_session_t {
+	u_int32_t	appid;	//match which app sign
+	u_int32_t	task;
+	u_int32_t	app_ident_state :8;
+	u_int32_t	hi_proto_id		:8;		//高级协议ID
+	u_int32_t	identcnt		:16;	//报文计数
+	u_int32_t	action_log_flag	:1;		//the flag ident whether action log is send
+	u_int32_t	http_persistent_conn: 1;//the http Persistent connection
+	u_int32_t	http_version: 2;        //the http version
+	u_int32_t	set_http_id: 2;         //need set http id
+	u_int32_t	ident_by_dfi: 1;	//the flow is identity by dfi search
+	u_int32_t	ident_by_cache: 1;	//the flow is identity by app cache
+	u_int32_t	ident_by_p2p: 1;	//the flow is identity by p2p upload or p2p download
+	u_int32_t	ident_by_port: 1;	//the flow is identity by predefined port
+	u_int32_t	ident_by_ipport: 1;	//the flow is identity by ip/port
+	u_int32_t	av_log_bypass: 1;
+	u_int32_t	ident_by_nego: 1;
+	u_int32_t	padding: 19;
+	u_int32_t	action_timestamp;		// the action occur timestamp
+	u_int32_t	app_sign_id;	//match which app sign
+
+	void		*high_proto_data;  // session_data_t
+	pak_len_t	length_order;
+	/* special handler for audit username */
+	char		*username;
+	u_int16_t	username_len;
+	/* byod info */
+	u_int16_t	platform_id;
+	char* system;
+	char* device;
+	char* supplier;
+    u_int8_t log_flag;
+    u_int8_t hash;
+
+#ifdef IPS_ENABLE
+	void		*associ;	//IPS相关
+    struct nf_conn_counter acct;
+#endif
+} app_session_t;
+/*
+ * 0 -- IP_CT_DIR_ORIGINAL
+ * 1 -- IP_CT_DIR_REPLY
+ */
+typedef struct _pak_len_t {
+	unsigned short count[IP_CT_DIR_MAX];
+	unsigned short order[IP_CT_DIR_MAX][10];
+} pak_len_t;
+enum ip_conntrack_dir {
+	IP_CT_DIR_ORIGINAL,
+	IP_CT_DIR_REPLY,
+	IP_CT_DIR_MAX
+};
+
+typedef struct _session_data_t {
+	int status;
+	int fr_flag;
+	memfile_t *filebuffer;
+	int leftlen;
+	int smallstatus;
+	data_buffer_t buffer;
+	u_int8_t private_area[0];
+} session_data_t;
+
+typedef struct _memfile_t {
+	int file_max_len;
+	int file_length;
+	int rw_offset;
+
+	int filename_len;
+	u_int8_t filename[256];
+	u_int8_t mem[0];
+} memfile_t;
+
+typedef struct _data_buffer_t {
+
+	/* for follow format of packet
+	 *  ---------------------------
+	 * |reasm1|parse1|parse2|reasm2|
+	 *  ---------------------------
+	 *  tmp_buf resered reasm2 temporarily,
+	 *  copy it to buffer after checker.
+	 *  tmp_len is length of reasm2.
+	 */
+	u_int8_t *tmp_buf;    //len 4096
+	int tmp_len;
+	int current;
+	u_int8_t *data;       //len 4096
+	long orig_pos;				/* pointer value of fresh segment in original packet */
+} data_buffer_t;
