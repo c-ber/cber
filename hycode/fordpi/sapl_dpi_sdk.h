@@ -20,7 +20,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include "r2_list.h"
-
+#include <stdint.h>
 
 struct flow_element
 {
@@ -66,7 +66,7 @@ struct sk_buff
     void *network_header;
     void *mac_header;
     void *tail;
-    u_int16_t network_header_len;
+    uint16_t network_header_len;
     struct flow_element  *ct;
 
     unsigned int        len;
@@ -75,16 +75,22 @@ struct sk_buff
 
 
 /* 1.   AIE引擎初始化函数 */
-int AIE_sdk_init(DPI_MALLOC malloc, DPI_FREE free);
+extern int AIE_sdk_init(DPI_MALLOC malloc, DPI_FREE free);
 
 /* 2.   AIE引擎去初始化函数 */
-void AIE_sdk_uninit();
+extern void AIE_sdk_uninit();
 
-/* 3.   AIE识别函数 */
-unsigned int AIE_hook(struct sk_buff *skb, void **app_session, unsigned int *uiAppId);
+/* 3    加载sap_apps_sigs.conf配置文件 */
+extern int AIE_set_app_lib(char *filecontent);
 
-/* 4.   AIE session内存释放函数 */
-void AIE_session_delete(void *app_session);
+/* 4    加载webmail: webmail_cn.html配置文件 */
+extern int AIE_set_webmail(char *filecontent);
+
+/* 5.   AIE识别函数 */
+extern int AIE_hook(struct sk_buff *skb, void **app_session, uint32_t *app_id, uint32_t *action_id);
+
+/* 6.   AIE session内存释放函数 */
+extern void AIE_session_delete(void *app_session);
 
 
 

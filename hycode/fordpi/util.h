@@ -18,12 +18,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 
 
+uint16_t ip_checksum_c( uint8_t *ptr, uint32_t size);
 
-
-
+void printf_buf(uint8_t *ptr, uint16_t len);
 
 
 

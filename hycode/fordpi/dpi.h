@@ -15,45 +15,22 @@
 #ifndef MODULES_DPI_DPI_H_
 #define MODULES_DPI_DPI_H_
 
-
+#include "cvmx_common.h"
+#include "encap.h"
 #include "util.h"
-#include "dpi_mm.h"
 #include "r2_list.h"
 #include "list.h"
+#include "semp_comm_dpi.h"
+#include "hash_alg.h"
+#include "sapl_dpi_sdk.h"
 
 
 mp_code_t dataplane_dpi_init();
 mp_code_t dataplane_dpi_processs(dpi_skb_t *skb, five_tuple_t *ft);
 
 
-struct flow_element
-{
-    struct cmb_list_head list;
-    int create_type; // 1 flow crated by pkt,  2. by statistic report.
 
-    unsigned int sip;
-    unsigned sp;
-
-    unsigned int dip;
-    unsigned dp;
-
-    unsigned char proto;
-    unsigned char dir;
-
-    unsigned int appid;
-
-    int packet_cnt;     //first 20 pkts.
-    int bytes;
-    void *app_session;
-    void *user_session;
-
-    void *tcp_rsm;
-
-    unsigned char athx;
-};
-
-
-#define FIVE_TUPLE_BUCKET_MAX_SIZE  10
+#define DPI_BUCKET_MAX_SIZE  10
 
 typedef struct{
     struct list_head    head;                  /* 桶子的双向链表指针 */
@@ -62,8 +39,84 @@ typedef struct{
     uint64_t            del_cell;              /* 已老化的五元组数 */
     cvmx_spinlock_t     lock;                  /* 操作锁 */
     uint32_t            index;                 /* 当前bucket的索引 */
-}hash_bucket_t;
+}dpi_hash_bucket_t;
 
+
+/*five tuple hash table*/
+typedef struct
+{
+    five_tuple_t        ft;
+    cvmx_spinlock_t     lock;
+}__attribute__((packed)) five_tuple_table_t;
+
+
+
+
+
+#define DPI_TABLE_CELL_MAX_LEN 128       /* 目前表的cell最大长度 */
+
+/* dpi five-tuple hash table cell */
+#define DPI_ENTRY_CELL_DATA_SIZE 14
+typedef struct dpi_hash_cell_s
+{
+    struct list_head node;                 /* 双向链表指针 16字节*/
+    uint64_t entry[DPI_ENTRY_CELL_DATA_SIZE];  /* Cell数据 14*8 = 112 字节*/
+}__attribute__((packed)) dpi_hash_cell_t; /* 128字节 */
+#define DPI_HASH_ENTRY_VALID_SIZE_128  (128-16)
+
+
+/*cell compare result*/
+typedef enum
+{
+    DPI_HASH_CMP_DIFF,
+    DPI_HASH_CMP_SAME,
+}dpi_hash_cmp_em_t;
+
+/* search key */
+typedef struct
+{
+#define MAX_HASH_DWORD 8
+    uint64_t  data[MAX_HASH_DWORD];
+    uint8_t   size;//sizeof(uint64_t)
+}dpi_hash_key_t;
+
+
+/*禁止同步*/
+#define DPI_HASH_CELL_NEW(_pool)     \
+        (malloc(sizeof(dpi_hash_cell_t)))
+
+#define DPI_HASH_CELL_FREE(bucket, _pool, _ptr_)   do {\
+        free(_ptr_ );\
+        _ptr_ = NULL;\
+        bucket->bucket_depth--;\
+    }while(0)
+
+#define HASH_TABLE_BUCKET_LOCK(_hash_table)  do{ \
+    cvmx_spinlock_lock(&((_hash_table)->lock));  \
+    }while(0)
+
+#define HASH_TABLE_BUCKET_UNLOCK(_hash_table)  do{\
+    cvmx_spinlock_unlock(&((_hash_table)->lock));  \
+}while(0)
+
+
+#define FIVE_TUPLE_LOCK(lock)  do{ \
+    cvmx_spinlock_lock(&(lock));  \
+    }while(0)
+
+#define FIVE_TUPLE_UNLOCK(lock)  do{\
+    cvmx_spinlock_unlock(&(lock));  \
+}while(0)
+
+
+/*配置文件内存位置*/
+typedef struct _config_info_t
+{
+    uint8_t  *pstr;               /* 指向文件内存的首地址 */
+    uint32_t  cur_wirte_index;    /* 当前已写的字节数 */
+    flag_t    is_complete_file;   /* 是否为完整的文件 */
+    uint32_t  file_size;          /* 文件大小 */
+}config_info_t;
 
 
 #endif /* MODULES_DPI_DPI_H_ */
