@@ -55,9 +55,9 @@ uint32_t rule_rfc_match (uint8_t uc_iifgrp, V4_5TUP_T * ip5tuple)
     uc_protocol |= ((uc_iifgrp & 0xff) << 2);
     printf("uc_iifgrp = %d, uc_protocol = %d \n", uc_iifgrp, uc_protocol);
 
-    if (pst_filter_set->pst_acl_ptr_md && pst_filter_set->pst_acl_ptr_md[0])
+    if (pst_filter_set->pst_acl_ptr_md)
     {
-        pst_pnoder = pst_filter_set->pst_acl_ptr_md[0]->st_phase_nodes;
+        pst_pnoder = pst_filter_set->pst_acl_ptr_md->st_phase_nodes;
     }
 
     if ((pst_pnoder != NULL) && (pst_pnoder[0].pul_cell_md != NULL))
@@ -123,15 +123,11 @@ void dataplane_stream_global_initialize(void)
     printf("test-------------->sizeof(g_stream_table) = %d \n",
             sizeof(*g_stream_table));
 
-    printf("test-------------->sizeof(rfc_filter_set_s) = %d \n",
-            sizeof(rfc_filter_set_s));
+    printf("test-------------->sizeof(rule_set_t) = %d \n",
+            sizeof(rule_set_t));
 
-    printf("test-------------->sizeof(rfc_filter_s) = %d \n",
-            sizeof(rfc_filter_s));
-
-
-    printf("=====================> st_filter_index.index  = %lu \n",
-                (size_t)(&( ((rfc_acl_s*)0)->pst_main_set )));
+    printf("test-------------->sizeof(rule_t) = %d \n",
+            sizeof(rule_t));
 
 
 
@@ -208,55 +204,55 @@ mp_code_t rule_mask_set_rfc_bitmap(rule_mask_t *rule)
         return MP_FUN_PARAM_ERR;
     }
 
-    rfc_filter_set_s *rfs = RFC_FILTER_GET();
+    rule_set_t *rs = RFC_FILTER_GET();
     int index = rule->ul_rule_id -1;
 
-    rfs->st_filter[index].ua_dim[0][0] = rule->ul_src_ip_start / 65536;
-    rfs->st_filter[index].ua_dim[1][0] = rule->ul_src_ip_start % 65536;
-    rfs->st_filter[index].ua_dim[0][1] = rule->ul_src_ip_end   / 65536;
-    rfs->st_filter[index].ua_dim[1][1] = rule->ul_src_ip_end   % 65536;
-    rfs->st_filter[index].ua_dim[2][0] = rule->ul_dst_ip_start / 65536;
-    rfs->st_filter[index].ua_dim[3][0] = rule->ul_dst_ip_start % 65536;
-    rfs->st_filter[index].ua_dim[2][1] = rule->ul_dst_ip_end   / 65536;
-    rfs->st_filter[index].ua_dim[3][1] = rule->ul_dst_ip_end   % 65536;
+    rs->rule[index].rule_item[0][0] = rule->ul_src_ip_start / 65536;
+    rs->rule[index].rule_item[1][0] = rule->ul_src_ip_start % 65536;
+    rs->rule[index].rule_item[0][1] = rule->ul_src_ip_end   / 65536;
+    rs->rule[index].rule_item[1][1] = rule->ul_src_ip_end   % 65536;
+    rs->rule[index].rule_item[2][0] = rule->ul_dst_ip_start / 65536;
+    rs->rule[index].rule_item[3][0] = rule->ul_dst_ip_start % 65536;
+    rs->rule[index].rule_item[2][1] = rule->ul_dst_ip_end   / 65536;
+    rs->rule[index].rule_item[3][1] = rule->ul_dst_ip_end   % 65536;
 
-    rfs->st_filter[index].ua_dim[4][0] = rule->us_src_port_start;
-    rfs->st_filter[index].ua_dim[4][1] = rule->us_src_port_end;
-    rfs->st_filter[index].ua_dim[5][0] = rule->us_dst_port_start;
-    rfs->st_filter[index].ua_dim[5][1] = rule->us_dst_port_end;
+    rs->rule[index].rule_item[4][0] = rule->us_src_port_start;
+    rs->rule[index].rule_item[4][1] = rule->us_src_port_end;
+    rs->rule[index].rule_item[5][0] = rule->us_dst_port_start;
+    rs->rule[index].rule_item[5][1] = rule->us_dst_port_end;
 
-    rfs->st_filter[index].ua_dim[6][0] = ((rule->uc_iifgrp_start << 2) & 0xff)
+    rs->rule[index].rule_item[6][0] = ((rule->uc_iifgrp_start << 2) & 0xff)
                                          | rule->uc_protocol_start;
-    rfs->st_filter[index].ua_dim[6][1] = ((rule->uc_iifgrp_end << 2) & 0xff)
+    rs->rule[index].rule_item[6][1] = ((rule->uc_iifgrp_end << 2) & 0xff)
                                          | rule->uc_protocol_end;
 
-    printf("pst_filter_set->st_filter[%d].ua_dim[0][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[0][0],
-        rfs->st_filter[index].ua_dim[0][1]);
-    printf("pst_filter_set->st_filter[%d].ua_dim[1][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[1][0],
-        rfs->st_filter[index].ua_dim[1][1]);
-    printf("pst_filter_set->st_filter[%d].ua_dim[2][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[2][0],
-        rfs->st_filter[index].ua_dim[2][1]);
-    printf("pst_filter_set->st_filter[%d].ua_dim[3][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[3][0],
-        rfs->st_filter[index].ua_dim[3][1]);
-    printf("pst_filter_set->st_filter[%d].ua_dim[4][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[4][0],
-        rfs->st_filter[index].ua_dim[4][1]);
-    printf("pst_filter_set->st_filter[%d].ua_dim[5][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[5][0],
-        rfs->st_filter[index].ua_dim[5][1]);
-    printf("pst_filter_set->st_filter[%d].ua_dim[6][0-1](0x%04x-%04x)\n",
-        index, rfs->st_filter[index].ua_dim[6][0],
-        rfs->st_filter[index].ua_dim[6][1]);
+    printf("pst_filter_set->rule[%d].rule_item[0][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[0][0],
+        rs->rule[index].rule_item[0][1]);
+    printf("pst_filter_set->rule[%d].rule_item[1][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[1][0],
+        rs->rule[index].rule_item[1][1]);
+    printf("pst_filter_set->rule[%d].rule_item[2][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[2][0],
+        rs->rule[index].rule_item[2][1]);
+    printf("pst_filter_set->rule[%d].rule_item[3][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[3][0],
+        rs->rule[index].rule_item[3][1]);
+    printf("pst_filter_set->rule[%d].rule_item[4][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[4][0],
+        rs->rule[index].rule_item[4][1]);
+    printf("pst_filter_set->rule[%d].rule_item[5][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[5][0],
+        rs->rule[index].rule_item[5][1]);
+    printf("pst_filter_set->rule[%d].rule_item[6][0-1](0x%04x-%04x)\n",
+        index, rs->rule[index].rule_item[6][0],
+        rs->rule[index].rule_item[6][1]);
 
-    rfs->st_filter[index].u_state   = ACL_ENABLE;
-    rfs->st_filter[index].b_newitem = ACL_NEW;
-    rfs->st_filter[index].u_ifgroup = 1;
+    rs->rule[index].u_state   = ACL_ENABLE;
+    rs->rule[index].b_newitem = ACL_NEW;
+    rs->rule[index].u_ifgroup = 1;
 
-    rfs->ul_filter_num ++;
+    rs->rule_num++;
 
     RFC_FILTER_SET_UCHANGE(1, ACL_CHANGED);
     return ret;

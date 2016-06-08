@@ -50,9 +50,6 @@ union unIP
 #define LENGTH64                64
 #endif
 
-//#define SIZE          1169                // SIZE = ceiling ( rules / LENGTH )
-#define RFC_SIZE32          ((MPP_MAX_FILTERS/LENGTH32)+((MPP_MAX_FILTERS%LENGTH32)?1:0))               // SIZE32 = ceiling ( rules / LENGTH32 )
-#define RFC_SIZE64          ((MPP_MAX_FILTERS/LENGTH64)+((MPP_MAX_FILTERS%LENGTH64)?1:0))               // SIZE64 = ceiling ( rules / LENGTH64 )
 
 #define MPP_MAX_PHASE0_CELL 65536
 
@@ -77,67 +74,76 @@ union unIP
 
 #define ACL_MAX_CELL        100
 
-#define MAX_IPV4_DIM        7
-#define MPP_MAX_FILTERS     (10000)
+
+
 #define IIF_GROUP_NUM       MAX_GROUP_NUMBER
 #define VIRTUAL_GROUP_NUM   IIF_GROUP_NUM
 
 typedef int rfcbool;
+
+
+/************************ change by cber *******************************/
+#define CHUNK_TOTAL_SZIE          7          /* chunk划分的数值*/
+#define RULE_NUM_MAX_SIZE        10          /* 规则集合最大值 */
+
+
+#define RFC_SIZE64   ((RULE_NUM_MAX_SIZE/LENGTH64)+((RULE_NUM_MAX_SIZE%LENGTH64)?1:0))
+
 //////////////////////////////////////////////////////////////////////////
 // datastructure defination
 
-//  structures for filters... please add crosslink structure
-typedef union
+/*单条规则内容存放，预处理表需要用*/
+typedef union _rule_t
 {
     struct
     {
-        uint16_t    ua_dim[MAX_IPV4_DIM][2];
-        // the bytes needed in practice, totally
-        uint16_t    u_tagid;
-        uint16_t    u_ifgroup: 8,
-                    u_state: 2,
-                    b_newitem: 1,
-                    resv: 5;
-        uint64_t    ud_statistics;
-    };
-    uint64_t ud_filter[32 * 8 / LENGTH64];
-} rfc_filter_s;
 
-#define RFC_FILTER_SIZE_64      (sizeof(rfc_filter_s)/sizeof(uint64_t))
+        uint16_t rule_item[CHUNK_TOTAL_SZIE][2];/*将规则按七个
+                                                chunk分类的方法存起来*/
 
-typedef struct FILTERSET
+        uint16_t u_tagid;
+        uint16_t u_ifgroup: 8,
+                 u_state: 2,
+                 b_newitem: 1,
+                 resv: 5;
+        uint64_t ud_statistics;
+    };                                       /* 这里总共是14+2个uint16,4+1个u64 */
+    uint64_t rule[5];                   /* 用于赋值 */
+} rule_t;
+
+#define RFC_FILTER_SIZE_64      (sizeof(rule_t)/sizeof(uint64_t))
+
+
+/*已经配置的规则的集合*/
+typedef struct _rule_set_t
 {
-    uint32_t        ul_filter_num;
-    rfc_filter_s    st_filter[MPP_MAX_FILTERS + 1]; // include default rule, so +1
-} rfc_filter_set_s;
+    uint32_t        rule_num;                    /* 规则个数 */
+    rule_t          rule[RULE_NUM_MAX_SIZE + 1]; /* 含1条默认规则 */
+} rule_set_t;
 
-// only for commit
-typedef struct FILTINDEX
+/*commit时的判断，变更规则集时候，需要知道那几个规则变化了*/
+typedef struct _rule_comit_t
 {
-    uint16_t        u_filter_num;
-    uint16_t        u_changed;
-    uint16_t        ua_index[MPP_MAX_FILTERS];
-} rfc_filter_index_s;
+    uint16_t        rule_num;    /* 规则个数 */
+    uint16_t        changed;     /* 规则集是否变化: 1 变化 0 未变 */
+    uint16_t        rule_status[RULE_NUM_MAX_SIZE];  /* 某个rule id修改情况 */
+} rule_comit_t;
 
 
 // only for phase0
-typedef struct FILTERACTION
+/* 预处理表：存放已配置好的规则集合,单链表结构 */
+typedef struct _rule_action_t
 {
-    uint16_t u_rule_id;         // the ruleid index in DWORD
-    uint16_t u_action;          // Operation: 1 set bit 0 clear bit
-    uint16_t u_index;
-    uint16_t u_reserve;
-    uint64_t ud_bitmask;        // bit in a DWORD
-    struct FILTERACTION *pst_next;
-} rfc_filter_action_s;
+    uint16_t        rid;           /* rule id */
+    uint16_t        action;           /* action: 1:set bit  0:clear bit */
+    uint16_t        ck_index;      /* 1条规则中对应的chunk 的下标索引 0~65535 */
+    uint16_t        reserve;       /* 预留，应该没用 */
+    uint64_t        bitmask;
+    struct _rule_action_t  *next;  /* 单链表指针 */
+} rule_action_t;
 
-#ifdef RFC4_DEBUG
+
 #define MAX_EQID_TABLE  13
-#endif
-
-#ifdef RFC3_DEBUG
-#define MAX_EQID_TABLE  11
-#endif
 
 // structure for CES...
 typedef struct CES
@@ -236,26 +242,18 @@ typedef struct rfc_phase_data
 
 typedef struct rfc_acl
 {
-    rfc_filter_set_s        st_filter_set[2];                           /**  filter set, array 0 is main, array 1 is backup */
-    rfc_filter_set_s        *pst_main_set;                              /** Point to st_filter_st[0] */
-    rfc_filter_set_s        *pst_backup_set;                            /** Point to st_filter_st[1] */
-    rfc_filter_set_s        *pst_set_md[MPP_MAX_ACL_NUM];               /** there is an independent pointer to point to the filterset in every acl group */
-    rfc_filter_index_s      st_filter_index[MPP_MAX_ACL_NUM];           /** store the diffrent acl group index when commit */
-    rfc_phase_set_s         st_phase[MPP_MAX_ACL_NUM];              /** phase struct for rfc */
-    rfc_phase_set_s         *pst_acl_ptr_md[MPP_MAX_ACL_NUM];           /** pointer of the phase structure in md */
-    rfc_phase_set_s         *pst_acl_ptr_mdu[MPP_MAX_ACL_NUM];          /** pointer of the phase structure in md */
+    rule_set_t        rule_set[2];                           /**  filter set, array 0 is main, array 1 is backup */
+    rule_set_t        *main_rs;                              /** Point to st_filter_st[0] */
+    rule_set_t        *bak_rs;                            /** Point to st_filter_st[1] */
+    rule_set_t        *md_rs;               /** there is an independent pointer to point to the filterset in every acl group */
+    rule_comit_t            commit;           /** store the diffrent acl group index when commit */
+    rfc_phase_set_s         st_phase;              /** phase struct for rfc */
+    rfc_phase_set_s         *pst_acl_ptr_md;           /** pointer of the phase structure in md */
+    rfc_phase_set_s         *pst_acl_ptr_mdu;          /** pointer of the phase structure in md */
     rfc_phase_set_s         *pst_acl_commit;                            /** pointer of the commit */
     rfc_phase_data_s        st_acl_phase_data;                          /** phase temporary data */
 } rfc_acl_s;
 
-#ifdef RFC4_DEBUG
-extern int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rfc_filter_set_s *pst_filter_set, rfc_filter_index_s *pst_filter_index);
-extern int rfc_phase1(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes, uint32_t ul_len, uint32_t ul_table);
-extern int rfc_phase2(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes, uint32_t ul_table);
-extern int rfc_phase3(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes, uint16_t u_ifgroup);
-extern int rfc_phase_commit(void);
-
-#endif
 
 typedef struct rfc_gsdata
 {

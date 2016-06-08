@@ -21,7 +21,7 @@ extern CVMX_SHARED rfc_acl_s       *g_ix_rfc_table_base;
 
 uint8_t CRC8  (uint8_t *ptr, uint32_t len);
 
-void rfc_init_default_rule(rfc_filter_s *pst_default);
+void rfc_init_default_rule(rule_t *pst_default);
 
 int rfc_phase_init(uint16_t u_ifgroup);
 
@@ -35,7 +35,7 @@ uint32_t rfc_search_bmp(uint64_t *pud_bmp, uint32_t ul_table);
 uint32_t rfc_get_rule_cost(uint64_t *pud_bmp);
 
 int rfc_phase0(rfc_phase_set_s *pst_acl_commit,
-               rfc_filter_set_s *pst_filter_set, rfc_filter_index_s *pst_filter_index);
+               rule_set_t *pst_filter_set, rule_comit_t *pst_filter_index);
 
 int  rfc_phase(rfc_pnoder_s *pst_node1,
                rfc_pnoder_s *pst_node2, rfc_pnoder_s *pst_node3, uint32_t ul_table);

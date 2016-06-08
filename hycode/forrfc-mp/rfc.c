@@ -6,14 +6,14 @@
 
 #define     ACL_RFC_DEBUG   /** Added by tsihang */
 
-void rfc_init_default_rule(rfc_filter_s *pst_default)
+void rfc_init_default_rule(rule_t *pst_default)
 {
     int i = 0;
     
-    for (i = 0; i < MAX_IPV4_DIM; i++)
+    for (i = 0; i < CHUNK_TOTAL_SZIE; i++)
     {
-        pst_default->ua_dim[i][0] = 0;
-        pst_default->ua_dim[i][1] = 255;
+        pst_default->rule_item[i][0] = 0;
+        pst_default->rule_item[i][1] = 255;
     }
 }
 
@@ -24,10 +24,10 @@ int rfc_phase_init(uint16_t u_ifgroup)
     int i;
     rfc_acl_s        *pst_acl = g_ix_rfc_table_base;
     rfc_phase_set_s  *pst_commit = pst_acl->pst_acl_commit;
-    uint32_t    ul_filter_num = pst_acl->st_filter_index[u_ifgroup].u_filter_num;
+    uint32_t    rule_num = pst_acl->commit.rule_num;
 
-    pst_acl->st_acl_phase_data.u_real_size = ul_filter_num / LENGTH64;
-    pst_acl->st_acl_phase_data.u_last_pos = ul_filter_num % LENGTH64;
+    pst_acl->st_acl_phase_data.u_real_size = rule_num / LENGTH64;
+    pst_acl->st_acl_phase_data.u_last_pos = rule_num % LENGTH64;
     
     if (pst_acl->st_acl_phase_data.u_last_pos)
         pst_acl->st_acl_phase_data.u_real_size++;
@@ -35,8 +35,8 @@ int rfc_phase_init(uint16_t u_ifgroup)
     else
         pst_acl->st_acl_phase_data.u_last_pos = LENGTH64 - 1;
         
-    pst_acl->st_acl_phase_data.u_real_size32 = ul_filter_num / LENGTH32;
-    pst_acl->st_acl_phase_data.u_last_pos32 = ul_filter_num % LENGTH32;
+    pst_acl->st_acl_phase_data.u_real_size32 = rule_num / LENGTH32;
+    pst_acl->st_acl_phase_data.u_last_pos32 = rule_num % LENGTH32;
     
     if (pst_acl->st_acl_phase_data.u_last_pos32)
         pst_acl->st_acl_phase_data.u_real_size32++;
@@ -362,7 +362,7 @@ uint32_t rfc_get_rule_cost(uint64_t *pud_bmp)
     }
     //printf("!!! Lack of default rule!\nThere is no rule matched!\n");
     // return -1;
-    return MPP_MAX_FILTERS;
+    return CHUNK_TOTAL_SZIE;
 }
 
 
@@ -385,17 +385,21 @@ uint32_t rfc_get_rule_cost(uint64_t *pud_bmp)
 
 // Function to fill the table of Phase 0
 // return : void
-int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rfc_filter_set_s *pst_filter_set, rfc_filter_index_s *pst_filter_index)
+int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule_comit_t *pst_filter_index)
 {
     uint32_t i, n, com, index;
     uint64_t ud_bmp[RFC_SIZE64];
     uint32_t ul_action_num, ul_eq_id;
-    rfc_filter_action_s *pst_filter_action[MPP_MAX_PHASE0_CELL] = {NULL}, * pst_action_temp;
-    rfc_filter_action_s st_filter_action[2 * MPP_MAX_FILTERS];
+
+    rule_action_t *pst_filter_action[MPP_MAX_PHASE0_CELL] = {NULL};
+    rule_action_t *pst_action_temp                        = NULL;
+
+    rule_action_t  st_filter_action[2 * CHUNK_TOTAL_SZIE] = {};
+
     rfc_phase_data_s *pst_acl_phase_data = &g_ix_rfc_table_base->st_acl_phase_data;
     
     // Chunk[0] to Chunk[5] of Phase 0
-    for (com = 0; com < 7; com++)
+    for (com = 0; com < CHUNK_TOTAL_SZIE; com++)
     {
         memset (pst_filter_action, 0, sizeof(pst_filter_action));
         memset (st_filter_action, 0, sizeof(st_filter_action));
@@ -405,7 +409,7 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rfc_filter_set_s *pst_filter_set
             ud_bmp[i] = 0;
             
         ul_action_num = 0;
-        ul_eq_id = 0;
+        ul_eq_id      = 0;
         
         // Initialize phase0_Nodes[com]->listEqs
         if (rfc_noder_init(pst_acl_commit, pst_acl_phase_data, pst_acl_commit->st_phase_nodes + com, MPP_MAX_PHASE0_CELL) != ACL_OK)
@@ -417,31 +421,28 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rfc_filter_set_s *pst_filter_set
         
         // Pre scan for action
         //将已添加的规则放在一个二维规则表里
-        for (n = 0; n < pst_filter_index->u_filter_num; n++)
+        for (n = 0; n < pst_filter_index->rule_num; n++)
         {
-            // first is low, then set bit
-            //          if(ACL_ENABLE != rfc_filter_set->st_filter[pst_filter_index->ua_index[n]].u_state)
-            //              continue;
-            st_filter_action[ul_action_num].u_rule_id = n / LENGTH64;
-            st_filter_action[ul_action_num].u_action = 1;
-            //st_filter_action[ul_action_num].ud_bitmask = 1 << (n & (LENGTH64 - 1));
-            DATA64_BITMASK_SET (&st_filter_action[ul_action_num].ud_bitmask, n);
-            index = pst_filter_set->st_filter[pst_filter_index->ua_index[n]].ua_dim[com][0];
-            st_filter_action[ul_action_num].u_index = index;
-            st_filter_action[ul_action_num].pst_next = pst_filter_action[index];
+            st_filter_action[ul_action_num].rid = n / LENGTH64;
+            st_filter_action[ul_action_num].action = 1;
+
+            DATA64_BITMASK_SET (&st_filter_action[ul_action_num].bitmask, n);
+            index = pst_filter_set->rule[pst_filter_index->rule_status[n]].rule_item[com][0];
+            st_filter_action[ul_action_num].ck_index = index;
+            st_filter_action[ul_action_num].next = pst_filter_action[index];
             pst_filter_action[index] = &st_filter_action[ul_action_num];
             ul_action_num++;
             // second is high+1, the clear bit
-            index = pst_filter_set->st_filter[pst_filter_index->ua_index[n]].ua_dim[com][1] + 1;
+            index = pst_filter_set->rule[pst_filter_index->rule_status[n]].rule_item[com][1] + 1;
             
             if (index <= MPP_MAX_PHASE0_CELL)
             {
-                st_filter_action[ul_action_num].u_rule_id = n / LENGTH64;
-                st_filter_action[ul_action_num].u_action = 0;
+                st_filter_action[ul_action_num].rid = n / LENGTH64;
+                st_filter_action[ul_action_num].action = 0;
                 //st_filter_action[ul_action_num].ud_bitmask = 1 << (n & (LENGTH64 - 1));
-                DATA64_BITMASK_SET (&st_filter_action[ul_action_num].ud_bitmask, n);
-                st_filter_action[ul_action_num].pst_next = pst_filter_action[index];
-                st_filter_action[ul_action_num].u_index = index;
+                DATA64_BITMASK_SET (&st_filter_action[ul_action_num].bitmask, n);
+                st_filter_action[ul_action_num].next = pst_filter_action[index];
+                st_filter_action[ul_action_num].ck_index = index;
                 pst_filter_action[index] = &st_filter_action[ul_action_num];
                 ul_action_num++;
             }
@@ -466,13 +467,13 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rfc_filter_set_s *pst_filter_set
                 
                 while (pst_action_temp != NULL)
                 {
-                    if (pst_action_temp->u_action)
-                        ud_bmp[pst_action_temp->u_rule_id] |= pst_action_temp->ud_bitmask;
+                    if (pst_action_temp->action)
+                        ud_bmp[pst_action_temp->rid] |= pst_action_temp->bitmask;
                         
                     else
-                        ud_bmp[pst_action_temp->u_rule_id] &= ~pst_action_temp->ud_bitmask;
+                        ud_bmp[pst_action_temp->rid] &= ~pst_action_temp->bitmask;
                         
-                    pst_action_temp = pst_action_temp->pst_next;
+                    pst_action_temp = pst_action_temp->next;
                 }
                 
                 if ((ul_eq_id = rfc_search_bmp(ud_bmp, com)) == ACL_END_LINK)
@@ -486,7 +487,7 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rfc_filter_set_s *pst_filter_set
         }
         
         for (i = 0; i < ul_action_num; i++)
-            pst_filter_action[st_filter_action[i].u_index] = NULL;
+            pst_filter_action[st_filter_action[i].ck_index] = NULL;
     }
     
     return ACL_OK;
@@ -583,7 +584,7 @@ int rfc_phase3(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes
     rfc_ces_s *pst_ces1, *pst_ces2;
     rfc_phase_set_s *pst_acl_commit = g_ix_rfc_table_base->pst_acl_commit;
     rfc_phase_data_s *pst_acl_phase_data = &g_ix_rfc_table_base->st_acl_phase_data;
-    rfc_filter_index_s *pst_filter_index = g_ix_rfc_table_base->st_filter_index;
+    rule_comit_t *pst_filter_index = &g_ix_rfc_table_base->commit;
     uint32_t i, j, m;
     pst_node1 = &pst_prev_phase_nodes[0];
     pst_node2 = &pst_prev_phase_nodes[1];
@@ -616,11 +617,11 @@ int rfc_phase3(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes
                 
             ul_cost = rfc_get_rule_cost(ud_bmp);
             
-            if (ul_cost == MPP_MAX_FILTERS)
-                MPP_GET_MDU_VAR(pst_phase_nodes->pul_cell) [ul_cell_index++] = MPP_MAX_FILTERS;
+            if (ul_cost == CHUNK_TOTAL_SZIE)
+                pst_phase_nodes->pul_cell_mdu[ul_cell_index++] = CHUNK_TOTAL_SZIE;
                 
             else
-                MPP_GET_MDU_VAR(pst_phase_nodes->pul_cell) [ul_cell_index++] = pst_filter_index[u_ifgroup].ua_index[ul_cost];
+                pst_phase_nodes->pul_cell_mdu[ul_cell_index++] = pst_filter_index[u_ifgroup].rule_status[ul_cost];
         }
     }
     
@@ -631,30 +632,34 @@ int rfc_phase_commit(void)
 {
     int i, j, result;
     uint16_t u_ifgroup;
+
     rfc_phase_set_s     *pst_acl_commit = g_ix_rfc_table_base->pst_acl_commit;
     rfc_phase_set_s     *pst_acl_temp = NULL;
-    rfc_filter_set_s    *pst_filter_set = g_ix_rfc_table_base->pst_backup_set, *pst_backup_set = NULL;
-    rfc_filter_index_s  *pst_filter_index = g_ix_rfc_table_base->st_filter_index;
+
+    rule_set_t          *pst_filter_set = g_ix_rfc_table_base->bak_rs;
+    rule_set_t          *pst_backup_set = NULL;
+
+    rule_comit_t        *pst_filter_index = &g_ix_rfc_table_base->commit;
 
     for (i = 0; i < MPP_MAX_ACL_NUM; i++)
     {
-        pst_filter_index[i].u_filter_num = 0;
+        pst_filter_index[i].rule_num = 0;
     }
 
-    for (i = 0; i < MPP_MAX_FILTERS; i++)
+    for (i = 0; i < CHUNK_TOTAL_SZIE; i++)
     {
-        if (pst_filter_set->st_filter[i].u_state == ACL_ENABLE)
+        if (pst_filter_set->rule[i].u_state == ACL_ENABLE)
         {
-            u_ifgroup = pst_filter_set->st_filter[i].u_ifgroup;
-            pst_filter_index[u_ifgroup - 1].ua_index[pst_filter_index[u_ifgroup - 1].u_filter_num ++] = i;
+            u_ifgroup = pst_filter_set->rule[i].u_ifgroup;
+            pst_filter_index[u_ifgroup - 1].rule_status[pst_filter_index[u_ifgroup - 1].rule_num++] = i;
         }
     }
     
     for (i = 0; i < MPP_MAX_ACL_NUM; i++)
     {
-        if (pst_filter_index[i].u_filter_num > 0)
+        if (pst_filter_index[i].rule_num > 0)
         {
-            if (pst_filter_index[i].u_changed == ACL_CHANGED)
+            if (pst_filter_index[i].changed == ACL_CHANGED)
             {                
                 rfc_phase_init(i);
 
@@ -680,26 +685,26 @@ int rfc_phase_commit(void)
                 }
 
                 pst_acl_commit->ul_enabled = ENABLE;
-                pst_acl_temp = (rfc_phase_set_s *) MPP_GET_MDU_VAR(g_ix_rfc_table_base->pst_acl_ptr) [i];
+                pst_acl_temp = g_ix_rfc_table_base->pst_acl_ptr_mdu;
 
-                MPP_GET_MD_VAR(g_ix_rfc_table_base->pst_set) [i] = ADDR_MDU_TO_MD(pst_filter_set);
+                g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
 
                 /** removed by tsihang below */
                 /** MPP_ASSIGN_ARR(g_ix_rfc_table_base->pst_acl_ptr, [i], rfc_phase_set_s *, pst_acl_commit); */
                 /** below instead */
 
-                (MPP_GET_MDU_VAR(g_ix_rfc_table_base->pst_acl_ptr) [i]) = (rfc_phase_set_s *)(pst_acl_commit);
-                (MPP_GET_MD_VAR(g_ix_rfc_table_base->pst_acl_ptr) [i]) = (rfc_phase_set_s *) ADDR_MDU_TO_MD(pst_acl_commit);
+                g_ix_rfc_table_base->pst_acl_ptr_mdu = (rfc_phase_set_s *)pst_acl_commit;
+                g_ix_rfc_table_base->pst_acl_ptr_md  = (rfc_phase_set_s *) pst_acl_commit;
 
                 pst_acl_commit = pst_acl_temp;
-                g_ix_rfc_table_base->pst_acl_commit = pst_acl_commit;
+                g_ix_rfc_table_base->pst_acl_commit = &pst_acl_commit;
 
-                pst_filter_index[i].u_changed = ACL_NOT_CHANGED;
+                pst_filter_index[i].changed = ACL_NOT_CHANGED;
             }
 
             else
             {
-                MPP_GET_MD_VAR(g_ix_rfc_table_base->pst_set) [i] = (rfc_filter_set_s *) ADDR_MDU_TO_MD(pst_filter_set);
+                g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
             }
 
             //pst_filter_index[i].u_filter_num = 0;//这一行不知道干嘛的，注释试下
@@ -707,38 +712,38 @@ int rfc_phase_commit(void)
 
         else
         {
-            MPP_GET_MD_VAR(g_ix_rfc_table_base->pst_set) [i] = (rfc_filter_set_s *) ADDR_MDU_TO_MD(pst_filter_set);
-            (MPP_GET_MDU_VAR(g_ix_rfc_table_base->pst_acl_ptr) [i])->ul_enabled = 0;
+             g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
+             g_ix_rfc_table_base->pst_acl_ptr_mdu->ul_enabled = 0;
         }
     }
 
     // add spinlock
-    pst_backup_set = g_ix_rfc_table_base->pst_main_set;
-    g_ix_rfc_table_base->pst_backup_set = g_ix_rfc_table_base->pst_main_set;
-    g_ix_rfc_table_base->pst_main_set = pst_filter_set;
+    pst_backup_set = g_ix_rfc_table_base->main_rs;
+    g_ix_rfc_table_base->bak_rs = g_ix_rfc_table_base->main_rs;
+    g_ix_rfc_table_base->main_rs = pst_filter_set;
 
-    pst_backup_set->ul_filter_num = g_ix_rfc_table_base->pst_main_set->ul_filter_num;
+    pst_backup_set->rule_num = g_ix_rfc_table_base->main_rs->rule_num;
     
     // assign the main set to backup set
-    for (i = 0; i < MPP_MAX_FILTERS; i++)
+    for (i = 0; i < CHUNK_TOTAL_SZIE; i++)
     {
-        if (pst_filter_set->st_filter[i].b_newitem == ACL_NEW)
+        if (pst_filter_set->rule[i].b_newitem == ACL_NEW)
         {
-            pst_filter_set->st_filter[i].b_newitem = ACL_NOT_NEW;
+            pst_filter_set->rule[i].b_newitem = ACL_NOT_NEW;
 
-            if (pst_filter_set->st_filter[i].u_state == ACL_DISABLE)
+            if (pst_filter_set->rule[i].u_state == ACL_DISABLE)
             {
-                pst_filter_set->st_filter[i].u_state = ACL_UNSET;
+                pst_filter_set->rule[i].u_state = ACL_UNSET;
             }
             
             for (j = 0; j < RFC_FILTER_SIZE_64 - 1; j++)
             {
-                pst_backup_set->st_filter[i].ud_filter[j] = pst_filter_set->st_filter[i].ud_filter[j];
+                pst_backup_set->rule[i].rule[j] = pst_filter_set->rule[i].rule[j];
             }
             
             // assign the statistics
-            pst_filter_set->st_filter[i].ud_statistics += pst_backup_set->st_filter[i].ud_statistics;       // need atmic operator
-            pst_backup_set->st_filter[i].ud_statistics = 0;
+            pst_filter_set->rule[i].ud_statistics += pst_backup_set->rule[i].ud_statistics;       // need atmic operator
+            pst_backup_set->rule[i].ud_statistics = 0;
         }
     }
 
@@ -750,14 +755,14 @@ int rfc_phase_commit(void)
 int rfc_phase_move(uint16_t u_start, int32_t l_num)
 {
     int i, j, k, count = 0, index = l_num;
-    rfc_filter_set_s    *pst_filter_set = g_ix_rfc_table_base->pst_backup_set;
-    rfc_filter_index_s  *pst_filter_index = g_ix_rfc_table_base->st_filter_index;
+    rule_set_t    *pst_filter_set   = g_ix_rfc_table_base->bak_rs;
+    rule_comit_t  *pst_filter_index = &g_ix_rfc_table_base->commit;
     
     if (l_num > 0)
     {
         // find enough position
-        for (i = u_start; i < MPP_MAX_FILTERS; i++)
-            if (pst_filter_set->st_filter[i].u_state == ACL_UNSET)
+        for (i = u_start; i < CHUNK_TOTAL_SZIE; i++)
+            if (pst_filter_set->rule[i].u_state == ACL_UNSET)
             {
                 if (!--index)
                     break;
@@ -774,16 +779,16 @@ int rfc_phase_move(uint16_t u_start, int32_t l_num)
         {
             // move item, from back to front
             for (j = i - 1; j >= u_start; j--)
-                if (pst_filter_set->st_filter[i].u_state == ACL_UNSET)
+                if (pst_filter_set->rule[i].u_state == ACL_UNSET)
                 {
                     for (k = 0; k < RFC_FILTER_SIZE_64; k++)
-                        pst_filter_set->st_filter[i].ud_filter[k] = pst_filter_set->st_filter[j].ud_filter[k];
+                        pst_filter_set->rule[i].rule[k] = pst_filter_set->rule[j].rule[k];
                         
-                    pst_filter_set->st_filter[j].u_state = ACL_UNSET;
-                    pst_filter_set->st_filter[j].b_newitem = ACL_NEW;
-                    pst_filter_set->st_filter[i].u_tagid = i;
-                    pst_filter_set->st_filter[i].b_newitem = ACL_NEW;
-                    pst_filter_index[pst_filter_set->st_filter[i].u_ifgroup].u_changed = ACL_CHANGED;
+                    pst_filter_set->rule[j].u_state = ACL_UNSET;
+                    pst_filter_set->rule[j].b_newitem = ACL_NEW;
+                    pst_filter_set->rule[i].u_tagid = i;
+                    pst_filter_set->rule[i].b_newitem = ACL_NEW;
+                    pst_filter_index[pst_filter_set->rule[i].u_ifgroup].changed = ACL_CHANGED;
                     i--;
                     
                     if (!--count)
@@ -796,7 +801,7 @@ int rfc_phase_move(uint16_t u_start, int32_t l_num)
     {
         // find enough position
         for (i = u_start; i >= 0; i--)
-            if (pst_filter_set->st_filter[i].u_state == ACL_UNSET)
+            if (pst_filter_set->rule[i].u_state == ACL_UNSET)
             {
                 if (!++index)
                     break;
@@ -813,16 +818,16 @@ int rfc_phase_move(uint16_t u_start, int32_t l_num)
         {
             // move item, from back to front
             for (j = i + 1; j <= u_start; j++)
-                if (pst_filter_set->st_filter[i].u_state == ACL_UNSET)
+                if (pst_filter_set->rule[i].u_state == ACL_UNSET)
                 {
                     for (k = 0; k < RFC_FILTER_SIZE_64; k++)
-                        pst_filter_set->st_filter[i].ud_filter[k] = pst_filter_set->st_filter[j].ud_filter[k];
+                        pst_filter_set->rule[i].rule[k] = pst_filter_set->rule[j].rule[k];
                         
-                    pst_filter_set->st_filter[j].u_state = ACL_UNSET;
-                    pst_filter_set->st_filter[j].b_newitem = ACL_NEW;
-                    pst_filter_set->st_filter[i].u_tagid = i;
-                    pst_filter_set->st_filter[i].b_newitem = ACL_NEW;
-                    pst_filter_index[pst_filter_set->st_filter[i].u_ifgroup].u_changed = ACL_CHANGED;
+                    pst_filter_set->rule[j].u_state = ACL_UNSET;
+                    pst_filter_set->rule[j].b_newitem = ACL_NEW;
+                    pst_filter_set->rule[i].u_tagid = i;
+                    pst_filter_set->rule[i].b_newitem = ACL_NEW;
+                    pst_filter_index[pst_filter_set->rule[i].u_ifgroup].changed = ACL_CHANGED;
                     i++;
                     
                     if (!--count)
@@ -838,40 +843,32 @@ int rfc_init(void)
 {
     int i;
 
-    g_ix_rfc_table_base->pst_main_set = g_ix_rfc_table_base->st_filter_set;
-    g_ix_rfc_table_base->pst_backup_set = g_ix_rfc_table_base->st_filter_set + 1;
-    rfc_init_default_rule(&g_ix_rfc_table_base->pst_main_set->st_filter[MPP_MAX_FILTERS]);
-    rfc_init_default_rule(&g_ix_rfc_table_base->pst_backup_set->st_filter[MPP_MAX_FILTERS]);
+    g_ix_rfc_table_base->main_rs = g_ix_rfc_table_base->rule_set;
+    g_ix_rfc_table_base->bak_rs = g_ix_rfc_table_base->rule_set + 1;
+    rfc_init_default_rule(&g_ix_rfc_table_base->main_rs->rule[CHUNK_TOTAL_SZIE]);
+    rfc_init_default_rule(&g_ix_rfc_table_base->bak_rs->rule[CHUNK_TOTAL_SZIE]);
 
 
-    for (i = 0; i < MPP_MAX_FILTERS + 1; i ++)
+    for (i = 0; i < CHUNK_TOTAL_SZIE + 1; i ++)
     {
-        g_ix_rfc_table_base->pst_main_set->st_filter[i].u_state = ACL_UNSET;
-        g_ix_rfc_table_base->pst_main_set->st_filter[i].b_newitem = ACL_NOT_NEW;
-        g_ix_rfc_table_base->pst_backup_set->st_filter[i].u_state = ACL_UNSET;
-        g_ix_rfc_table_base->pst_backup_set->st_filter[i].b_newitem = ACL_NOT_NEW;
+        g_ix_rfc_table_base->main_rs->rule[i].u_state = ACL_UNSET;
+        g_ix_rfc_table_base->main_rs->rule[i].b_newitem = ACL_NOT_NEW;
+        g_ix_rfc_table_base->bak_rs->rule[i].u_state = ACL_UNSET;
+        g_ix_rfc_table_base->bak_rs->rule[i].b_newitem = ACL_NOT_NEW;
     }
     
-    for (i = 0; i < MPP_MAX_ACL_NUM; i++)
-        MPP_GET_MD_VAR(g_ix_rfc_table_base->pst_set) [i] = (rfc_filter_set_s *) ADDR_MDU_TO_MD(g_ix_rfc_table_base->pst_main_set);
+         g_ix_rfc_table_base->pst_acl_ptr_md = g_ix_rfc_table_base->main_rs;
         
-    for (i = 0; i < MPP_MAX_ACL_NUM; i++)
-    {
-        g_ix_rfc_table_base->st_filter_index[i].u_filter_num = 0;
-    }
-        
-    for (i = 0; i < MPP_MAX_ACL_NUM; i++)
-    {
-        /** removed by tsihang below */
-        /** MPP_ASSIGN_ARR(pst_acl->pst_acl_ptr,[i],rfc_phase_set_s*,pst_acl->st_phase+i); */
-        /** below instead */
 
-        g_ix_rfc_table_base->st_phase[i].ul_enabled = 0;
-        (MPP_GET_MDU_VAR(g_ix_rfc_table_base->pst_acl_ptr) [i]) = (rfc_phase_set_s *)(g_ix_rfc_table_base->st_phase + i);
-        (MPP_GET_MD_VAR(g_ix_rfc_table_base->pst_acl_ptr) [i]) = (rfc_phase_set_s *) ADDR_MDU_TO_MD(g_ix_rfc_table_base->st_phase + i);
-    }
+        g_ix_rfc_table_base->commit.rule_num = 0;
+
+
+        g_ix_rfc_table_base->st_phase.ul_enabled = 0;
+        g_ix_rfc_table_base->pst_acl_ptr_mdu = &g_ix_rfc_table_base->st_phase + i;
+        g_ix_rfc_table_base->pst_acl_ptr_md = &g_ix_rfc_table_base->st_phase + i;
+
     
-    g_ix_rfc_table_base->pst_acl_commit = g_ix_rfc_table_base->st_phase + MPP_MAX_ACL_NUM - 1;
+        g_ix_rfc_table_base->pst_acl_commit = &g_ix_rfc_table_base->st_phase + MPP_MAX_ACL_NUM - 1;
     
     return ACL_OK;
 }

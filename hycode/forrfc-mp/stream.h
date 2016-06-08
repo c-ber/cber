@@ -19,12 +19,12 @@
 
 
 /*---------------ºêº¯Êý--------------*/
-#define RFC_FILTER_GET()        (g_ix_rfc_table_base->pst_backup_set)
+#define RFC_FILTER_GET()        (g_ix_rfc_table_base->bak_rs)
 
 #define RFC_FILTER_SET_UCHANGE(_iifgrp, _v)  \
-              (g_ix_rfc_table_base->st_filter_index[_iifgrp - 1].u_changed = _v)
+              (g_ix_rfc_table_base->commit.changed = _v)
 
-#define RFC_FILTER_INDEX_GET()  (g_ix_rfc_table_base->st_filter_index)
+#define RFC_FILTER_INDEX_GET()  (g_ix_rfc_table_base->commit)
 
 #define IPV4    0x04
 #define IPV6    0x06
