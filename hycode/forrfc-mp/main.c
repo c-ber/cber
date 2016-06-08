@@ -35,16 +35,7 @@ int iptoint( const char *ip )
 int main(int argc,char * argv[])
 {
     printf("test start! \n");
-    int c_argc = 10;
-    char tmp[rule_mask_item_num][32] = {
-            "add", "1","10.21.71.210", "120.198.232.105", "1373", "80", "tcp", "1", "forward", "1"
-    };
-    char *c_argv[rule_mask_item_num];
-    int i = 0;
-    for( i = 0 ; i < rule_mask_item_num; i++)
-    {
-        c_argv[i] = tmp[i];
-    }
+
 
     dataplane_stream_global_initialize();
 

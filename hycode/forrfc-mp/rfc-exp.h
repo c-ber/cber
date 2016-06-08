@@ -148,7 +148,7 @@ typedef struct _rule_action_t
 // structure for CES...
 typedef struct CES
 {
-    uint32_t    ul_hash_index;
+    uint32_t    ul_hash_index;       /* hash index*/
     uint32_t    ul_next;
     uint32_t    ul_eq_id: 24,                               // 3 byte, eqID;
                 ul_table: 8;
@@ -224,7 +224,7 @@ typedef struct rfc_phase_set_s
 #define MPP_MAX_ACL_NUM         1
 #define MPP_MAX_ACL_CES_NUM     30  //chunk equivalence set 的内存分配总数
 #define MPP_MAX_ACL_CBM_NUM     (1<<4)// 掩码规则分类位图(class bitmp)各个阶段的总内存分配
-#define MPP_MAX_ACL_HASH_SIZE   20
+#define MPP_MAX_ACL_HASH_SIZE   20     //哈希求模的模值
 
 typedef struct rfc_phase_data
 {

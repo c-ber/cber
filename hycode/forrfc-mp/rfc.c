@@ -62,7 +62,10 @@ int rfc_noder_init(rfc_phase_set_s *pst_acl_commit, rfc_phase_data_s *pst_acl_ph
         
     pst_noder->ul_cell_index = MPP_MAX_ACL_CELLS_NUM - pst_acl_commit->ul_free_cell_num;
     pst_noder->ul_cell_num = ul_max;
-    MPP_ASSIGN_VAR(pst_noder->pul_cell, uint32_t *, pst_acl_commit->ul_cells + pst_noder->ul_cell_index);
+
+    pst_noder->pul_cell_mdu = (uint32_t *)(pst_acl_commit->ul_cells + pst_noder->ul_cell_index);
+    pst_noder->pul_cell_md = (uint32_t *)(pst_acl_commit->ul_cells + pst_noder->ul_cell_index);
+
     pst_acl_commit->ul_free_cell_num -= ul_max;
     pst_noder->ul_eq_id = 0;
     pst_noder->ul_ces_index = pst_acl_phase_data->ul_ces_index;
@@ -96,8 +99,8 @@ uint32_t rfc_search_bmp(uint64_t *pud_bmp, uint32_t ul_table)
     rfc_phase_data_s *pst_acl_phase_data = &g_ix_rfc_table_base->st_acl_phase_data;
     uint32_t     *pul_hash = pst_acl_phase_data->ul_ces_hash;
     rfc_ces_s    *pst_ces = pst_acl_phase_data->st_ces;
-    rfc_ces_s    *pst_temp;
-    uint64_t     *pud_temp;
+    rfc_ces_s    *ces_tmp;   //指向 pst_ces结构体变量   临时变量
+    uint64_t     *cbm_tmp;   //指向 pst_acl_phase_data->ud_cbm_data的临时变量
     uint32_t     ul_same_cbm = ACL_END_LINK;
     
     //tCES = ptrlistEqs->head;
@@ -112,34 +115,34 @@ uint32_t rfc_search_bmp(uint64_t *pud_bmp, uint32_t ul_table)
         
         while (ul_index != ACL_END_LINK)
         {
-            pst_temp = &pst_ces[ul_index];
+            ces_tmp = &pst_ces[ul_index];
 
             if (ul_same_cbm != ACL_END_LINK)
             {
-                if (ul_same_cbm == pst_temp->ul_cbm_index)
+                if (ul_same_cbm == ces_tmp->ul_cbm_index)
                 {
-                    if (pst_temp->ul_table == ul_table)
-                        return pst_temp->ul_eq_id;
+                    if (ces_tmp->ul_table == ul_table)
+                        return ces_tmp->ul_eq_id;
                 }
             }
             else
             {
                 // find same ud_bmp from hash table
-                if (rfc_compare_bmp(pud_bmp, &pst_acl_phase_data->ud_cbm_data[pst_temp->ul_cbm_index], pst_acl_phase_data->u_real_size) == RFCTRUE)
+                if (rfc_compare_bmp(pud_bmp, &pst_acl_phase_data->ud_cbm_data[ces_tmp->ul_cbm_index], pst_acl_phase_data->u_real_size) == RFCTRUE)
                 {
-                    if (pst_temp->ul_table == ul_table)
+                    if (ces_tmp->ul_table == ul_table)
                     {
-                        return pst_temp->ul_eq_id;
+                        return ces_tmp->ul_eq_id;
                     }
                         
                     else
                     {
-                        ul_same_cbm = pst_temp->ul_cbm_index;
+                        ul_same_cbm = ces_tmp->ul_cbm_index;
                     }
                 }
             }
             
-            ul_index = pst_temp->ul_next;
+            ul_index = ces_tmp->ul_next;
         }
     }
    
@@ -155,26 +158,26 @@ uint32_t rfc_search_bmp(uint64_t *pud_bmp, uint32_t ul_table)
         return ACL_END_LINK;
     }
 
-    pst_temp = &pst_ces[pst_acl_phase_data->ul_ces_index];
-    pst_temp->ul_hash_index = ul_hash_index;
-    pst_temp->ul_next = pul_hash[ul_hash_index];
-    pst_temp->ul_eq_id = g_ix_rfc_table_base->pst_acl_commit->st_phase_nodes[ul_table].ul_eq_id++;
-    pst_temp->ul_table = ul_table;
+    ces_tmp = &pst_ces[pst_acl_phase_data->ul_ces_index];
+    ces_tmp->ul_hash_index = ul_hash_index;
+    ces_tmp->ul_next = pul_hash[ul_hash_index];
+    ces_tmp->ul_eq_id = g_ix_rfc_table_base->pst_acl_commit->st_phase_nodes[ul_table].ul_eq_id++;
+    ces_tmp->ul_table = ul_table;
     pul_hash[ul_hash_index] = pst_acl_phase_data->ul_ces_index++;
     if (ul_same_cbm == ACL_END_LINK)
     {
-        pst_temp->ul_cbm_index = pst_acl_phase_data->ul_cbm_index;
+        ces_tmp->ul_cbm_index = pst_acl_phase_data->ul_cbm_index;
         pst_acl_phase_data->ul_cbm_index += pst_acl_phase_data->u_real_size;
-        pud_temp = &pst_acl_phase_data->ud_cbm_data[pst_temp->ul_cbm_index];
+        cbm_tmp = &pst_acl_phase_data->ud_cbm_data[ces_tmp->ul_cbm_index];
         for (i = 0; i < pst_acl_phase_data->u_real_size; i++)
-            pud_temp[i] = pud_bmp[i];
+            cbm_tmp[i] = pud_bmp[i];
     }
     else
     {
-        pst_temp->ul_cbm_index = ul_same_cbm;
+        ces_tmp->ul_cbm_index = ul_same_cbm;
     }
         
-    return pst_temp->ul_eq_id;
+    return ces_tmp->ul_eq_id;
 }
 
 
@@ -420,17 +423,18 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule
         }
         
         // Pre scan for action
-        //将已添加的规则放在一个二维规则表里
+        //13个chunk都有各自的一个ces表，里面cbm是用链表串起来的长度，单个是64位
         for (n = 0; n < pst_filter_index->rule_num; n++)
         {
             st_filter_action[ul_action_num].rid = n / LENGTH64;
             st_filter_action[ul_action_num].action = 1;
 
+            /**/
             DATA64_BITMASK_SET (&st_filter_action[ul_action_num].bitmask, n);
             index = pst_filter_set->rule[pst_filter_index->rule_status[n]].rule_item[com][0];
             st_filter_action[ul_action_num].ck_index = index;
             st_filter_action[ul_action_num].next = pst_filter_action[index];
-            pst_filter_action[index] = &st_filter_action[ul_action_num];
+            pst_filter_action[index] = &st_filter_action[ul_action_num];/*这里赋值了，就说明这个chunk项的index项不为空*/
             ul_action_num++;
             // second is high+1, the clear bit
             index = pst_filter_set->rule[pst_filter_index->rule_status[n]].rule_item[com][1] + 1;
@@ -458,7 +462,7 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule
                 return ACL_CES_ERROR;
             }
         }
-        //z这里会循环chunk，并对chuank值赋值
+        //预处理表赋值，action为空时候, eq_id为0, 否则填对应的值
         for (i = 0; i < MPP_MAX_PHASE0_CELL; i++)
         {
             if (pst_filter_action[i] != NULL)
@@ -483,7 +487,7 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule
                 }
             }
 
-            MPP_GET_MDU_VAR(pst_acl_commit->st_phase_nodes[com].pul_cell) [i] = ul_eq_id;
+            pst_acl_commit->st_phase_nodes[com].pul_cell_mdu[i] = ul_eq_id;
         }
         
         for (i = 0; i < ul_action_num; i++)
@@ -641,81 +645,78 @@ int rfc_phase_commit(void)
 
     rule_comit_t        *pst_filter_index = &g_ix_rfc_table_base->commit;
 
-    for (i = 0; i < MPP_MAX_ACL_NUM; i++)
-    {
-        pst_filter_index[i].rule_num = 0;
-    }
+
+    pst_filter_index->rule_num = 0;
+
 
     for (i = 0; i < CHUNK_TOTAL_SZIE; i++)
     {
         if (pst_filter_set->rule[i].u_state == ACL_ENABLE)
         {
             u_ifgroup = pst_filter_set->rule[i].u_ifgroup;
-            pst_filter_index[u_ifgroup - 1].rule_status[pst_filter_index[u_ifgroup - 1].rule_num++] = i;
+            pst_filter_index->rule_status[pst_filter_index->rule_num++] = i;
         }
     }
     
-    for (i = 0; i < MPP_MAX_ACL_NUM; i++)
+
+    if (pst_filter_index->rule_num > 0)
     {
-        if (pst_filter_index[i].rule_num > 0)
+        if (pst_filter_index->changed == ACL_CHANGED)
         {
-            if (pst_filter_index[i].changed == ACL_CHANGED)
-            {                
-                rfc_phase_init(i);
+            rfc_phase_init(0);
 
-                //MC_PRINT ("pst_acl_commit : %p, %d\n", pst_acl_commit, pst_acl_commit - g_ix_rfc_table_base->st_phase);
-                if ((result = rfc_phase0(pst_acl_commit, pst_filter_set, &pst_filter_index[i])) != ACL_OK)
-                {
-                    return result;
-                }
-
-                if ((result = rfc_phase1(&pst_acl_commit->st_phase_nodes[0], &pst_acl_commit->st_phase_nodes[7], 3, 7)) != ACL_OK)
-                {
-                    return result;
-                }    
-                
-                if ((result = rfc_phase2(&pst_acl_commit->st_phase_nodes[6], &pst_acl_commit->st_phase_nodes[10], 10)) != ACL_OK)
-                {
-                    return result;
-                } 
-                
-                if ((result = rfc_phase3(&pst_acl_commit->st_phase_nodes[10], &pst_acl_commit->st_phase_nodes[12], i)) != ACL_OK)
-                {
-                    return result;
-                }
-
-                pst_acl_commit->ul_enabled = ENABLE;
-                pst_acl_temp = g_ix_rfc_table_base->pst_acl_ptr_mdu;
-
-                g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
-
-                /** removed by tsihang below */
-                /** MPP_ASSIGN_ARR(g_ix_rfc_table_base->pst_acl_ptr, [i], rfc_phase_set_s *, pst_acl_commit); */
-                /** below instead */
-
-                g_ix_rfc_table_base->pst_acl_ptr_mdu = (rfc_phase_set_s *)pst_acl_commit;
-                g_ix_rfc_table_base->pst_acl_ptr_md  = (rfc_phase_set_s *) pst_acl_commit;
-
-                pst_acl_commit = pst_acl_temp;
-                g_ix_rfc_table_base->pst_acl_commit = &pst_acl_commit;
-
-                pst_filter_index[i].changed = ACL_NOT_CHANGED;
-            }
-
-            else
+            if ((result = rfc_phase0(pst_acl_commit, pst_filter_set, pst_filter_index)) != ACL_OK)
             {
-                g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
+                return result;
             }
 
-            //pst_filter_index[i].u_filter_num = 0;//这一行不知道干嘛的，注释试下
+            if ((result = rfc_phase1(&pst_acl_commit->st_phase_nodes[0],
+                                     &pst_acl_commit->st_phase_nodes[7], 3, 7)) != ACL_OK)
+            {
+                return result;
+            }
+
+            if ((result = rfc_phase2(&pst_acl_commit->st_phase_nodes[6],
+                                     &pst_acl_commit->st_phase_nodes[10], 10)) != ACL_OK)
+            {
+                return result;
+            }
+
+            if ((result = rfc_phase3(&pst_acl_commit->st_phase_nodes[10],
+                                     &pst_acl_commit->st_phase_nodes[12], 0)) != ACL_OK)
+            {
+                return result;
+            }
+
+            pst_acl_commit->ul_enabled = ENABLE;
+            pst_acl_temp = g_ix_rfc_table_base->pst_acl_ptr_mdu;
+
+            g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
+
+            /** removed by tsihang below */
+            /** MPP_ASSIGN_ARR(g_ix_rfc_table_base->pst_acl_ptr, [i], rfc_phase_set_s *, pst_acl_commit); */
+            /** below instead */
+
+            g_ix_rfc_table_base->pst_acl_ptr_mdu = (rfc_phase_set_s *)pst_acl_commit;
+            g_ix_rfc_table_base->pst_acl_ptr_md  = (rfc_phase_set_s *) pst_acl_commit;
+
+            pst_acl_commit = pst_acl_temp;
+            g_ix_rfc_table_base->pst_acl_commit = &pst_acl_commit;
+
+            pst_filter_index->changed = ACL_NOT_CHANGED;
         }
 
         else
         {
+            g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
+        }
+    }
+    else
+        {
              g_ix_rfc_table_base->pst_acl_ptr_md = pst_filter_set;
              g_ix_rfc_table_base->pst_acl_ptr_mdu->ul_enabled = 0;
         }
-    }
+
 
     // add spinlock
     pst_backup_set = g_ix_rfc_table_base->main_rs;
