@@ -90,6 +90,8 @@ int create_tcp_client(int *sockfd)
     }
     else
     {
+        printf("Connect server success!\n");
+        printf("Service ip : 192.168.20.86, port = 6001 \n");
         return 0;
     }
 }
@@ -102,7 +104,7 @@ int snd_tcp_data(int *sockfd)
     {
         perror("Send data fail, should be reconnect!");
         close(*sockfd);
-        create_tcp_client(sockfd);
+        //create_tcp_client(sockfd);//导致重发数据包
     }
      return ret;
 }
@@ -180,7 +182,7 @@ int recv_udp_data(int *sockfd)
     sigprocmask(SIG_UNBLOCK, &intmask, NULL);
     return -1;
 }
-
+uint32_t valid_pkt = 0;
 void decode(const struct pcap_pkthdr * pkthdr, const unsigned char *raw_pkt)
 {
     //struct ethhdr *eth_header = (struct ethhdr *)(raw_pkt);
@@ -202,6 +204,8 @@ void decode(const struct pcap_pkthdr * pkthdr, const unsigned char *raw_pkt)
     memcpy(rcv_buf, payload, rcv_len);
     if (payload[0] == 0x64 || payload[1] == 0x70 || payload[2] == 0x69)
     {
+        valid_pkt++;
+        printf("process: %d packet have receive !", valid_pkt);
         snd_tcp_data(&tcp_fd);
     }
     
@@ -231,7 +235,7 @@ void getPacket(u_char * arg, const struct pcap_pkthdr * pkthdr, const u_char * p
 }
 int main(int argc,char * argv[])
 {
-    printf(">>>>>>>>>>>>>test start :\n");
+    printf("\ntest start :\n");
     //int udp_fd = -1;
     create_tcp_client(&tcp_fd);
 
@@ -265,6 +269,7 @@ int main(int argc,char * argv[])
 
     /* wait loop forever */
     int id = 0;
+    printf("Start to listen data now...\n");
     pcap_loop(device, -1, getPacket, (u_char*)&id);
 
     close(tcp_fd);
