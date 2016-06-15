@@ -51,7 +51,7 @@ union unIP
 #endif
 
 
-#define MPP_MAX_PHASE0_CELL 65536
+#define MPP_MAX_PHASE0_CELL (65536)
 
 #define ACL_ENABLE      2
 #define ACL_DISABLE     1
@@ -171,13 +171,13 @@ typedef struct PNODER
     uint32_t ul_ces_index;          // pointer of the first CES of this table
 } rfc_pnoder_s;
 
-#define TABLE_0_PHASE0 65536
-#define TABLE_1_PHASE0 65536
-#define TABLE_2_PHASE0 65536
-#define TABLE_3_PHASE0 65536
-#define TABLE_4_PHASE0 65536
-#define TABLE_5_PHASE0 65536
-#define TABLE_6_PHASE0 65536
+#define TABLE_0_PHASE0 MPP_MAX_PHASE0_CELL
+#define TABLE_1_PHASE0 MPP_MAX_PHASE0_CELL
+#define TABLE_2_PHASE0 MPP_MAX_PHASE0_CELL
+#define TABLE_3_PHASE0 MPP_MAX_PHASE0_CELL
+#define TABLE_4_PHASE0 MPP_MAX_PHASE0_CELL
+#define TABLE_5_PHASE0 MPP_MAX_PHASE0_CELL
+#define TABLE_6_PHASE0 MPP_MAX_PHASE0_CELL
 
 #define TABLE_7_PHASE1 4
 #define TABLE_8_PHASE1 4

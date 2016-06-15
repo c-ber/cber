@@ -83,12 +83,11 @@ uint32_t rule_rfc_match (uint8_t uc_iifgrp, V4_5TUP_T * ip5tuple)
         value11 = (pst_pnoder[11].pul_cell_md)[value7 * pst_pnoder[8].ul_eq_id + value8];
         value12 = (pst_pnoder[12].pul_cell_md)[value10 * pst_pnoder[11].ul_eq_id + value11];
 
-        int n = 0;
-        for( n = 0 ; n < 5; n++)
-        {
-            printf("test----------[%d] = %d\n", n,
-                    MPP_GET_MD_VAR (pst_pnoder[6].pul_cell)[n]);
-        }
+
+        printf("test------- = %u\n",*(pst_pnoder[5].pul_cell_md));
+        printf("test------- = %u\n",*(pst_pnoder[4].pul_cell_md));
+        printf("test------- = %u\n",*(pst_pnoder[4].pul_cell_md+1));
+
         printf("%d %d %d %d %d %d %d %d %d %d %d %d %d\n",
                 value0,value1,value2,value3,value4,value5,value6,value7,
                 value8,value9,value10,value11,value12);

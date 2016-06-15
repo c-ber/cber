@@ -17,6 +17,14 @@ void rfc_init_default_rule(rule_t *pst_default)
     }
 }
 
+void printf_cbm(uint64_t * ptr, int n )
+{
+    int i = 0 ;
+    for( i = 0 ; i < n ; i++)
+    {
+        printf("=========> cbm value[%02d] = %#x \n",i, *(ptr+i));
+    }
+}
 
 // before every phase, must init
 int rfc_phase_init(uint16_t u_ifgroup)
@@ -390,7 +398,10 @@ uint32_t rfc_get_rule_cost(uint64_t *pud_bmp)
 // return : void
 int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule_comit_t *pst_filter_index)
 {
-    uint32_t i, n, com, index;
+    uint32_t i     = 0;
+    uint32_t n     = 0;
+    uint32_t com   = 0;
+    uint32_t index = 0;//存放当前chunk中的有效的索引值
     uint64_t ud_bmp[RFC_SIZE64];
     uint32_t ul_action_num, ul_eq_id;
 
@@ -404,6 +415,7 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule
     // Chunk[0] to Chunk[5] of Phase 0
     for (com = 0; com < CHUNK_TOTAL_SZIE; com++)
     {
+        printf("sizeof(pst_filter_action) = %d \n", sizeof(pst_filter_action));
         memset (pst_filter_action, 0, sizeof(pst_filter_action));
         memset (st_filter_action, 0, sizeof(st_filter_action));
         
@@ -434,7 +446,9 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule
             index = pst_filter_set->rule[pst_filter_index->rule_status[n]].rule_item[com][0];
             st_filter_action[ul_action_num].ck_index = index;
             st_filter_action[ul_action_num].next = pst_filter_action[index];
-            pst_filter_action[index] = &st_filter_action[ul_action_num];/*这里赋值了，就说明这个chunk项的index项不为空*/
+
+            /*这里赋值了，就说明这个chunk项的index项不为空*/
+            pst_filter_action[index] = &st_filter_action[ul_action_num];
             ul_action_num++;
             // second is high+1, the clear bit
             index = pst_filter_set->rule[pst_filter_index->rule_status[n]].rule_item[com][1] + 1;
@@ -447,6 +461,7 @@ int rfc_phase0(rfc_phase_set_s *pst_acl_commit, rule_set_t *pst_filter_set, rule
                 DATA64_BITMASK_SET (&st_filter_action[ul_action_num].bitmask, n);
                 st_filter_action[ul_action_num].next = pst_filter_action[index];
                 st_filter_action[ul_action_num].ck_index = index;
+
                 pst_filter_action[index] = &st_filter_action[ul_action_num];
                 ul_action_num++;
             }
@@ -544,7 +559,8 @@ int  rfc_phase(rfc_pnoder_s *pst_node1, rfc_pnoder_s *pst_node2, rfc_pnoder_s *p
     return ACL_OK;
 }
 
-int rfc_phase1(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes, uint32_t ul_len, uint32_t ul_table)
+int rfc_phase1(rfc_pnoder_s *pst_prev_phase_nodes,
+        rfc_pnoder_s *pst_phase_nodes, uint32_t ul_len, uint32_t ul_table)
 {
     uint32_t com;
     int result = 0;
@@ -552,7 +568,9 @@ int rfc_phase1(rfc_pnoder_s *pst_prev_phase_nodes, rfc_pnoder_s *pst_phase_nodes
     // Chunk[0] ~ Chunk[2] of Phase 1
     for (com = 0; com < ul_len; com++)
     {
-        if ( (result = rfc_phase(&pst_prev_phase_nodes[com << 1], &pst_prev_phase_nodes[(com << 1) + 1], pst_phase_nodes + com, ul_table + com)) != ACL_OK)
+        if ( (result = rfc_phase(&pst_prev_phase_nodes[com << 1],
+              &pst_prev_phase_nodes[(com << 1) + 1],
+              pst_phase_nodes + com, ul_table + com)) != ACL_OK)
         {
             return result;
         }
@@ -669,7 +687,7 @@ int rfc_phase_commit(void)
             {
                 return result;
             }
-
+            printf_cbm(g_ix_rfc_table_base->st_acl_phase_data.ud_cbm_data, 16);
             if ((result = rfc_phase1(&pst_acl_commit->st_phase_nodes[0],
                                      &pst_acl_commit->st_phase_nodes[7], 3, 7)) != ACL_OK)
             {
