@@ -112,6 +112,8 @@ namespace SimulationTransfer
             readlen++;
             string tmp = null;
 
+            System.Text.UTF8Encoding ut = new System.Text.UTF8Encoding(false);
+
             //dr["应用ID"] = type;
             //dr["应用名称"] = type;
             //dr["应用类别"] = type;
@@ -167,7 +169,7 @@ namespace SimulationTransfer
                 {
                     return false;
                 }
-                tmp = Encoding.Default.GetString(buf, readlen, length);
+                tmp = ut.GetString(buf, readlen, length);
                 dr["应用名称"] = tmp;
                 readlen += length;
             }
@@ -184,7 +186,8 @@ namespace SimulationTransfer
                 {
                     return false;
                 }
-                tmp = Encoding.Default.GetString(buf, readlen, length);
+                tmp = ut.GetString(buf, readlen, length);
+
                 dr["应用行为"] = tmp;
                 readlen += length;
             }
@@ -201,7 +204,7 @@ namespace SimulationTransfer
                 {
                     return false;
                 }
-                tmp = Encoding.Default.GetString(buf, readlen, length);
+                tmp = ut.GetString(buf, readlen, length);
                 dr["审计用户名"] = tmp;
                 readlen += length;
             }
@@ -220,7 +223,7 @@ namespace SimulationTransfer
                 {
                     return false;
                 }
-                tmp = Encoding.Default.GetString(buf, readlen, length);
+                tmp = ut.GetString(buf, readlen, length);
                 dr["审计内容"] = tmp;
                 readlen += length;
             }
