@@ -74,7 +74,7 @@ int pcap_read(char *input_file, uint8_t *data)
 }
 
 
-void test_gtpv1(uint8_t * ptr, int len)
+void test_protocol(uint8_t * ptr, int len)
 {
     mp_error_t rv ;
     cvmx_wqe_t work;
@@ -95,7 +95,7 @@ int main(int argc,char * argv[])
     }
     else
     {
-        test_gtpv1(data, len);
+        test_protocol(data, len);
     }
 
     return 0;

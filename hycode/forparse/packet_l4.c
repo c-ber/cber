@@ -48,7 +48,23 @@ mp_error_t semp_L4_parse(cvmx_wqe_t *work, struct pbuf *p, mpp_control_st *mpp, 
                 hydra_stat_inc(stat_business_innerl4_udp);
                 break;
             }
-
+        case IP_PROTO_STCP:
+            if (HEADER_OUTER == outer_inner)
+            {
+               hydra_stat_inc(stat_business_outerl4_sctp);
+               LOG_PRINT(M_PARSE, LV_INFO, "Enter SCTP:\n");
+#define DEBUG_S11_ONLY 0
+#if DEBUG_S11_ONLY
+               return MP_E_NONE;
+#else
+               return semp_sctp_parse(work, p, mpp);
+#endif
+            }
+            else
+            {
+                hydra_stat_inc(stat_business_innerl4_sctp);
+                break;
+            }
          default:
             LOG_PRINT(M_PARSE, LV_INFO, "Unsupported protocol: %d.\n", protocol);
             mpp->tuple->v4.protocol = 0;

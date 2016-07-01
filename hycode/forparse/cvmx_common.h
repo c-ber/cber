@@ -39,6 +39,7 @@
 #define cvmx_get_core_num() 2
 typedef pthread_mutex_t cvmx_spinlock_t;
 
+#define semp_ntohs(a) ntohs(a)
 
 typedef struct
 {
@@ -46,6 +47,58 @@ typedef struct
 }cvmx_wqe_t;
 
 
+typedef enum {
+    XSUCCESS = 0,   /** Successfully */
+    XFAILURE,       /** Normal failure */
+    XENOENT,        /** No such element */
+    XEINVAL,        /** Invalid argument */
+    XEACCES,        /** Permission denied */
+    XENOMEM = 5,        /** Out of memory */
+    XERANGE,        /** Out of range */
+    XETIME,     /** Timer expired */
+    XENOSPC,        /** No space left on device */
+    XEHDERR,        /** Hardware error */
+    XEMEM = 10,     /** Memory error */
+    XEQUEF,     /** Queue full*/
+    XEQUEE,     /** Queue empty */
+    XEINIT,     /** Uninit*/
+    XENOTFOUND,     /** NotFound*/
+    XEUNMATCH = 15,     /** UNMATCH */
+    XEEXIST,        /** Exist */
+    XEOVERTIME,     /** copy to over times  */
+    XETIMEOUT,      /** Timeout*/
+    XECHECKERR ,     /* Check error */
+    XEWQEALLOCFAIL = 20,      /* Wqe alloc fail */
+    XEPKTALLOCFAIL,      /* Packet data buff alloc fail */
+    XEACLERR,        /* RFC error */
+    XEACLLISTERR,        /* RFC list error */
+    XEACLCESERR,        /* RFC ces error */
+    XEACLCELLERR = 25,        /* RFC cell error */
+    SE_UNSUPPORT,
+    XEPKTTOOLONG=30,
+    XEADDIMSIFAIL,
+    XEADDIMEIFAIL,
+    XEADDMSISDNFAIL,
+    XE_ADDTAI_FAIL,
+    XE_ADDGUTI_FAIL,
+    XEADDTIMESTAMPFAIL,
+    XEUNKOWN,
+
+    MP_OK                   = 0,           /* 正常返回 */
+    MP_PARSE_RLT            = 100,         /* 协议解析结果错误 */
+    MP_TABLE_EMPTY          = 101,         /* 空表操作 */
+    MP_TABLE_FULL           = 102,         /* 表项已满 */
+    MP_NOT_FOUND            = 103,         /* 表项未找到 */
+    MP_CELL_FOUND           = 104,         /* 表项已找到 */
+    MP_FUN_PARAM_ERR        = 105,         /* 函数参数非法 */
+    MP_NULL_POINT           = 106,         /* 空指针错误 */
+    MP_SPACE_NOT_ENOUGH     = 107,         /* 指针指向的地址空间不够 */
+    MP_NON_BCD_FORMAT       = 108,         /* 非BCD格式 */
+    MP_NO_LOG_READ          = 109,         /* 当前没有可读日志 */
+    MP_RELATE_SUCCESS       = 110,         /* gtpu关联成功 */
+    MP_EXCEPTION_STAT       = 111,         /* 未建表的异常关联情况 */
+    MP_FAIL                 = 255          /* 正常处理中的错误返回 */
+}mp_code_t;
 
 typedef enum mp_error_e{
 	MP_E_NONE                 = 0,          /* OK */

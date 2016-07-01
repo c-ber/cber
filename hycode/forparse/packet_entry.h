@@ -33,6 +33,14 @@
 //#include "gmm_nas_parse.h"
 
 
+#ifndef DOWN
+#define DOWN    0
+#endif
+
+#ifndef UP
+#define UP      1
+#endif
+
 typedef struct
 {
     ip_comm_t srcip;
@@ -67,7 +75,23 @@ typedef enum
     PARSE_UNKNOW_OR_NOSUPPORT, /*protocol identify Unknow*/
 }parse_result_t;
 
+typedef struct
+{
+    uint16_t    bear_id;        /*bear id*/
+    ip_comm_t   gTP_ip;         /*gtp-u ip*/
+    uint32_t    gTP_id;         /*gtp-u teid*/
+}TransportLayerMsg_t;
 
+typedef  struct
+{
+    uint8_t              isPacketValid; /*对关联模块是否是有效的， YES有效 NO无效*/
+    uint8_t              pduCode;       /*initiatingMessage successfulOutcome unsuccessfulOutcome outcome*/
+    uint8_t              procecode;     /* Procedure Code */
+    uint8_t              mask;          /*信息是否有效的标志位，详见 RANAP_IE_VALID_TYPE_EM*/
+    TransportLayerMsg_t  transportMsg;  /*transport layer message*/
+    rai_t                rai;           /*路由区标志*/
+    imsi_t               imsi;          /*International Mobile Subscriber Identification Number*/
+}parse_ranap_t;
 
 typedef struct
 {
@@ -77,7 +101,7 @@ typedef struct
     ip_comm_t           sgsnip;
 
 //    parse_sccp_t        sccp_info;
-//    parse_ranap_t       ranap_info;/*RAI\teid\ip\procecode\protocolIE_id\bear_id\imsi\mask*/
+    parse_ranap_t       ranap_info;/*RAI\teid\ip\procecode\protocolIE_id\bear_id\imsi\mask*/
 //    parse_gmm_nas_t     gmm_info;/*RAI\msgtype\imsi\p-tmsi\imei\imsi\mask*/
 }parse_IuPS_t;
 
@@ -109,12 +133,98 @@ typedef struct
 
 typedef struct
 {
+    uint32_t sequence_no;  /*sequence count*/
+    uint8_t bear_id;      /*EPS bearer identity*/
+    uint8_t dir;         /*direction*/
+    uint32_t data_len;      /*ciphered message length*/
+    uint8_t *data;             /* pointer to ciphered message*/
+    lte_kasme_t kasme;      /*key*/
+    uint8_t type;           /*algorithm type*/
+} nas_info_t;
+
+
+typedef struct
+{
+    uint8_t *data;         /*output plain code*/
+    uint32_t len;          /*output plaine code length*/
+} nas_plain_t;
+
+typedef enum
+{
+    NAS_MSG_TYPE_ATTACH_ACCEPT    = 0x42,
+    NAS_MSG_TYPE_TAU_ACCEPT       = 0x49,
+    NAS_MSG_GUTI_REALLOCATION_CMD = 0x50,
+    NAS_MSG_TYPE_MAX
+}NAS_MSG_TYPE_E;
+
+typedef struct
+{
+    ip_comm_t   tip;
+    uint32_t    teid;
+}parse_rab_t;
+
+enum type_identity_em
+{
+    TYPE_INVALID = 0,
+    TYPE_OLD_GUTI = 6,
+    TYPE_IMSI = 1,
+};
+
+typedef struct
+{
+    uint16_t    EMM_message_type;   //NAS EPS Mobility Management Message Type
+    uint16_t    cipher_alg_type;    //Type of ciphering algorithm
+    uint16_t    nas_pkt_off;
+    uint16_t    nas_pkt_len;
+    //uint16_t    nas_cipher_off;     //offset to cipher data
+    uint8_t *   nas_cipher_ptr;     //pointer to cipher data
+    uint16_t    nas_cipher_len;     //length of the cipher data
+    lte_rand_t  rand;               //rand value from the NAS PDU
+    uint8_t     ciphered_flag;      //flag indicate if the message has been ciphered
+    uint8_t     sequence_no;
+    uint8_t     submit_flag;        //whether submit to contrl core
+    lte_guti_t  guti;               //store guti in nas
+    union{
+        lte_guti_t  guti;
+        lte_imsi_t  imsi;
+    }init_identify;
+    enum type_identity_em type_of_identity;  /* Indicating intialiaUEMessage packet has imsi or old_GUTI, 1: for imsi, 0: for old_guti */
+}parse_nas_t;
+
+
+
+typedef  struct
+{
+    uint8_t     direction;  /* packet direction, 0: up direction from eNodeB to MME, 1: down direction, from MME to eNodeB */
+    uint8_t     procecode;  /* Procedure Code */
+    uint32_t    protocolIE_id;  /**/
+    uint16_t    bear_id;          /* NAS use */
+    uint16_t    sequence_no;      /* NAS use */
+    uint32_t    cn_id;
+    uint32_t    access_node_id;
+    ip_comm_t   access_node_ip;
+    ip_comm_t   cn_ip;
+    lte_tai_t   tai;
+    parse_nas_t nas;
+    uint8_t     nas_exist;
+    parse_rab_t rab_info;
+    parse_rab_t s1u_dl_fteid;
+    lte_ecgi_t  ecgi;
+    uint8_t     ecgi_exist;
+    uint8_t     is_enb_path_switch_suc;/*if the ENodeB path switch process success*/
+}parse_s1ap_t;
+
+typedef struct
+{
     prase_protocol_em  protocol;
     parse_result_t     result;
     uint8_t            IuPS_msg_num;
     uint8_t            is_sccp_pkt;
-
-    parse_gtpv1c_t gtpv1c;
+    union
+    {
+        parse_s1ap_t s1ap;
+        parse_gtpv1c_t gtpv1c;
+    };
     uint8_t  version;
     parse_ip_t ip;
 }parse_pkt_info_t;

@@ -124,11 +124,6 @@ struct gtpv1c_hdr
 #define PBUF_PTR_IP(_type, _ptr, _p, offset) (_ptr = (_type)(_p->ptr_offset+(char *)_p->ptr)+offset)
 #define GTPC_IE_COMMON_HDR_LEN            (4)
 
-enum
-{
-    UP_LINK     = 1,
-    DOWN_LINK   = 0,
-};
 
 /*typedef struct
 {

@@ -142,6 +142,13 @@ typedef enum {
  GTP_MAX
 }umts_tunnel_node_t;
 
+
+typedef enum
+{
+    UP_LINK     = 1,
+    DOWN_LINK   = 0
+}DIRECTION_TYPE_EM;
+
 #define IP_V4 4 /*标志IP版本为4*/
 #define IP_V6 6 /*标志IP版本为6*/
 
