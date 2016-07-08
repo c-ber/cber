@@ -17,45 +17,71 @@
 /*imsi表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagImsiTableUpdateAction
 {
-    IMSIT_UPDATE_IMSI               = 0x0001,           //[[CN]] 更新imsi                  [[CN]]
-    IMSIT_UPDATE_IMEI               = 0x0002,           //[[CN]] 更新imei                  [[CN]]
-    IMSIT_UPDATE_MSISDN             = 0x0004,           //[[CN]] 更新msisdn                [[CN]]
-    IMSIT_UPDATE_EX_FIELD           = 0x0008,           //[[CN]] 更新扩展字段              [[CN]]
-    IMSIT_UPDATE_GUTI               = 0x0010,           //[[CN]] 更新GUTI                  [[CN]]
-    IMSIT_UPDATE_TAI                = 0x0020,           //[[CN]] 更新TAI                   [[CN]]
-    IMSIT_UPDATE_PDN                = 0x0040,           //[[CN]] 更新PDN                   [[CN]]
-    IMSIT_UPDATE_ALG                = 0x0080,           //[[CN]] 更新algorithm type        [[CN]]
-    IMSIT_UPDATE_KASME              = 0x0100,           //[[CN]] 更新kasme                 [[CN]]
-    IMSIT_UPDATE_POS_S11_MME        = 0x0200,           //[[CN]] 更新s11_mme table index   [[CN]]
-    IMSIT_UPDATE_POS_S11_SGW        = 0x0400,           //[[CN]] 更新s11_sgw table index   [[CN]]
-    IMSIT_UPDATE_POS_S1U_SGW        = 0x0800,           //[[CN]] 更新s1u_sgw table index   [[CN]]
-    IMSIT_UPDATE_POS_S1U_ENB        = 0x1000,           //[[CN]] 更新s1u_eNB table index   [[CN]]
-    IMSIT_UPDATE_POS_S6A            = 0x2000,           //[[CN]] 更新s6a table table index [[CN]]
-    IMSIT_UPDATE_POS_S1_MME         = 0x4000,           //[[CN]] 更新s1_mme table index    [[CN]]
-    IMSIT_UPDATE_MASK               = 0x8000,           //[[CN]] 更新mask                  [[CN]]
-    IMSIT_UPDATE_AGING              = 0x10000,          //[[CN]] 更新老化时间              [[CN]]
+    IMSI_T_UPDATE_IMSI                    = 0x0001,           //[[CN]] 更新imsi                                                       [[CN]]
+    IMSI_T_UPDATE_IMEI                    = 0x0002,           //[[CN]] 更新imei                                                       [[CN]]
+    IMSI_T_UPDATE_MSISDN                  = 0x0004,           //[[CN]] 更新msisdn                                                     [[CN]]
+    IMSI_T_UPDATE_EX_FIELD                = 0x0008,           //[[CN]] 更新扩展字段                                                   [[CN]]
+    IMSI_T_UPDATE_GUTI                    = 0x0010,           //[[CN]] 更新GUTI                                                       [[CN]]
+    IMSI_T_UPDATE_TAI                     = 0x0020,           //[[CN]] 更新TAI                                                        [[CN]]
+    IMSI_T_UPDATE_PDN                     = 0x0040,           //[[CN]] 更新PDN                                                        [[CN]]
+    IMSI_T_UPDATE_ALG                     = 0x0080,           //[[CN]] 更新algorithm type                                             [[CN]]
+    IMSI_T_UPDATE_KASME                   = 0x0100,           //[[CN]] 更新kasme                                                      [[CN]]
+    IMSI_T_UPDATE_POS_DL_GTP_C            = 0x0200,           //[[CN]] 更新3g:sgsn控制面表项索引;4g:S11_MME表项                       [[CN]]
+    IMSI_T_UPDATE_POS_UL_GTP_C            = 0x0400,           //[[CN]] 更新3g:ggsn控制面表项索引;4g:S11_SGW表项                       [[CN]]
+    IMSI_T_UPDATE_POS_UL_GTP_U_DEFAULT    = 0x0800,           //[[CN]] 更新3g:主PDP上行用户面表项索引;4g:默认承载上行用户面表项索引   [[CN]]
+    IMSI_T_UPDATE_POS_UL_GTP_U_SECOND     = 0x1000,           //[[CN]] 更新3g:从PDP上行用户面表项索引;4g:专用承载上行用户面表项索引   [[CN]]
+    IMSI_T_UPDATE_POS_DL_GTP_U_DEFAULT    = 0x2000,           //[[CN]] 更新3g:主PDP下行用户面表项索引;4g:默认承载下行用户面表项索引   [[CN]]
+    IMSI_T_UPDATE_POS_DL_GTP_U_SECOND     = 0x4000,           //[[CN]] 更新3g:从PDP下行用户面表项索引;4g:专用承载下行用户面表项索引   [[CN]]
+    IMSI_T_UPDATE_POS_S6A                 = 0x8000,           //[[CN]] 更新s6a table table index                                      [[CN]]
+    IMSI_T_UPDATE_MASK                    = 0x10000,          //[[CN]] 更新mask                                                       [[CN]]
+    IMSI_T_UPDATE_AGING                   = 0x20000,          //[[CN]] 更新老化时间                                                   [[CN]]
+    IMSI_T_UPDATE_POS_AN_INFO             = 0x40000,          //[[CN]] 更新3g:rnc_ip;4g:eNodeB_ip                                     [[CN]]
+    IMSI_T_UPDATE_POS_CN_INFO             = 0x80000,          //[[CN]] 更新3g:sgsn_ip;4g:mme_ip                                       [[CN]]
+    /*add by zhengwan for 3g,begin modified by zhengwan,由于在gn接口中要更新lac*/
+    IMSI_T_UPDATE_PLMN                    = 0x100000,         //[[CN]] 更新rai中的plmn                                                [[CN]]
+    IMSI_T_UPDATE_LAC                     = 0x200000,         //[[CN]] 更新rai中的lac                                                 [[CN]]
+    IMSI_T_UPDATE_RAC                     = 0x400000,         //[[CN]] 更新rai中的rac                                                 [[CN]]
+    IMSI_T_UPDATE_POS_PTMSI_IMSI_MAP      = 0x800000,         //[[CN]] 更新ptmsi_imsi_map index                                       [[CN]]
+    /*add by zhengwan for 3g,end*/
+    IMSI_T_UPDATE_ECGI                    = 0x1000000,         //[[CN]] 更新ecgi                                                      [[CN]]
+    IMSI_T_UPDATE_MOBILE_TYPE             = 0x2000000,         //[[CN]] 更新mobile type                                               [[CN]]
+    IMSI_T_UPDATE_CELL_ID                 = 0x40000000,        //[[CN]] 更新CELL ID                                                   [[CN]]
 }ImsiTableUpdateActionEnum;
+
 
 typedef enum tagImsiTableContentValidMask
 {
-    IMSIT_IMSI_VALID           = 0x0001,           //[[CN]]  IMSI 有效         [[CN]]
-    IMSIT_IMEI_VALID           = 0x0002,           //[[CN]] IMEI 有效          [[CN]]
-    IMSIT_MSISDN_VALID         = 0x0004,           //[[CN]] MSISDN 有效        [[CN]]
-    IMSIT_EX_FIELD_VALID       = 0x0008,           //[[CN]] EX_FIELD有效       [[CN]]
-    IMSIT_GUTI_VALID           = 0x0010,           //[[CN]] GUTI有效           [[CN]]
-    IMSIT_TAI_VALID            = 0x0020,           //[[CN]] TAI有效            [[CN]]
-    IMSIT_PDN_VALID            = 0x0040,           //[[CN]] PDN有效            [[CN]]
-    IMSIT_POS_S11_MME_VALID    = 0x0080,           //[[CN]] s11_mme index 有效 [[CN]]
-    IMSIT_POS_S11_SGW_VALID    = 0x0100,           //[[CN]] s11_sgw index 有效 [[CN]]
-    IMSIT_POS_S1U_SGW_VALID    = 0x0200,           //[[CN]] s1u_sgw index有效  [[CN]]
-    IMSIT_POS_S1U_ENB_VALID    = 0x0400,           //[[CN]] s1u_eNB index有效  [[CN]]
-    IMSIT_POS_S6A_VALID        = 0x0800,           //[[CN]] s6a  index有效     [[CN]]
-    IMSIT_POS_S1_MME_VALID     = 0x1000,           //[[CN]] s1_mme index 有效  [[CN]]
+    IMSI_T_IMSI_VALID                  = 0x0001,           //[[CN]]  IMSI 有效                                                    [[CN]]
+    IMSI_T_IMEI_VALID                  = 0x0002,           //[[CN]] IMEI 有效                                                     [[CN]]
+    IMSI_T_MSISDN_VALID                = 0x0004,           //[[CN]] MSISDN 有效                                                   [[CN]]
+    IMSI_T_EX_FIELD_VALID              = 0x0008,           //[[CN]] EX_FIELD有效                                                  [[CN]]
+    IMSI_T_GUTI_VALID                  = 0x0010,           //[[CN]] GUTI有效                                                      [[CN]]
+    IMSI_T_TAI_VALID                   = 0x0020,           //[[CN]] TAI有效                                                       [[CN]]
+    IMSI_T_PDN_VALID                   = 0x0040,           //[[CN]] PDN有效                                                       [[CN]]
+    IMSI_T_ALG_VALID                   = 0x0080,           //[[CN]] ALG有效                                                       [[CN]]
+    IMSI_T_KASME_VALID                 = 0x0100,           //[[CN]] KASME有效                                                     [[CN]]
+    IMSI_T_POS_DL_GTP_C_VALID          = 0x0200,           //[[CN]] 3g:sgsn控制面表项索引;4g:S11_MME表项有效                      [[CN]]
+    IMSI_T_POS_UL_GTP_C_VALID          = 0x0400,           //[[CN]] 3g:ggsn控制面表项索引;4g:S11_SGW表项有效                      [[CN]]
+    IMSI_T_POS_UL_GTP_U_DEFAULT_VALID  = 0x0800,           //[[CN]] 3g:主PDP上行用户面表项索引;4g:默认承载上行用户面表项索引有效  [[CN]]
+    IMSI_T_POS_UL_GTP_U_SECOND_VALID   = 0x1000,           //[[CN]] 3g:从PDP上行用户面表项索引;4g:专用承载上行用户面表项索引有效  [[CN]]
+    IMSI_T_POS_DL_GTP_U_DEFAULT_VALID  = 0x2000,           //[[CN]] 3g:主PDP下行用户面表项索引;4g:默认承载下行用户面表项索引有效  [[CN]]
+    IMSI_T_POS_DL_GTP_U_SECOND_VALID   = 0x4000,           //[[CN]] 3g:从PDP下行用户面表项索引;4g:专用承载下行用户面表项索引有效  [[CN]]
+    IMSI_T_POS_S6A_VALID               = 0x8000,           //[[CN]] s6a  index有效                                                [[CN]]
+    IMSI_T_POS_AN_INFO_VALID           = 0x10000,          //[[CN]] 3g:rnc_ip;4g:eNodeB_ip有效                                    [[CN]]
+    IMSI_T_AGING_VALID                 = 0x20000,          //[[CN]] AGING有效                                                     [[CN]]
+    IMSI_T_POS_CN_INFO_VALID           = 0x40000,          //[[CN]] 3g:sgsn_ip;4g:mme_ip有效                                      [[CN]]
+    /*add by zhengwan for 3g,begin*/
+    IMSI_T_RAI_VALID                   = 0x80000,          //[[CN]] RAI有效                                                       [[CN]]
+    IMSI_T_POS_PTMSI_IMSI_MAP_VALID    = 0x100000,         //[[CN]] ptmsi index 有效                                              [[CN]]
+    /*add by zhengwan for 3g,end*/
+    IMSI_T_UPDATE_ECGI_VALID           = 0x200000,         //[[CN]] ecgi index 有效                                               [[CN]]
+    IMSI_T_UPDATE_MOBILE_TYPE_VALID    = 0x400000,         //[[CN]] ecgi index 有效                                               [[CN]]
+    IMSI_T_CELL_ID_VALID               = 0x800000,         //[[CN]] CELL ID 有效                                                  [[CN]]
 }ImsiTableContentValidMaskEnum;
 
 #define UPDATE_IMSIT_FIELD(field, action, dst, src, len) \
     memcpy(dst, src, len);\
-    action |= IMSIT_UPDATE_##field;
+    action |= IMSI_T_UPDATE_##field;
 
 
 
@@ -63,80 +89,148 @@ typedef enum tagImsiTableContentValidMask
 /*s1_mme表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagS1_MMETableUpdateAction
 {
-    S1_MMET_UPDATE_ENODE_IP         = 0x0001,           //[[CN]] 更新enode ip       [[CN]]
-    S1_MMET_UPDATE_ENODE_UE_ID      = 0x0002,           //[[CN]] 更新enode ue id    [[CN]]
-    S1_MMET_UPDATE_IMSI             = 0x0004,           //[[CN]] 更新imsi           [[CN]]
-    S1_MMET_UPDATE_MME_IP           = 0x0008,           //[[CN]] 更新mme ip         [[CN]]
-    S1_MMET_UPDATE_MME_UE_ID        = 0x0010,           //[[CN]] 更新mme ue id      [[CN]]
-    S1_MMET_UPDATE_RAND             = 0x0020,           //[[CN]] 更新rand           [[CN]]
-    S1_MMET_UPDATE_OLD_GUTI         = 0x0040,           //[[CN]] 更新old_guti       [[CN]]
-    S1_MMET_UPDATE_ALG_TYPE         = 0x0080,           //[[CN]] 更新算法类型       [[CN]]
-    S1_MMET_UPDATE_GUTI_FLAG        = 0x0100,           //[[CN]] 更新guti flag      [[CN]]
-    S1_MMET_UPDATE_TAI              = 0x0200,           //[[CN]] 更新TAI            [[CN]]
-    S1_MMET_UPDATE_MASK             = 0x0400,           //[[CN]] 更新mask           [[CN]]
-    S1_MMET_UPDATE_AGING            = 0x0800,           //[[CN]] 更新aging          [[CN]]
-    S1_MMET_UPDATE_TIMSI_FLAG       = 0X1000,           //[[CN]] 更新timsi flag     [[CN]]
+    AN_INFOT_UPDATE_AN_IP               = 0x0001,           //[[CN]] 更新3g:rnc_ip;4g:eNodeB_ip                 [[CN]]
+    AN_INFOT_UPDATE_AN_ID               = 0x0002,           //[[CN]] 更新3g:rnc_sccp_id;4g:enode_ue_s1ap_id     [[CN]]
+    AN_INFOT_UPDATE_IMSI                = 0x0004,           //[[CN]] 更新imsi                                   [[CN]]
+    AN_INFOT_UPDATE_CN_IP               = 0x0008,           //[[CN]] 更新3g:sgsn_ip;4g:mme_ip                   [[CN]]
+    AN_INFOT_UPDATE_CN_ID               = 0x0010,           //[[CN]] 更新3g:sgsn_sccp_id;4g:mme_ue_s1ap_id      [[CN]]
+    AN_INFOT_UPDATE_RAND                = 0x0020,           //[[CN]] 更新rand                                   [[CN]]
+    AN_INFOT_UPDATE_OLD_GUTI            = 0x0040,           //[[CN]] 更新old_guti                               [[CN]]
+    AN_INFOT_UPDATE_ALG_TYPE            = 0x0080,           //[[CN]] 更新算法类型                               [[CN]]
+    AN_INFOT_UPDATE_GUTI_FLAG           = 0x0100,           //[[CN]] 更新guti flag                              [[CN]]
+    AN_INFOT_UPDATE_TAI                 = 0x0200,           //[[CN]] 更新TAI                                    [[CN]]
+    AN_INFOT_UPDATE_MASK                = 0x0400,           //[[CN]] 更新mask                                   [[CN]]
+    AN_INFOT_UPDATE_AGING               = 0x0800,           //[[CN]] 更新aging                                  [[CN]]
+    S1_MMET_UPDATE_ECGI                 = 0x1000,           //[[CN]] 更新ECGI                                   [[CN]]
+    AN_INFOT_UPDATE_RAI                 = 0x2000,           //[CN]] 更新RAI                                     [[CN]]
+    AN_INFOT_UPDATE_TIMSI_FLAG          = 0X4000,           //[[CN]] 更新timsi flag                             [[CN]]
+    AN_INFOT_UPDATE_RNC_POINT_CODE      = 0x8000,           //[[CN]] 更新rnc m3ua信令点码                        [[CN]]
+    AN_INFOT_UPDATE_RNC_SCCP_ID         = 0x10000,           //[[CN]] 更新rnc sccp id                           [[CN]]
+    AN_INFOT_UPDATE_SGSN_POINT_CODE     = 0x20000,           //[[CN]] 更新sgsn m3ua信令点码                     [[CN]]
+    AN_INFOT_UPDATE_SGSN_SCCP_ID        = 0x40000,           //[[CN]] 更新sgsn sccp id                          [[CN]]
+    AN_INFOT_UPDATE_MOBILE_TYPE         = 0x80000            //[[CN]] 更新mobile type                           [[CN]]
  }S1_MMETableUpdateActionEnum;
  
 typedef enum tagS1MMETableContentValidMask
 {
-    S1_MMET_IMSI_VALID             = 0x0001,           //[[CN]] 有效性 imsi           [[CN]]
-    S1_MMET_MME_IP_VALID           = 0x0002,           //[[CN]] 有效性 mme ip         [[CN]]
-    S1_MMET_MME_UE_ID_VALID        = 0x0004,           //[[CN]] 有效性 mme ue id      [[CN]]
-    S1_MMET_RAND_VALID             = 0x0008,           //[[CN]] 有效性 rand           [[CN]]
-    S1_MMET_OLD_GUTI_VALID         = 0x0010,           //[[CN]] 有效性 old_guti       [[CN]]
-    S1_MMET_ALG_TYPE_VALID         = 0x0020,           //[[CN]] 有效性 算法类型       [[CN]]
-    S1_MMET_GUTI_FLAG_VALID        = 0x0040,           //[[CN]] 有效性 guti flag      [[CN]]
-    S1_MMET_TAI_VALID              = 0x0080,           //[[CN]] 有效性 TAI            [[CN]]
-    S1_MMET_TIMSI_FLAG_VALID       = 0X0100,           //[[CN]] 有效性 TIMSI flag     [[CN]] 
+    AN_INFOT_AN_IP_VALID           = 0x0001,           //[[CN]] 3g:rnc_ip;4g:eNodeB_ip有效               [[CN]]
+    AN_INFOT_AN_ID_VALID           = 0x0002,           //[[CN]] 3g:rnc_sccp_id;4g:enode_ue_s1ap_id有效   [[CN]]
+    AN_INFOT_IMSI_VALID            = 0x0004,           //[[CN]] 有效性 imsi                              [[CN]]
+    AN_INFOT_CN_IP_VALID           = 0x0008,           //[[CN]] 3g:sgsn_ip;4g:mme_ip有效                 [[CN]]
+    AN_INFOT_CN_ID_VALID           = 0x0010,           //[[CN]] 3g:sgsn_sccp_id;4g:mme_ue_s1ap_id有效    [[CN]]
+    AN_INFOT_RAND_VALID            = 0x0020,           //[[CN]] 有效性 rand                              [[CN]]
+    AN_INFOT_OLD_GUTI_VALID        = 0x0040,           //[[CN]] 有效性 old_guti                          [[CN]]
+    AN_INFOT_ALG_TYPE_VALID        = 0x0080,           //[[CN]] 有效性 算法类型                          [[CN]]
+    AN_INFOT_GUTI_FLAG_VALID       = 0x0100,           //[[CN]] 有效性 guti flag                         [[CN]]
+    AN_INFOT_TAI_VALID             = 0x0200,           //[[CN]] 有效性 TAI                               [[CN]]
+    AN_INFOT_AGING_VALID           = 0x0400,           //[[CN]] 更新aging                                [[CN]]
+    AN_INFOT_ECGI_VALID            = 0x0800,           //[[CN]] 更新ecgi                                 [[CN]]
+    AN_INFOT_RAI_VALID             = 0x1000,           //[[CN]] RAI有效                                  [[CN]]
+    AN_INFOT_TIMSI_FLAG_VALID      = 0X2000,           //[[CN]] 有效性 TIMSI flag                        [[CN]]
+    AN_INFOT_RNC_POINT_CODE_VALID  = 0x4000,           //[[CN]] rnc m3ua信令点码 有效                    [[CN]]
+    AN_INFOT_RNC_SCCP_ID_VALID     = 0x8000,           //[[CN]] rnc sccp id 有效                         [[CN]]
+    AN_INFOT_SGSN_POINT_CODE_VALID = 0x10000,           //[[CN]] sgsn m3ua信令点码 有效                  [[CN]]
+    AN_INFOT_SGSN_SCCP_ID_VALID    = 0x20000,           //[[CN]] sgsn sccp id  有效                      [[CN]]
+    AN_INFOT_MOBILE_TYPE_VALID     = 0x40000            //[[CN]] mobile type  有效                       [[CN]]
 }S1MMETableContentValidMaskEnum;
 
-/* s11-mme 表项的更新操作类型定义，每一位对应更新一个元素 */
-typedef enum tagS11_MMETableUpdateAction
+/*add by zhengwan for 3g,begin*/
+typedef enum tag_P_TMSI_T_UPDATE_EM
 {
-    S11_MMET_UPDATE_FTEID        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
-    S11_MMET_UPDATE_IMSI         = 0x0002,           //[[CN]] 更新imsi        [[CN]]
-    S11_MMET_UPDATE_AGING        = 0x0004,           //[[CN]] 更新aging       [[CN]]
-}S11_MMETableUpdateActionEnum;
+    P_TMSI_T_UPDATE_PTMSI       = 0x0001,           //[[CN]] P-TMSI有效                  [[CN]]
+    P_TMSI_T_UPDATE_IMSI        = 0x0002            //[[CN]] IMSI                        [[CN]]
+}P_TMSI_T_UPDATE_EM;
 
-/*s11-sgw表项的更新操作类型定义，每一位对应更新一个元素*/
-typedef enum tagS11_SGWTableUpdateAction
+typedef enum tag_P_TMSI_T_ContentValidMask
 {
-    S11_SGWT_UPDATE_FTEID        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
-    S11_SGWT_UPDATE_IMSI         = 0x0002,           //[[CN]] 更新imsi        [[CN]]
-    S11_SGWT_UPDATE_AGING        = 0x0004,           //[[CN]] 更新aging       [[CN]]
-}S11_SGWTableUpdateActionEnum;
+    P_TMSI_T_PTMSI_VALID      = 0x0001,           //[[CN]] P-TMSI有效                  [[CN]]
+    P_TMSI_T_IMSI_VALID       = 0x0002            //[[CN]] IMSI                        [[CN]]
+}P_TMSI_T_ActionEnum;
+
+/*add by zhengwan for 3g,end*/
+#if 0
+typedef enum tag_CN_INFOT_UPDATE_EM
+{
+    CN_INFOT_UPDATE_CN_IP       = 0x0001,           //[[CN]] 更新3g:sgsn_ip;4g:mme_ip有效                [[CN]]
+    CN_INFOT_UPDATE_CN_ID       = 0x0002,           //[[CN]] 更新3g:sgsn_sccp_id;4g:mme_ue_s1ap_id有效   [[CN]]
+    CN_INFOT_UPDATE_AN_IP       = 0x0004,           //[[CN]] 更新3g:rnc_ip;4g:eNodeB_ip有效              [[CN]]
+    CN_INFOT_UPDATE_AN_ID       = 0x0008,           //[[CN]] 更新3g:rnc_sccp_id;4g:enode_ue_s1ap_id有效  [[CN]]
+    CN_INFOT_UPDATE_IMSI        = 0x0010            //[[CN]] 更新imsi                                    [[CN]]
+}CN_INFOT_UPDATE_EM;
+
+typedef enum tag_EM_CN_INFOT_PARA_VALID
+{
+    CN_INFOT_CN_IP_VALID       = 0x0001,           //[[CN]] 3g:rnc_ip;4g:eNodeB_ip有效              [[CN]]
+    CN_INFOT_CN_ID_VALID       = 0x0002,           //[[CN]] 3g:rnc_sccp_id;4g:enode_ue_s1ap_id有效  [[CN]]
+    CN_INFOT_AN_IP_VALID       = 0x0004,           //[[CN]] 3g:rnc_ip;4g:eNodeB_ip有效              [[CN]]
+    CN_INFOT_AN_ID_VALID       = 0x0008,           //[[CN]] 3g:rnc_sccp_id;4g:enode_ue_s1ap_id有效  [[CN]]
+    CN_INFOT_IMSI_VALID        = 0x0010,           //[[CN]] imsi有效                                [[CN]]
+}EM_CN_INFOT_PARA_VALID;
+#endif
+
+/* gtp_c表项的更新操作类型定义，每一位对应更新一个元素 */
+typedef enum tag_GTP_C_T_UPDATE_EM
+{
+    GTP_C_T_UPDATE_GTP_IP        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
+    GTP_C_T_UPDATE_TEID          = 0x0002,
+    GTP_C_T_UPDATE_IMSI          = 0x0004,           //[[CN]] 更新imsi        [[CN]]
+    GTP_C_T_UPDATE_AGING         = 0x0008,           //[[CN]] 更新aging       [[CN]]
+}GTP_C_T_UPDATE_EM;
 
 /*s1u表项的更新操作类型定义，每一位对应更新一个元素*/
 typedef enum tagS1UTableUpdateAction
 {
-    S1UT_UPDATE_FTEID        = 0x0001,           //[[CN]] 更新fteid       [[CN]]
-    S1UT_UPDATE_UE_IP        = 0x0002,           //[[CN]] 更新ue_ip       [[CN]]
-    S1UT_UPDATE_IMSI         = 0x0004,           //[[CN]] 更新imsi        [[CN]]
-    S1UT_UPDATE_IMEI         = 0x0008,           //[[CN]] 更新imei        [[CN]]
-    S1UT_UPDATE_MSISDN       = 0x0010,           //[[CN]] 更新msisdn      [[CN]]
-    S1UT_UPDATE_EX_FIELD     = 0x0020,           //[[CN]] 更新ex_field    [[CN]]
-    S1UT_UPDATE_AGING        = 0x0040,           //[[CN]] 更新aging       [[CN]]
-    S1UT_UPDATE_TAI          = 0x0080,           //[[CN]] 更新tai         [[CN]]
-    S1UT_UPDATE_GUTI         = 0x0100,           //[[CN]] 更新guti        [[CN]]
-    S1UT_UPDATE_MASK         = 0x0200,
+    GTP_U_T_UPDATE_GTP_IP       = 0x0001,           //[[CN]] 更新trans_layer_ip        [[CN]]
+    GTP_U_T_UPDATE_TEID         = 0x0002,           //[[CN]] 更新TEID                  [[CN]]
+    GTP_U_T_UPDATE_USER_IP      = 0x0004,           //[[CN]] 更新user_ip               [[CN]]
+    GTP_U_T_UPDATE_IMSI         = 0x0008,           //[[CN]] 更新imsi                  [[CN]]
+    GTP_U_T_UPDATE_IMEI         = 0x0010,           //[[CN]] 更新imei                  [[CN]]
+    GTP_U_T_UPDATE_MSISDN       = 0x0020,           //[[CN]] 更新msisdn                [[CN]]
+    GTP_U_T_UPDATE_EX_FIELD     = 0x0040,           //[[CN]] 更新ex_field              [[CN]]
+    GTP_U_T_UPDATE_AGING        = 0x0080,           //[[CN]] 更新aging                 [[CN]]
+    GTP_U_T_UPDATE_TAI          = 0x0100,           //[[CN]] 更新tai                   [[CN]]
+    GTP_U_T_UPDATE_GUTI         = 0x0200,           //[[CN]] 更新guti                  [[CN]]
+    GTP_U_T_UPDATE_MASK         = 0x0400,           //[[CN]] 更新mask                  [[CN]]
+    /*modified by zhengwan, 由于gn接口中需要更新lac字段，所以将rai的更新标志拆开,begin*/
+    GTP_U_T_UPDATE_PLMN         = 0x0800,           //[[CN]] 更新plmn                  [[CN]]
+    GTP_U_T_UPDATE_LAC          = 0x1000,           //[[CN]] 更新lac                   [[CN]]
+    GTP_U_T_UPDATE_RAC          = 0x2000,           //[[CN]] 更新rac                   [[CN]]
+    /*modified by zhengwan, end*/
+    GTP_U_T_UPDATE_BEARID       = 0x4000,           //[[CN]] 更新BEARID                [[CN]]
+    GTP_U_T_UPDATE_PDN          = 0x8000,           //[[CN]] 更新PDN                   [[CN]]
+    GTP_U_T_UPDATE_ECGI         = 0x10000,           //[[CN]] 更新ECGI                 [[CN]]
 #ifdef STAT_TEST
-    S1UT_UPDATE_CREATE_REALTE= 0x0400,
-    S1UT_UPDATE_B0_NUM       = 0x0800,
-    S1UT_UPDATE_B1_NUM       = 0x1000
+    GTP_U_T_UPDATE_CREATE_REALTE= 0x20000,           //[[CN]] 更新PDN                   [[CN]]
+    GTP_U_T_UPDATE_B0_NUM       = 0x40000,           //[[CN]] 更新PDN                   [[CN]]
+    GTP_U_T_UPDATE_B1_NUM       = 0x80000,          //[[CN]] 更新PDN                   [[CN]]
 #endif
+    GTP_U_T_UPDATE_MOBILE_TYPE  = 0x100000,         //[[CN]] 更新mobile type index     [[CN]]
+    GTP_U_T_UPDATE_CELL_ID      = 0x200000,         //[[CN]] 更新CELL ID有效           [[CN]]
 }S1UTableUpdateActionEnum;
 
 
 
 typedef enum tagS1uTableContentValidMask
 {
-    S1UT_IMSI_VALID            = 0x0001,           //[[CN]]  IMSI 有效         [[CN]]
-    S1UT_IMEI_VALID            = 0x0002,           //[[CN]] IMEI 有效          [[CN]]
-    S1UT_MSISDN_VALID          = 0x0004,           //[[CN]] MSISDN 有效        [[CN]]
-    S1UT_EX_FIELD_VALID        = 0x0008,           //[[CN]] EX_FIELD有效       [[CN]]
-    S1UT_GUTI_VALID            = 0x0010,           //[[CN]] GUTI有效           [[CN]]
-    S1UT_TAI_VALID             = 0x0020,           //[[CN]] TAI有效            [[CN]]
+    GTP_U_T_GTP_IP_VALID                = 0x0001,           //[[CN]] trans_layer_ip有效 [[CN]]
+    GTP_U_T_TEID_VALID                  = 0x0002,           //[[CN]] TEID有效           [[CN]]
+    GTP_U_T_USER_IP_VALID               = 0x0004,           //[[CN]] user_ip有效        [[CN]]
+    GTP_U_T_IMSI_VALID                  = 0x0008,           //[[CN]] IMSI 有效          [[CN]]
+    GTP_U_T_IMEI_VALID                  = 0x0010,           //[[CN]] IMEI 有效          [[CN]]
+    GTP_U_T_MSISDN_VALID                = 0x0020,           //[[CN]] MSISDN 有效        [[CN]]
+    GTP_U_T_AGING_VALID                 = 0x0040,           //[[CN]] AGING 有效         [[CN]]
+    GTP_U_T_EX_FIELD_VALID              = 0x0080,           //[[CN]] EX_FIELD有效       [[CN]]
+    GTP_U_T_GUTI_VALID                  = 0x0100,           //[[CN]] GUTI有效           [[CN]]
+    GTP_U_T_TAI_VALID                   = 0x0200,           //[[CN]] TAI有效            [[CN]]
+    GTP_U_T_RAI_VALID                   = 0x0400,           //[[CN]] RAI有效            [[CN]]
+    GTP_U_T_BEARID_VALID                = 0x0800,           //[[CN]] BEARID有效         [[CN]]
+    GTP_U_T_PDN_VALID                   = 0x1000,           //[[CN]] PDN有效            [[CN]]
+    GTP_U_T_CREATE_REALTE_VALID         = 0x2000,           //[[CN]] CREATE_REALTE有效  [[CN]]
+    GTP_U_T_B0_NUM_VALID                = 0x4000,           //[[CN]] B0_NUM有效         [[CN]]
+    GTP_U_T_B1_NUM_VALID                = 0x8000,           //[[CN]] B1_NUM有效         [[CN]]
+    GTP_U_T_ECGI_VALID                  = 0x10000,          //[[CN]] ECGI有效           [[CN]]
+    GTP_U_T_UPDATE_MOBILE_TYPE_VALID    = 0x20000,          //[[CN]] mobile type index 有效  [[CN]]
+    GTP_U_T_CELL_ID_VALID               = 0x40000,          //[[CN]] CELL ID 有效       [[CN]]
 }S1uTableContentValidMaskEnum;
 
 /*s6a表项的更新操作类型定义，每一位对应更新一个元素*/
@@ -156,6 +250,51 @@ typedef enum tagS_TMSITableUpdateAction
     S_TMSIT_UPDATE_S_TMSI        = 0x0001,           //[[CN]] 更新s_tmsi       [[CN]]
     S_TMSIT_UPDATE_IMSI          = 0x0002,           //[[CN]] 更新imsi         [[CN]]
 }S_TMSITableUpdateActionEnum;
+
+
+typedef enum tag_CN_INFOT_UPDATE_EM
+{
+    CN_INFOT_UPDATE_CN_IP                       = (0x1<<0), //[[CN]] 更新3g:sgsn_ip;4g:mme_ip有效                [[CN]]
+    CN_INFOT_UPDATE_CN_ID                       = (0x1<<1), //[[CN]] 更新3g:sgsn_sccp_id;4g:mme_ue_s1ap_id有效   [[CN]]
+    CN_INFOT_UPDATE_AN_IP                       = (0x01<<2),//[[CN]] 更新3g:rnc_ip;4g:eNodeB_ip有效              [[CN]]
+    CN_INFOT_UPDATE_AN_ID                       = (0x01<<3),//[[CN]] 更新3g:rnc_sccp_id;4g:enode_ue_s1ap_id有效  [[CN]]
+    CN_INFOT_UPDATE_STAT                        = (0x01<<4),//
+    CN_INFOT_UPDATE_CH_VALID                    = (0x01<<5),//
+    CN_INFOT_UPDATE_CH_ENB_IP                   = (0x01<<6),//
+    CN_INFOT_UPDATE_CH_ENB_UE_ID                = (0x01<<7),//
+    CN_INFOT_UPDATE_CH_ECGI                     = (0x01<<8),//
+    CN_INFOT_UPDATE_CH_TAI                      = (0x01<<9),//
+    CN_INFOT_UPDATE_AGING                       = (0x01<<10),//
+    CN_INFOT_UPDATE_HANDOVER_INFO               = (0x01<<11),//
+    CN_INFOT_UPDATE_IMSI                        = (0x01<<12), //[[CN]] 更新imsi                                    [[CN]]
+    CN_INFOT_UPDATE_MASK                        = (0x01<<13), //[[CN]] 更新imsi                                    [[CN]]
+    CN_INFOT_UPDATE_SGSN_POINT_CODE             = (0x01<<14), //[[CN]] 更新imsi                                    [[CN]]
+    CN_INFOT_UPDATE_SGSN_SCCP_ID                = (0x01<<15), //[[CN]] 更新imsi                                    [[CN]]
+    CN_INFOT_UPDATE_RNC_POINT_CODE              = (0x01<<16), //[[CN]] 更新imsi                                    [[CN]]
+    CN_INFOT_UPDATE_RNC_SCCP_ID                 = (0x01<<17), //[[CN]] 更新imsi                                     [[CN]]
+    CN_INFOT_UPDATE_MOBILE_TYPE                 = (0x01<<18)
+}CN_INFOT_UPDATE_EM;
+
+typedef enum tag_CN_INFOT_PARA_VALID_EM
+{
+    CN_INFOT_AN_ID_VALID                       = (0x01<<0),//[[CN]]  3g:rnc_sccp_id;4g:enode_ue_s1ap_id有效  [[CN]]
+    CN_INFOT_STAT_VALID                        = (0x01<<1),//
+    CN_INFOT_CH_VALID                          = (0x01<<2),//
+    CN_INFOT_CH_ENB_IP_VALID                   = (0x01<<3),//
+    CN_INFOT_CH_ENB_UE_ID_VALID                = (0x01<<4),//
+    CN_INFOT_CH_ECGI_VALID                     = (0x01<<5),//
+    CN_INFOT_CH_TAI_VALID                      = (0x01<<6),//
+    CN_INFOT_AGING_VALID                       = (0x01<<7),//
+    CN_INFOT_HANDOVER_INFO_VALID               = (0x01<<8),//
+    CN_INFOT_IMSI_VALID                        = (0x01<<9), //[[CN]]  imsi有效                                [[CN]]
+    CN_INFOT_MASK_VALID                        = (0x01<<10), //[[CN]]  MASK有效                                [[CN]]
+    CN_INFOT_SGSN_POINT_CODE_VALID             = (0x01<<11),//
+    CN_INFOT_SGSN_SCCP_ID_VALID                = (0x01<<12),//
+    CN_INFOT_RNC_POINT_CODE_VALID              = (0x01<<13), //[[CN]]  imsi有效                                [[CN]]
+    CN_INFOT_RNC_SCCP_ID_VALID                 = (0x01<<14), //[[CN]]  MASK有效                                [[CN]]
+    CN_INFOT_UPDATE_MOBILE_TYPE_VALID         = (0x01<<15)
+}CN_INFOT_PARA_VALID_EM;
+
 
 
 /*计时器操作处理*/
@@ -289,8 +428,16 @@ typedef struct
     cvmx_spinlock_unlock(&(imsi_delete_lock));  \
 }while(0)
 
+/* 将通用ip结构转为key值 */
+#define IP_TRASNFER_TO_KEY(ptr, comm_ip)  \
+do{                 \
+    *ptr = comm_ip.version; \
+    ptr++; \
+    memcpy(ptr,  &(comm_ip.ip.u64), sizeof(comm_ip.ip.u64)); \
+    ptr += 16;\
+}while(0)
 
-
+mp_code_t check_TBCD_encode(uint16_t ie_len, uint8_t *ie_buf);
 
 mp_code_t hash_table_search_update(hash_table_t *table, hash_table_control_t *control);
 mp_code_t hash_table_search_destroy(hash_table_t *table, hash_table_control_t *control);
@@ -310,8 +457,18 @@ mp_code_t hash_cell_get_by_index( hash_table_t *table, hash_table_index_t *hti,
 
 mp_code_t hash_cell_get_by_hash( hash_table_t *table, hash_key_t *key,
                                  void *dst_data, uint32_t dst_len );
+
+mp_code_t hash_get_cell_and_index_by_hash( hash_table_t *table,
+                                         hash_key_t   *key,
+                                         void         *dst_data,
+                                         uint32_t      dst_len,
+                                         hash_table_index_t *index);
+
 mp_code_t hash_cell_delete_by_hash( hash_table_t *table,
                                     hash_key_t   *key );
+
+mp_code_t hash_cell_delete_by_index( hash_table_t       *table,
+                                     hash_table_index_t *hti);
 
 mp_code_t hash_cell_update_timer_by_hash(hash_table_t *table,
                                          hash_key_t   *key,
@@ -323,11 +480,11 @@ mp_code_t hash_cell_update_timer_by_index(hash_table_t       *table,
 
 mp_code_t update_imsi_table(void *dst, void *src, uint64_t action);
 mp_code_t update_s1_mme_table(void *dst, void *src, uint64_t action);
-mp_code_t update_s11_mme_table(void *dst, void *src, uint64_t action);
-mp_code_t update_s11_sgw_table(void *dst, void *src, uint64_t action);
+mp_code_t update_gtpc_table(void *dst, void *src, uint64_t action);
 mp_code_t update_s1u_table(void *dst, void *src, uint64_t action);
 mp_code_t update_s6a_table(void *dst, void *src, uint64_t action);
 mp_code_t update_s_tmsi_table(void *dst, void *src, uint64_t action);
+mp_code_t update_ptmsi_imsi_table(void *dst, void *src, uint64_t action);
 
 
 

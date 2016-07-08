@@ -24,12 +24,10 @@
 #include <assert.h>
 #include "lte_relate.h"
 #include "packet_entry.h"
-#include "packet_gtpv2c.h"
+
 #include "hash_alg.h"
 #include "lte_log.h"
-#include "kfifo.h"
-#include "packet_diameter.h"
-#include "dpi.h"
+
 
 //lte_imsi_t imsi_base =  {0x44,0x50,0x14,0x09,0x17,0x02,0x00,0xf8};  /*IMSI*/
   lte_imsi_t imsi_base =  {0x64,0x00,0x78,0x59,0x32,0x50,0x07,0xf6};  /*IMSI*/
@@ -73,7 +71,7 @@ void test_delete()
 
 
     pktinfo.gtpc.message_type = GTP_MSG_DELETE_SES_RSP;
-    pktinfo.gtpc.dstip = s11_mme_ip;
+    pktinfo.gtpc.dstip.ip.v4 = s11_mme_ip;
     pktinfo.gtpc.teid  = s11_mme_teid;
     pktinfo.gtpc.cause = REUQEST_ACCEPT;
 
@@ -95,9 +93,9 @@ void test_gtp_u()
 
     //pktinfo.gtpu.message_type = GTP_MSG_PDU;\
     //上行
-    pktinfo.gtpu.ot_dstip = s1u_sgw_ip;
+    pktinfo.gtpu.ot_dstip.ip.v4 = s1u_sgw_ip;
     pktinfo.gtpu.teid     = s1u_sgw_teid;
-    pktinfo.gtpu.in_dstip = ue_ip;
+    pktinfo.gtpu.in_dstip.ip.v4 = ue_ip;
     ret = lte_gtpu_process(&pktinfo.gtpu);
     if( MP_OK != ret )
     {
@@ -105,9 +103,9 @@ void test_gtp_u()
     }
 
     //下行
-    pktinfo.gtpu.ot_dstip = s1u_enode_ip;
+    pktinfo.gtpu.ot_dstip.ip.v4 = s1u_enode_ip;
     pktinfo.gtpu.teid     = s1u_enode_teid;
-    pktinfo.gtpu.in_dstip = ue_ip;
+    pktinfo.gtpu.in_dstip.ip.v4 = ue_ip;
     ret = lte_gtpu_process(&pktinfo.gtpu);
     if( MP_OK != ret )
     {
@@ -126,8 +124,8 @@ void test35()
 
     pktinfo.gtpc.message_type = GTP_MSG_MODIFY_BEARER_RSP;
     pktinfo.gtpc.fteid[S1U_SGW].teid = s1u_sgw_teid;
-    pktinfo.gtpc.fteid[S1U_SGW].ip  = s1u_sgw_ip;
-    pktinfo.gtpc.dstip = s11_mme_ip;
+    pktinfo.gtpc.fteid[S1U_SGW].ip.ip.v4  = s1u_sgw_ip;
+    pktinfo.gtpc.dstip.ip.v4 = s11_mme_ip;
     pktinfo.gtpc.teid  = s11_mme_teid;
 
     ret = lte_gtpc_process(&pktinfo.gtpc);
@@ -148,8 +146,8 @@ void test34()
 
     pktinfo.gtpc.message_type = GTP_MSG_MODIFY_BEARER_REQ;
     pktinfo.gtpc.fteid[S1U_ENODEB].teid = s1u_enode_teid;
-    pktinfo.gtpc.fteid[S1U_ENODEB].ip  = s1u_enode_ip;
-    pktinfo.gtpc.dstip = s11_sgw_ip;
+    pktinfo.gtpc.fteid[S1U_ENODEB].ip.ip.v4  = s1u_enode_ip;
+    pktinfo.gtpc.dstip.ip.v4 = s11_sgw_ip;
     pktinfo.gtpc.teid  = s11_sgw_teid;
 
     ret = lte_gtpc_process(&pktinfo.gtpc);
@@ -171,13 +169,13 @@ void test33()
 
     pktinfo.gtpc.message_type = GTP_MSG_CREATE_SES_RSP;
     pktinfo.gtpc.fteid[S11_SGW].teid = s11_sgw_teid;
-    pktinfo.gtpc.fteid[S11_SGW].ip  = s1u_sgw_ip;
-    pktinfo.gtpc.dstip = s11_mme_ip;
+    pktinfo.gtpc.fteid[S11_SGW].ip.ip.v4  = s1u_sgw_ip;
+    pktinfo.gtpc.dstip.ip.v4 = s11_mme_ip;
     pktinfo.gtpc.teid  = s11_mme_teid;
     pktinfo.gtpc.fteid[S1U_SGW].teid = s1u_sgw_teid;
-    pktinfo.gtpc.fteid[S1U_SGW].ip  = s1u_sgw_ip;
-    pktinfo.gtpc.pdn.pdn_addr  = ue_ip;
-    pktinfo.gtpc.dstip =s11_mme_ip;
+    pktinfo.gtpc.fteid[S1U_SGW].ip.ip.v4  = s1u_sgw_ip;
+    pktinfo.gtpc.pdn.pdn_addr.ip.v4  = ue_ip;
+    pktinfo.gtpc.dstip.ip.v4 =s11_mme_ip;
     pktinfo.gtpc.teid = s11_mme_teid;
     ret = lte_gtpc_process(&pktinfo.gtpc);
 
@@ -205,7 +203,7 @@ void test32()
     memcpy(pktinfo.gtpc.msisdn, msisdn, sizeof(lte_msisdn_t) );
     pktinfo.gtpc.msisdn_len = 6;
     pktinfo.gtpc.fteid[S11_MME].teid = s11_mme_teid;
-    pktinfo.gtpc.fteid[S11_MME].ip  =  s11_mme_ip;
+    pktinfo.gtpc.fteid[S11_MME].ip.ip.v4  =  s11_mme_ip;
 
     pktinfo.gtpc.message_type = GTP_MSG_CREATE_SES_REQ;
     ret = lte_gtpc_process(&pktinfo.gtpc);
@@ -224,8 +222,8 @@ void test_s6a_request()
     diameter.valid_kasme_rand_pair_num = 1;
     diameter.hop_by_hop = 0x0d700959;
     diameter.valid_mask = ~0;
-    diameter.hss_ip     = 0x0a471a3a;
-    diameter.s6a_mme_ip = 0x0a471b04;
+    diameter.hss_ip.ip.v4     = 0x0a471a3a;
+    diameter.s6a_mme_ip.ip.v4 = 0x0a471b04;
     memcpy( diameter.user_name , imsi, 8);
 
     diameter.dmt_type = DMT_REQ_PKT;
@@ -252,8 +250,8 @@ void test_s6a_response()
     diameter.valid_kasme_rand_pair_num = 1;
     diameter.hop_by_hop = 0x0d700959;
     diameter.valid_mask = ~0;
-    diameter.hss_ip     = 0x0a471a3a;
-    diameter.s6a_mme_ip = 0x0a471b04;
+    diameter.hss_ip.ip.v4     = 0x0a471a3a;
+    diameter.s6a_mme_ip.ip.v4 = 0x0a471b04;
     memcpy( diameter.user_name , imsi, 8);
     diameter.dmt_type = DMT_RES_PKT;
     memcpy(diameter.kasme_info[0].kasme, kasme, sizeof(kasme));
@@ -274,9 +272,9 @@ void test_s1_1()
     memset(&s1ap, 0 , sizeof(parse_s1ap_t));
 
     s1ap.nas.EMM_message_type = EMM_MSG_ATTACH_REQUEST;
-    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-    s1ap.mme_ip = s11_mme_ip;
-    s1ap.enode_ip = s1u_enode_ip;
+//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+//    s1ap.mme_ip = s11_mme_ip;
+//    s1ap.enode_ip = s1u_enode_ip;
     memcpy(s1ap.tai, tai, sizeof(tai));
     //s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
     s1ap.nas.type_of_identity = TYPE_IMSI;
@@ -298,9 +296,9 @@ void test_s1_1_old()
     memset(&s1ap, 0 , sizeof(parse_s1ap_t));
 
     s1ap.nas.EMM_message_type = EMM_MSG_ATTACH_REQUEST;
-    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-    s1ap.mme_ip = s11_mme_ip;
-    s1ap.enode_ip = s1u_enode_ip;
+//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+//    s1ap.mme_ip = s11_mme_ip;
+//    s1ap.enode_ip = s1u_enode_ip;
     memcpy(s1ap.tai, tai, sizeof(tai));
     s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
     //s1ap.nas.type_of_identity = TYPE_IMSI;
@@ -324,10 +322,10 @@ void test_s1_2()
 
     s1ap.nas.EMM_message_type = 0x42;
     s1ap.nas.ciphered_flag = false;
-    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-
-    s1ap.enode_ip = s1u_enode_ip;
-    s1ap.mme_ip   = s11_mme_ip;
+//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+//
+//    s1ap.enode_ip = s1u_enode_ip;
+//    s1ap.mme_ip   = s11_mme_ip;
 
     memcpy(s1ap.nas.guti, guti, sizeof(lte_guti_t));
     ret = lte_s1ap_InitialContextSetup(packet_ptr, &s1ap);
@@ -346,10 +344,10 @@ void test_s1_2_new_guti()
 
     s1ap.nas.EMM_message_type = 0x42;
     s1ap.nas.ciphered_flag = false;
-    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-
-    s1ap.enode_ip = s1u_enode_ip;
-    s1ap.mme_ip   = s11_mme_ip;
+//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
+//
+//    s1ap.enode_ip = s1u_enode_ip;
+//    s1ap.mme_ip   = s11_mme_ip;
 
     memcpy(s1ap.nas.guti, guti_new, sizeof(lte_guti_t));
     ret = lte_s1ap_InitialContextSetup(packet_ptr, &s1ap);
@@ -366,10 +364,10 @@ void test_s1_3()
     memset(&s1ap, 0 , sizeof(parse_s1ap_t));
 
     s1ap.nas.EMM_message_type = EMM_MSG_IDENTIFY_RESPONSE;
-    s1ap.enode_ip             = s1u_enode_ip;
-    s1ap.enode_ue_s1ap_id     = enode_ue_s1ap_id;
-    s1ap.mme_ip               = s11_mme_ip;
-    s1ap.mme_ue_s1ap_id       = mme_ue_s1ap_id;
+    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
+    s1ap.access_node_id       = enode_ue_s1ap_id;
+    s1ap.cn_ip.ip.v4          = s11_mme_ip;
+    s1ap.cn_id                = mme_ue_s1ap_id;
     s1ap.nas.type_of_identity = TYPE_IMSI;
 
     memcpy(s1ap.nas.init_identify.imsi, imsi_base, sizeof(imsi_base));
@@ -392,12 +390,12 @@ void test_s1_4()
 
     //s1ap.nas.EMM_message_type = EMM_SECURITE_COMMAND;
     s1ap.nas.EMM_message_type = EMM_MSG_AUTH_REQUEST;
-    s1ap.enode_ip             = s1u_enode_ip;
-    s1ap.enode_ue_s1ap_id     = enode_ue_s1ap_id;
+    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
+    s1ap.access_node_id       = enode_ue_s1ap_id;
 
     memcpy( s1ap.nas.rand, rand_base, sizeof(rand_base));
 
-    ret = lte_s1ap_downlinkNASTransport(&s1ap);
+    ret = lte_s1ap_downlinkNASTransport(NULL, &s1ap);
     if( MP_OK != ret )
     {
         printf("s1 step 4 ,code[%d]\n", ret);
@@ -409,6 +407,73 @@ void test_s1_5()
     mp_code_t ret = MP_OK;
     parse_s1ap_t s1ap;
 }
+
+
+void test_3g_2()
+{
+    mp_code_t ret;
+    parse_IuPS_t IuPS_info;
+    memset(&IuPS_info, 0,  sizeof(IuPS_info));
+
+    lte_imsi_t          imsi =  {};  /*IMSI*/
+    memcpy(imsi, imsi_base, sizeof(lte_imsi_t));
+
+    IuPS_info.sccp_info.dlr_indic = 0;
+    IuPS_info.gmm_info.valid_ie_mask |= P_TMSI_VALID;
+    IuPS_info.sccp_info.dpc = 1;
+
+    p_tmsi_t p_tmsi = {0x11, 0x22, 0x33, 0x44};
+    memcpy(IuPS_info.gmm_info.p_tmsi, p_tmsi, sizeof(p_tmsi_t));
+
+    ret = dt_gmm_relate_attach_accept(&IuPS_info);
+    if( MP_OK != ret )
+    {
+        printf("step 3g 1 ,code[%d]\n", ret);
+    }
+
+}
+
+
+void test_3g_1(int flag_with_imsi)
+{
+    mp_code_t ret;
+    parse_IuPS_t IuPS_info;
+    memset(&IuPS_info, 0,  sizeof(IuPS_info));
+
+    IuPS_info.sccp_info.message_type = EN_SCCP_MESSAGE_CR;
+    IuPS_info.sccp_info.slr_indic = 1;
+    IuPS_info.sccp_info.dpc = 1;
+
+    if(flag_with_imsi)
+    {
+        IuPS_info.gmm_info.valid_ie_mask |= IMSI_VALID;
+        lte_imsi_t imsi = {0x64, 0x00, 0x00, 0x00, 0x32, 0x05, 0x07, 0xf7};
+        memcpy(IuPS_info.gmm_info.imsi, imsi, sizeof(lte_imsi_t));
+    }
+    else
+    {
+        IuPS_info.gmm_info.valid_ie_mask |= P_TMSI_VALID;
+        p_tmsi_t p_tmsi = {0x19, 0xdc, 0x3e, 0x44};
+        memcpy(IuPS_info.gmm_info.p_tmsi, p_tmsi, sizeof(p_tmsi_t));
+    }
+
+    IuPS_info.ranap_info.mask |= RANAP_IE_RAI_VALID;
+    uint8_t rai[6] = {0x00, 0x64, 0xf0, 0x00, 0x26, 0xaf};
+    memcpy(&IuPS_info.ranap_info.rai, rai, sizeof(rai_t));
+
+
+    IuPS_info.gmm_info.message_type = GMM_MSG_ATTACH_REQUEST;
+
+
+
+    ret = umts_IuPS_relate_init_ue_msg(&IuPS_info);
+    if( MP_OK != ret )
+    {
+        printf("step 3g 1 ,code[%d]\n", ret);
+    }
+
+}
+
 char * tablename[]={
 "TABLE_IMSI",
 "TABLE_S11_MME",
@@ -492,6 +557,9 @@ void test()
         printf("cell[%02d]:\n",i);
         printf("*******************************\n");
 
+        test_3g_1(1);
+        test_3g_1(0);
+
         //test_s1_1();
         //test_s1_2();
 //        test_s1_1_old();
@@ -501,20 +569,20 @@ void test()
 //        test_s6a_response();
 
 //        show_memory();
-        test32();
-        //show_memory();
-
-        test33();
-        show_memory();
-
-
-        test34();
-        //show_memory();
-
-        test35();
-        //show_memory();
-
-        npcp_show_relate_info(imsi_base);
+//        test32();
+//        //show_memory();
+//
+//        test33();
+//        show_memory();
+//
+//
+//        test34();
+//        //show_memory();
+//
+//        test35();
+//        //show_memory();
+//
+//        npcp_show_relate_info(imsi_base);
 
 //        test_gtp_u();
 
@@ -533,35 +601,21 @@ void test()
     //show_memory();
 }
 
-void testdpi()
-{
-    char peer0_0[] = {
-    0x30, 0xff, 0x00, 0x3c, 0x5a, 0xa3, 0x03, 0xa5,
-    0x45, 0x00, 0x00, 0x3c, 0x97, 0x31, 0x40, 0x00,
-    0x40, 0x06, 0xa4, 0x04, 0x0a, 0x74, 0x01, 0x8f,
-    0x6f, 0x1e, 0x84, 0x65, 0x04, 0x6b, 0x00, 0x50,
-    0x3e, 0x50, 0x5d, 0xa6, 0x00, 0x00, 0x00, 0x00,
-    0xa0, 0x02, 0x39, 0x08, 0xa4, 0x15, 0x00, 0x00,
-    0x02, 0x04, 0x05, 0xb4, 0x04, 0x02, 0x08, 0x0a,
-    0x00, 0x19, 0xca, 0x97, 0x00, 0x00, 0x00, 0x00,
-    0x01, 0x03, 0x03, 0x01 };
-    dpi_skb_t skb = {0};
-    skb.ptr_len = sizeof(peer0_0);
-    skb.sap.protocol = 0x0800;
-    skb.sap.network_header = (void*)peer0_0;
-
-    dataplane_dpi_processs(&skb);
-}
 int main(int argc,char * argv[])
 {
 
 //    pthread_t pid = -1;
 //    pthread_create(&pid, NULL, npcp_update_cell_timer, (void *)NULL);
 
-    dataplane_lte_relate_init();
-    test();
+    int i = -5;
+    uint32_t x = 5;
+    if(x > i )
+        printf("fdlkjfkl");
 
-//    testdpi();
+
+//    dataplane_lte_relate_init();
+//    test();
+
 
     //pthread_join(pid,NULL);
 

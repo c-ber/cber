@@ -3,10 +3,47 @@
 
 extern CVMX_SHARED uint64_t g_aging_timer_max;
 
+
+
+mp_code_t check_TBCD_encode(uint16_t ie_len, uint8_t *ie_buf)
+{
+    uint16_t i = 0;
+    uint8_t low  = 0;
+    uint8_t high = 0;
+
+    CVMX_MP_POINT_CHECK(ie_buf, M_S11, LV_ERROR);
+    if ( 0 == ie_len )
+    {
+        return MP_FUN_PARAM_ERR;
+    }
+    for ( i = 0; i < ie_len; i++ )
+    {
+        BIT_LOW_ASCII_4(low, ie_buf[i]);
+        BIT_HIGH_ASCII_4(high,ie_buf[i]);
+
+        if ( ie_len-1 == i )
+        {
+            if ( !isdigit(low) || (!isdigit(high) &&  ((0xf & high)!=0x0f)) )
+            {
+                return MP_NON_BCD_FORMAT;
+            }
+        }
+        else
+        {
+            if ( !isdigit(low) || !isdigit(high) )
+            {
+                return MP_NON_BCD_FORMAT;
+            }
+        }
+
+    }
+    return MP_OK;
+}
+
+
 // Update imsi table callback function
 mp_code_t update_imsi_table(void *dst, void *src, uint64_t action)
 {
-    int i = 0;
     
     CVMX_MP_POINT_CHECK(src, M_S11, LV_ERROR);
     CVMX_MP_POINT_CHECK(dst, M_S11, LV_ERROR);
@@ -14,88 +51,89 @@ mp_code_t update_imsi_table(void *dst, void *src, uint64_t action)
     lte_table_imsi_t   *imsi_src = (lte_table_imsi_t *)src;
     lte_table_imsi_t   *imsi_dst = (lte_table_imsi_t *)dst;
 
-    if( IMSIT_UPDATE_IMSI & action )
+    if( IMSI_T_UPDATE_IMSI & action )
     {
         LTE_DEBUG_PRINTF("update_imsi !\n");
         PRINTF_IMSI(imsi_src->imsi);
         PRINTF_IMSI(imsi_dst->imsi);
         memcpy(imsi_dst->imsi, imsi_src->imsi, sizeof(lte_imsi_t));
-        imsi_dst->mask |= IMSIT_IMSI_VALID;
+        imsi_dst->mask |= IMSI_T_IMSI_VALID;
     }
-    if( IMSIT_UPDATE_IMEI & action )
+    if( IMSI_T_UPDATE_IMEI & action )
     {
         LTE_DEBUG_PRINTF("update_imei !\n");
         PRINTF_IMEI(imsi_src->imei);
         PRINTF_IMEI(imsi_dst->imei);
         memcpy(imsi_dst->imei, imsi_src->imei, sizeof(lte_imei_t));
-        imsi_dst->mask |= IMSIT_IMEI_VALID;
+        imsi_dst->mask |= IMSI_T_IMEI_VALID;
     }
-    if( IMSIT_UPDATE_MSISDN & action )
+    if( IMSI_T_UPDATE_MSISDN & action )
     {
         LTE_DEBUG_PRINTF("update_msisdn !\n");
         PRINTF_MSISDN(imsi_src->msisdn);
         PRINTF_MSISDN(imsi_dst->msisdn);
         memcpy(imsi_dst->msisdn, imsi_src->msisdn, sizeof(lte_msisdn_t));
-        imsi_dst->mask |= IMSIT_MSISDN_VALID;
+        imsi_dst->mask |= IMSI_T_MSISDN_VALID;
     }
-    if( IMSIT_UPDATE_POS_S11_MME & action )
+    if( IMSI_T_UPDATE_POS_DL_GTP_C & action )
     {
-        LTE_DEBUG_PRINTF("update_pos_s11_mme !\n");
-        memcpy(&(imsi_dst->pos_s11_mme), &(imsi_src->pos_s11_mme), sizeof(hash_table_index_t));
-        imsi_dst->mask |= IMSIT_POS_S11_MME_VALID;
+        LTE_DEBUG_PRINTF("update_pos_dl_gtp_c !\n");
+        memcpy(&(imsi_dst->pos_dl_gtp_c), &(imsi_src->pos_dl_gtp_c), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_DL_GTP_C_VALID;
     }
-    if( IMSIT_UPDATE_POS_S11_SGW & action )
+    if( IMSI_T_UPDATE_POS_UL_GTP_C & action )
     {
-        LTE_DEBUG_PRINTF("update_pos_s11_sgw !\n");
-        memcpy(&(imsi_dst->pos_s11_sgw), &(imsi_src->pos_s11_sgw), sizeof(hash_table_index_t));
-        imsi_dst->mask |= IMSIT_POS_S11_SGW_VALID;
+        LTE_DEBUG_PRINTF("update_pos_ul_gtp_c !\n");
+        memcpy(&(imsi_dst->pos_ul_gtp_c), &(imsi_src->pos_ul_gtp_c), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_UL_GTP_C_VALID;
     }
-    if( IMSIT_UPDATE_POS_S6A & action )
+    if( IMSI_T_UPDATE_POS_S6A & action )
     {
         LTE_DEBUG_PRINTF("update_pos_s6a !\n");
         memcpy(&(imsi_dst->pos_s6a), &(imsi_src->pos_s6a), sizeof(hash_table_index_t));
-        imsi_dst->mask |= IMSIT_POS_S6A_VALID;
+        imsi_dst->mask |= IMSI_T_POS_S6A_VALID;
     }
-    if( IMSIT_UPDATE_POS_S1_MME & action )
+    if( IMSI_T_UPDATE_POS_AN_INFO & action )
     {
-        LTE_DEBUG_PRINTF("update_imsi_S1_MME_POS !\n");
-        memcpy(&(imsi_dst->pos_s1_mme), &(imsi_src->pos_s1_mme), sizeof(hash_table_index_t));
-        imsi_dst->mask |= IMSIT_POS_S1_MME_VALID;
+        LTE_DEBUG_PRINTF("update_imsi_AN_INFO_POS !\n");
+        memcpy(&(imsi_dst->pos_an_info), &(imsi_src->pos_an_info), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_AN_INFO_VALID;
     }
-    if( IMSIT_UPDATE_PDN & action )
+    if( IMSI_T_UPDATE_PDN & action )
     {
         LTE_DEBUG_PRINTF("update_pdn !\n"); 
-        memcpy(&(imsi_dst->pdn), &(imsi_src->pdn), sizeof(lte_pdn_t));
-        imsi_dst->mask |= IMSIT_PDN_VALID;
+        memcpy(&(imsi_dst->pdn), &(imsi_src->pdn), sizeof(pdn_t));
+        imsi_dst->mask |= IMSI_T_PDN_VALID;
     }
-    if( IMSIT_UPDATE_EX_FIELD & action )
+    if( IMSI_T_UPDATE_EX_FIELD & action )
     {
         LTE_DEBUG_PRINTF("update_ex_field !\n");
         memcpy(&(imsi_dst->ex_field), &(imsi_src->ex_field), sizeof(extend_field_t));
-        imsi_dst->mask |= IMSIT_EX_FIELD_VALID;
+        imsi_dst->mask |= IMSI_T_EX_FIELD_VALID;
     }
-    if( IMSIT_UPDATE_GUTI & action )
+    if( IMSI_T_UPDATE_GUTI & action )
     {
         LTE_DEBUG_PRINTF("update_imsi_GUTI !\n");
         PRINTF_GUTI(imsi_src->guti);
         PRINTF_GUTI(imsi_dst->guti);
         memcpy(imsi_dst->guti, imsi_src->guti, sizeof(lte_guti_t));
-        imsi_dst->mask |= IMSIT_GUTI_VALID;
+        imsi_dst->mask |= IMSI_T_GUTI_VALID;
     }
-    if( IMSIT_UPDATE_TAI & action )
+    if( IMSI_T_UPDATE_TAI & action )
     {
         LTE_DEBUG_PRINTF("update_imsi_TAI !\n");
         PRINTF_TAI(imsi_src->tai);
         PRINTF_TAI(imsi_dst->tai);
         memcpy(imsi_dst->tai, imsi_src->tai, sizeof(lte_tai_t));
-        imsi_dst->mask |= IMSIT_TAI_VALID;
+        imsi_dst->mask |= IMSI_T_TAI_VALID;
     }
-    if( IMSIT_UPDATE_ALG & action )
+    if( IMSI_T_UPDATE_ALG & action )
     {
         LTE_DEBUG_PRINTF("update_imsi_ALG_type !\n");
         imsi_dst->alg_type = imsi_src->alg_type;
+        imsi_dst->mask |= IMSI_T_ALG_VALID;
     }
-    if( IMSIT_UPDATE_KASME & action )
+    if( IMSI_T_UPDATE_KASME & action )
     {
         PRINTF_IMSI(imsi_src->imsi);
         LTE_DEBUG_PRINTF("update_imsi_kasme !\n");
@@ -103,38 +141,108 @@ mp_code_t update_imsi_table(void *dst, void *src, uint64_t action)
         PRINTF_KASME(imsi_dst->kasme);
 
         memcpy(imsi_dst->kasme, imsi_src->kasme, sizeof(lte_kasme_t));
+        imsi_dst->mask |= IMSI_T_KASME_VALID;
     }
 #ifdef RELATE_AGING
-    if( IMSIT_UPDATE_AGING &action )
+    if( IMSI_T_UPDATE_AGING &action )
     {
         LTE_DEBUG_PRINTF("update_imsi_aging!\n");
         imsi_dst->aging = imsi_src->aging;
+        imsi_dst->mask |= IMSI_T_AGING_VALID;
     }
 #endif
-    if (IMSIT_UPDATE_MASK & action)
+    
+    if (IMSI_T_UPDATE_POS_UL_GTP_U_DEFAULT & action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_ul_gtp_u_default !\n");
+        memcpy(&(imsi_dst->pos_ul_gtp_u[0]), &(imsi_src->pos_ul_gtp_u[0]), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_UL_GTP_U_DEFAULT_VALID;
+        /*for (i=0; i < MAX_NUM_BEARER; i++)
+        {
+            memcpy(&(imsi_dst->pos_ul_gtp_u[i]), &(imsi_src->pos_ul_gtp_u[i]), sizeof(hash_table_index_t));
+        }*/
+    }
+    if (IMSI_T_UPDATE_POS_UL_GTP_U_SECOND& action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_ul_gtp_u_second !\n");
+        memcpy(&(imsi_dst->pos_ul_gtp_u[1]), &(imsi_src->pos_ul_gtp_u[1]), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_UL_GTP_U_SECOND_VALID;
+    }
+    if (IMSI_T_UPDATE_POS_DL_GTP_U_DEFAULT& action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_dl_gtp_u_default !\n");
+        memcpy(&(imsi_dst->pos_dl_gtp_u[0]), &(imsi_src->pos_dl_gtp_u[0]), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_DL_GTP_U_DEFAULT_VALID;
+        /*for (i=0; i < MAX_NUM_BEARER; i++)
+        {
+            memcpy(&(imsi_dst->pos_dl_gtp_u[i]), &(imsi_src->pos_dl_gtp_u[i]), sizeof(hash_table_index_t));
+        }*/
+    }
+    if (IMSI_T_UPDATE_POS_DL_GTP_U_SECOND& action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_dl_gtp_u_second !\n");
+        memcpy(&(imsi_dst->pos_dl_gtp_u[1]), &(imsi_src->pos_dl_gtp_u[1]), sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_DL_GTP_U_SECOND_VALID;
+    }
+    /*modified by zhengwan, 由于gn接口中需要更新lac字段，所以将rai的更新标志拆开,begin*/
+    if (IMSI_T_UPDATE_PLMN & action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_plmn !\n");
+        memcpy(imsi_dst->rai.plmn, imsi_src->rai.plmn, sizeof(plmn_t));
+        imsi_dst->mask |= IMSI_T_RAI_VALID;
+    }
+    if (IMSI_T_UPDATE_LAC & action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_lac !\n");
+        memcpy(imsi_dst->rai.lac, imsi_src->rai.lac, sizeof(lac_t));
+        imsi_dst->mask |= IMSI_T_RAI_VALID;
+    }
+    if (IMSI_T_UPDATE_RAC & action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_rac !\n");
+        memcpy(imsi_dst->rai.rac, imsi_src->rai.rac, sizeof(rac_t));
+        imsi_dst->mask |= IMSI_T_RAI_VALID;
+    }
+    /*modified by zhengwan, end*/
+    if (IMSI_T_UPDATE_POS_PTMSI_IMSI_MAP & action)
+    {
+        LTE_DEBUG_PRINTF("update_pos_ptmsi_imsi_map !\n");
+        memcpy(&imsi_dst->pos_ptmsi_imsi_map, &imsi_src->pos_ptmsi_imsi_map, sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_PTMSI_IMSI_MAP_VALID;
+    }
+
+    if (IMSI_T_UPDATE_POS_CN_INFO & action)
+    {
+        LTE_DEBUG_PRINTF("update_pos_cn_info !\n");
+        memcpy(&imsi_dst->pos_cn_info, &imsi_src->pos_cn_info, sizeof(hash_table_index_t));
+        imsi_dst->mask |= IMSI_T_POS_CN_INFO_VALID;
+    }
+
+    if (IMSI_T_UPDATE_MASK & action)
     {
         LTE_DEBUG_PRINTF("update_imsi_mask !\n");
         imsi_dst->mask = imsi_src->mask;
     }
-    if (IMSIT_UPDATE_POS_S1U_SGW & action)
+
+    if (IMSI_T_UPDATE_ECGI & action)
     {
-        LTE_DEBUG_PRINTF("update_imsi_s1u-sgw !\n");
-        for (i=0; i < MAX_NUM_BEARER; i++)
-        {
-            memcpy(&(imsi_dst->pos_s1u_sgw[i]), &(imsi_src->pos_s1u_sgw[i]), sizeof(hash_table_index_t));
-        }
-        imsi_dst->mask |= IMSIT_POS_S1U_SGW_VALID;
-    }
-    if (IMSIT_UPDATE_POS_S1U_ENB & action)
-    {
-        LTE_DEBUG_PRINTF("update_imsi_s1u-eNB !\n");
-        for (i=0; i < MAX_NUM_BEARER; i++)
-        {
-            memcpy(&(imsi_dst->pos_s1u_eNB[i]), &(imsi_src->pos_s1u_eNB[i]), sizeof(hash_table_index_t));
-        }
-        imsi_dst->mask |= IMSIT_POS_S1U_ENB_VALID;
+        LTE_DEBUG_PRINTF("update_imsi_ecgi !\n");
+        memcpy(&(imsi_dst->ecgi), &(imsi_src->ecgi), sizeof(lte_ecgi_t));
+        imsi_dst->mask |= IMSI_T_UPDATE_ECGI_VALID;
     }
 
+    if (IMSI_T_UPDATE_MOBILE_TYPE & action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_mobile_type !\n");
+        memcpy(&(imsi_dst->mobile_type), &(imsi_src->mobile_type), sizeof(imsi_src->mobile_type));
+        imsi_dst->mask |= IMSI_T_UPDATE_MOBILE_TYPE_VALID;
+    }
+    if (IMSI_T_UPDATE_CELL_ID & action)
+    {
+        LTE_DEBUG_PRINTF("update_imsi_cell_id !\n");
+        memcpy(&(imsi_dst->cell_id), &(imsi_src->cell_id), sizeof(imsi_src->cell_id));
+        imsi_dst->mask |= IMSI_T_CELL_ID_VALID;
+    }
     return MP_OK;
 }
 
@@ -147,158 +255,194 @@ mp_code_t update_s1_mme_table(void *dst, void *src, uint64_t action)
     lte_table_s1_mme_enodeb_t   *s1_mme_src = (lte_table_s1_mme_enodeb_t *)src;
     lte_table_s1_mme_enodeb_t   *s1_mme_dst = (lte_table_s1_mme_enodeb_t *)dst;
 
-    if( S1_MMET_UPDATE_ENODE_IP & action )
+    if( AN_INFOT_UPDATE_AN_IP & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_enode_ip !\n");
-        s1_mme_dst->enode_ip = s1_mme_src->enode_ip;
+        memcpy(&(s1_mme_dst->lte_hash_para.access_node_ip), &(s1_mme_src->lte_hash_para.access_node_ip), sizeof(ip_comm_t));
+        s1_mme_dst->mask |= AN_INFOT_AN_IP_VALID;
     }
-    if( S1_MMET_UPDATE_ENODE_UE_ID & action )
+    if( AN_INFOT_UPDATE_AN_ID & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_enode_ue_id !\n");
-        s1_mme_dst->enode_ue_s1ap_id = s1_mme_src->enode_ue_s1ap_id;
+        s1_mme_dst->lte_hash_para.access_node_id = s1_mme_src->lte_hash_para.access_node_id;
+        s1_mme_dst->mask |= AN_INFOT_AN_ID_VALID;
     }
-    if( S1_MMET_UPDATE_IMSI & action )
+    if( AN_INFOT_UPDATE_IMSI & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_imsi !\n");
         PRINTF_IMSI(s1_mme_src->imsi);
         PRINTF_IMSI(s1_mme_dst->imsi);
         
         memcpy(s1_mme_dst->imsi, s1_mme_src->imsi, sizeof(lte_imsi_t));
-        s1_mme_dst->mask |= S1_MMET_IMSI_VALID;
+        s1_mme_dst->mask |= AN_INFOT_IMSI_VALID;
     }
-    if( S1_MMET_UPDATE_MME_IP & action )
+    if( AN_INFOT_UPDATE_CN_IP & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_mme_ip !\n");
-        s1_mme_dst->mme_ip = s1_mme_src->mme_ip;
-        s1_mme_dst->mask |= S1_MMET_MME_IP_VALID;
+        s1_mme_dst->lte_hash_para.cn_ip = s1_mme_src->lte_hash_para.cn_ip;
+        s1_mme_dst->mask |= AN_INFOT_CN_IP_VALID;
     }
-    if( S1_MMET_UPDATE_MME_UE_ID & action )
+    if( AN_INFOT_UPDATE_CN_ID & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_mme_ue_id !\n");
-        s1_mme_dst->mme_ue_s1ap_id = s1_mme_src->mme_ue_s1ap_id;
-        s1_mme_dst->mask |= S1_MMET_MME_UE_ID_VALID;
+        s1_mme_dst->lte_hash_para.cn_id = s1_mme_src->lte_hash_para.cn_id;
+        s1_mme_dst->mask |= AN_INFOT_CN_ID_VALID;
     }
-    if( S1_MMET_UPDATE_RAND & action )
+    if( AN_INFOT_UPDATE_RAND & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_rand !\n");
         PRINTF_IMSI(s1_mme_src->imsi);
         PRINTF_RAND(s1_mme_src->rand);
         
         memcpy(s1_mme_dst->rand, s1_mme_src->rand, sizeof(lte_rand_t));
-        s1_mme_dst->mask |= S1_MMET_RAND_VALID;
+        s1_mme_dst->mask |= AN_INFOT_RAND_VALID;
     }
-    if( S1_MMET_UPDATE_OLD_GUTI & action )
+    if( AN_INFOT_UPDATE_OLD_GUTI & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_old_guti !\n");
         PRINTF_GUTI(s1_mme_src->old_guti);
         PRINTF_GUTI(s1_mme_dst->old_guti);
         
         memcpy(s1_mme_dst->old_guti, s1_mme_src->old_guti, sizeof(lte_guti_t));
-        s1_mme_dst->mask |= S1_MMET_OLD_GUTI_VALID;
+        s1_mme_dst->mask |= AN_INFOT_OLD_GUTI_VALID;
     }
-    if( S1_MMET_UPDATE_ALG_TYPE & action )
+    if( AN_INFOT_UPDATE_ALG_TYPE & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_alg_type !\n");
         s1_mme_dst->cipher_alg_type = s1_mme_src->cipher_alg_type;
-        s1_mme_dst->mask |= S1_MMET_ALG_TYPE_VALID;
+        s1_mme_dst->mask |= AN_INFOT_ALG_TYPE_VALID;
     }
-    if( S1_MMET_UPDATE_GUTI_FLAG & action )
+    if( AN_INFOT_UPDATE_GUTI_FLAG & action )
     {
         LTE_DEBUG_PRINTF("update_s1_mme_guti_flag !\n");
         s1_mme_dst->guti_flag = s1_mme_src->guti_flag;
-        s1_mme_dst->mask |= S1_MMET_GUTI_FLAG_VALID;
+        s1_mme_dst->mask |= AN_INFOT_GUTI_FLAG_VALID;
     }
 
-    if (S1_MMET_UPDATE_TAI & action)
+    if (AN_INFOT_UPDATE_TAI & action)
     {
         LTE_DEBUG_PRINTF("update_imsi_TAI !\n");
         PRINTF_TAI(s1_mme_src->tai);
         PRINTF_TAI(s1_mme_dst->tai);
         memcpy(s1_mme_dst->tai, s1_mme_src->tai, sizeof(lte_tai_t));
-        s1_mme_dst->mask |= S1_MMET_TAI_VALID;
+        s1_mme_dst->mask |= AN_INFOT_TAI_VALID;
+    }
+	if(S1_MMET_UPDATE_ECGI&action)
+    {
+    	s1_mme_dst->ecgi = s1_mme_src->ecgi;
+        s1_mme_dst->mask |= AN_INFOT_ECGI_VALID;
     }
 #ifdef RELATE_AGING
-    if (S1_MMET_UPDATE_AGING &action)
+    if (AN_INFOT_UPDATE_AGING &action)
     {
         LTE_DEBUG_PRINTF("update_imsi_aging!\n");
         s1_mme_dst->aging = s1_mme_src->aging;
+        s1_mme_dst->mask |= AN_INFOT_AGING_VALID;
     }
 #endif
+    if(AN_INFOT_UPDATE_RAI & action)
+    {
+        memcpy(&s1_mme_dst->rai, &s1_mme_src->rai, sizeof(rai_t));    
+        s1_mme_dst->mask |= AN_INFOT_RAI_VALID;
+    }
 
-    if (S1_MMET_UPDATE_MASK & action)
+    if (AN_INFOT_UPDATE_MASK & action)
     {
         s1_mme_dst->mask = s1_mme_src->mask;
     }
 
-    if (S1_MMET_UPDATE_TIMSI_FLAG & action)
+    if (AN_INFOT_UPDATE_TIMSI_FLAG & action)
     {
         s1_mme_dst->timsi_flag = s1_mme_src->timsi_flag;
-        s1_mme_dst->mask |= S1_MMET_TIMSI_FLAG_VALID;
+        s1_mme_dst->mask |= AN_INFOT_TIMSI_FLAG_VALID;
     }
 
+    if(AN_INFOT_UPDATE_RNC_POINT_CODE & action)
+    {
+        s1_mme_dst->umts_hash_para.rnc_m3ua_signal_code = s1_mme_src->umts_hash_para.rnc_m3ua_signal_code;
+        s1_mme_dst->mask |= AN_INFOT_RNC_POINT_CODE_VALID;
+    }
+
+    if(AN_INFOT_UPDATE_RNC_SCCP_ID & action)
+    {
+        s1_mme_dst->umts_hash_para.rnc_sccp_id = s1_mme_src->umts_hash_para.rnc_sccp_id;
+        s1_mme_dst->mask |= AN_INFOT_RNC_SCCP_ID_VALID;
+    }
+    if(AN_INFOT_UPDATE_SGSN_POINT_CODE & action)
+    {
+        s1_mme_dst->umts_hash_para.sgsn_m3ua_signal_code = s1_mme_src->umts_hash_para.sgsn_m3ua_signal_code;
+        s1_mme_dst->mask |= AN_INFOT_SGSN_POINT_CODE_VALID;
+    }
+    if(AN_INFOT_UPDATE_SGSN_SCCP_ID & action)
+    {
+        s1_mme_dst->umts_hash_para.sgsn_sccp_id = s1_mme_src->umts_hash_para.sgsn_sccp_id;
+        s1_mme_dst->mask |= AN_INFOT_SGSN_SCCP_ID_VALID;
+    }
+    if(AN_INFOT_UPDATE_MOBILE_TYPE & action)
+    {
+        s1_mme_dst->mobile_type = s1_mme_src->mobile_type;
+        s1_mme_dst->mask |= AN_INFOT_MOBILE_TYPE_VALID;
+    }
     return MP_OK;
 }
 
-// Update s11_mme table callback function
-mp_code_t update_s11_mme_table(void *dst, void *src, uint64_t action)
+mp_code_t update_ptmsi_imsi_table(void *dst, void *src, uint64_t action)
+{
+    CVMX_MP_POINT_CHECK(src, M_SYS, LV_ERROR);
+    CVMX_MP_POINT_CHECK(dst, M_SYS, LV_ERROR);
+
+    umts_table_p_tmsi_t   *p_tmsi_src = (umts_table_p_tmsi_t *)src;
+    umts_table_p_tmsi_t   *p_tmsi_dst = (umts_table_p_tmsi_t *)dst;
+
+    if( P_TMSI_T_UPDATE_PTMSI & action )
+    {
+        LTE_DEBUG_PRINTF("update_p_tmsi_PTMSI !\n");
+        memcpy(p_tmsi_dst->p_tmsi, p_tmsi_src->p_tmsi, sizeof(p_tmsi_t));
+    }
+   if( P_TMSI_T_UPDATE_IMSI & action )
+   {
+      LTE_DEBUG_PRINTF("update_p_tmsi_imsi !\n"); 
+
+      memcpy(p_tmsi_dst->imsi, p_tmsi_src->imsi, sizeof(lte_imsi_t));
+   }
+      return MP_OK;
+}    
+
+// Update gtpc table callback function
+mp_code_t update_gtpc_table(void *dst, void *src, uint64_t action)
 {
     CVMX_MP_POINT_CHECK(src, M_S11, LV_ERROR);
     CVMX_MP_POINT_CHECK(dst, M_S11, LV_ERROR);
 
-    lte_table_s11_mme_t   *s11_mme_src = (lte_table_s11_mme_t *)src;
-    lte_table_s11_mme_t   *s11_mme_dst = (lte_table_s11_mme_t *)dst;
+    lte_table_gtpc_t   *gtpc_src = (lte_table_gtpc_t *)src;
+    lte_table_gtpc_t   *gtpc_dst = (lte_table_gtpc_t *)dst;
     
-    if( S11_MMET_UPDATE_IMSI & action )
+    if( GTP_C_T_UPDATE_IMSI & action )
     {
         LTE_DEBUG_PRINTF("update_imsi !\n");
-        PRINTF_IMSI(s11_mme_src->imsi);
-        PRINTF_IMSI(s11_mme_dst->imsi);
-        memcpy(s11_mme_dst->imsi, s11_mme_src->imsi, sizeof(lte_imsi_t));
+        PRINTF_IMSI(gtpc_src->imsi);
+        PRINTF_IMSI(gtpc_dst->imsi);
+        memcpy(gtpc_dst->imsi, gtpc_src->imsi, sizeof(lte_imsi_t));
     }
 
-    if( S11_MMET_UPDATE_FTEID & action )
+    if( GTP_C_T_UPDATE_GTP_IP & action )
     {
-        LTE_DEBUG_PRINTF("update_s11_mme_fteid !\n");
-        memcpy(&(s11_mme_dst->fteid.data), &(s11_mme_src->fteid.data),sizeof(lte_fteid_t));
-    }
-    if( S11_MMET_UPDATE_AGING & action )
-    {
-        LTE_DEBUG_PRINTF("update_s11_mme_aging !\n"); 
-        s11_mme_dst->aging = s11_mme_src->aging;
-    }
-
-    return MP_OK;
-}
-
-// Update s11_sgw table callback function
-mp_code_t update_s11_sgw_table(void *dst, void *src, uint64_t action)
-{
-    CVMX_MP_POINT_CHECK(src, M_S11, LV_ERROR);
-    CVMX_MP_POINT_CHECK(dst, M_S11, LV_ERROR);
-
-    lte_table_s11_sgw_t   *s11_sgw_src = (lte_table_s11_sgw_t *)src;
-    lte_table_s11_sgw_t   *s11_sgw_dst = (lte_table_s11_sgw_t *)dst;
-
-    if (S11_SGWT_UPDATE_IMSI & action)
-    {
-       LTE_DEBUG_PRINTF("update_imsi !\n");
-       PRINTF_IMSI(s11_sgw_src->imsi);
-       PRINTF_IMSI(s11_sgw_dst->imsi);
-       memcpy(s11_sgw_dst->imsi, s11_sgw_src->imsi, sizeof(lte_imsi_t));
-    }
-   
-    if (S11_SGWT_UPDATE_FTEID & action)
-    {
-        LTE_DEBUG_PRINTF("update_s11_sgw_fteid !\n");
-        memcpy(&(s11_sgw_dst->fteid.data), &(s11_sgw_src->fteid.data), sizeof(lte_fteid_t));
+        LTE_DEBUG_PRINTF("update_gtpc_fteid !\n");
+        memcpy(&(gtpc_dst->control_plane_ip), &(gtpc_src->control_plane_ip),sizeof(ip_comm_t));
     }
     
-    if (S11_SGWT_UPDATE_AGING & action)
+    if( GTP_C_T_UPDATE_TEID & action )
     {
-        LTE_DEBUG_PRINTF("update_s11_sgw_aging !\n"); 
-        s11_sgw_dst->aging = s11_sgw_src->aging;
+        LTE_DEBUG_PRINTF("update_gtpc_fteid !\n");
+        gtpc_dst->teid = gtpc_src->teid;
     }
     
+    if( GTP_C_T_UPDATE_AGING & action )
+    {
+        LTE_DEBUG_PRINTF("update_gtpc_aging !\n"); 
+        gtpc_dst->aging = gtpc_src->aging;
+    }
+
     return MP_OK;
 }
 
@@ -307,89 +451,142 @@ mp_code_t update_s1u_table(void *dst, void *src, uint64_t action)
 {
     CVMX_MP_POINT_CHECK(src, M_SYS, LV_ERROR);
     CVMX_MP_POINT_CHECK(dst, M_SYS, LV_ERROR);
-    lte_table_s1u_t   *s1u_src = (lte_table_s1u_t *)src;
-    lte_table_s1u_t   *s1u_dst = (lte_table_s1u_t *)dst;
+    lte_table_gtpu_t   *s1u_src = (lte_table_gtpu_t *)src;
+    lte_table_gtpu_t   *s1u_dst = (lte_table_gtpu_t *)dst;
 
-    if( S1UT_UPDATE_FTEID & action )
+    if( GTP_U_T_UPDATE_GTP_IP & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_fteid !\n");
-        memcpy(&(s1u_dst->fteid.data), &(s1u_src->fteid.data), sizeof(lte_fteid_t));
+        memcpy(&(s1u_dst->trans_layer_ip), &(s1u_src->trans_layer_ip), sizeof(ip_comm_t));
+        s1u_dst->mask |= GTP_U_T_GTP_IP_VALID;
     }
-    if( S1UT_UPDATE_UE_IP & action )
+    if( GTP_U_T_UPDATE_TEID & action )
+    {
+        LTE_DEBUG_PRINTF("update_s1u_fteid !\n");
+        s1u_dst->teid = s1u_src->teid;
+        s1u_dst->mask |= GTP_U_T_TEID_VALID;
+    }
+    if( GTP_U_T_UPDATE_USER_IP & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_ue_ip !\n");
-        s1u_dst->ue_ip = s1u_src->ue_ip;
+        memcpy(&(s1u_dst->user_ip), &(s1u_src->user_ip), sizeof(ip_comm_t));
+        s1u_dst->mask |= GTP_U_T_USER_IP_VALID;
     }
-    if( S1UT_UPDATE_IMSI & action )
+    if( GTP_U_T_UPDATE_IMSI & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_imsi !\n");
         PRINTF_IMSI(s1u_src->imsi);
         PRINTF_IMSI(s1u_dst->imsi);
         memcpy(s1u_dst->imsi, s1u_src->imsi, sizeof(lte_imsi_t));
-        s1u_dst->mask |= S1UT_IMSI_VALID;
+        s1u_dst->mask |= GTP_U_T_IMSI_VALID;
     }
-    if( S1UT_UPDATE_IMEI & action )
+    if( GTP_U_T_UPDATE_IMEI & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_imei !\n");
         PRINTF_IMEI(s1u_src->imei);
         PRINTF_IMEI(s1u_dst->imei);
         memcpy(s1u_dst->imei, s1u_src->imei, sizeof(lte_imei_t));
-        s1u_dst->mask |= S1UT_IMEI_VALID;
+        s1u_dst->mask |= GTP_U_T_IMEI_VALID;
     }
-    if( S1UT_UPDATE_MSISDN & action )
+    if( GTP_U_T_UPDATE_MSISDN & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_msisdn !\n");
         PRINTF_MSISDN(s1u_src->msisdn);
         PRINTF_MSISDN(s1u_dst->msisdn);
         memcpy(s1u_dst->msisdn, s1u_src->msisdn, sizeof(lte_msisdn_t));
-        s1u_dst->mask |= S1UT_MSISDN_VALID;
+        s1u_dst->mask |= GTP_U_T_MSISDN_VALID;
     }
-    if( S1UT_UPDATE_EX_FIELD & action )
+    if( GTP_U_T_UPDATE_EX_FIELD & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_ex_field !\n");
         memcpy(&(s1u_dst->ex_field), &(s1u_src->ex_field), sizeof(extend_field_t));
-        s1u_dst->mask |= S1UT_EX_FIELD_VALID;
+        s1u_dst->mask |= GTP_U_T_EX_FIELD_VALID;
     }
-    if( S1UT_UPDATE_AGING & action )
+    if( GTP_U_T_UPDATE_AGING & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_aging !\n");
         s1u_dst->aging = s1u_src->aging;
+        s1u_dst->mask |= GTP_U_T_AGING_VALID;
     }
-    if( S1UT_UPDATE_TAI & action )
+    if( GTP_U_T_UPDATE_TAI & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_tai !\n");
         PRINTF_TAI(s1u_src->tai);
         PRINTF_TAI(s1u_dst->tai);
         memcpy(s1u_dst->tai, s1u_src->tai, sizeof(lte_tai_t));
-        s1u_dst->mask |= S1UT_TAI_VALID;
+        s1u_dst->mask |= GTP_U_T_TAI_VALID;
     }
-    if( S1UT_UPDATE_GUTI & action )
+    if( GTP_U_T_UPDATE_GUTI & action )
     {
         LTE_DEBUG_PRINTF("update_s1u_guti !\n");
         PRINTF_GUTI(s1u_src->guti);
         PRINTF_GUTI(s1u_dst->guti);
         memcpy(s1u_dst->guti, s1u_src->guti, sizeof(lte_guti_t));
-        s1u_dst->mask |= S1UT_GUTI_VALID;
+        s1u_dst->mask |= GTP_U_T_GUTI_VALID;
     }
-    if (IMSIT_UPDATE_MASK & action)
+    /*modified by zhengwan, 由于gn接口中需要更新lac字段，所以将rai的更新标志拆开,begin*/
+    if( GTP_U_T_UPDATE_PLMN & action )
     {
-        LTE_DEBUG_PRINTF("update_imsi_mask !\n");
+        LTE_DEBUG_PRINTF("update_s1u_plmn !\n");
+        memcpy(s1u_dst->rai.plmn, s1u_src->rai.plmn, sizeof(plmn_t));
+        s1u_dst->mask |= GTP_U_T_RAI_VALID;
+    }
+
+    if( GTP_U_T_UPDATE_LAC & action )
+    {
+        LTE_DEBUG_PRINTF("update_s1u_lac !\n");
+        memcpy(s1u_dst->rai.lac, s1u_src->rai.lac, sizeof(lac_t));
+        s1u_dst->mask |= GTP_U_T_RAI_VALID;
+    }
+    
+    if( GTP_U_T_UPDATE_RAC & action )
+    {
+        LTE_DEBUG_PRINTF("update_s1u_rac !\n");
+        memcpy(s1u_dst->rai.rac, s1u_src->rai.rac, sizeof(rac_t));
+        s1u_dst->mask |= GTP_U_T_RAI_VALID;
+    }
+    /*modified by zhengwan,end*/
+
+    if (GTP_U_T_UPDATE_MASK & action)
+    {
+        LTE_DEBUG_PRINTF("update_s1u_mask !\n");
         s1u_dst->mask = s1u_src->mask;
     }
+    if (GTP_U_T_UPDATE_ECGI & action)
+    {
+        LTE_DEBUG_PRINTF("update_s1u_ecgi !\n");
+        memcpy(&s1u_dst->ecgi, &s1u_src->ecgi, sizeof(lte_ecgi_t));
+        s1u_dst->mask |= GTP_U_T_ECGI_VALID;
+    }
 #ifdef STAT_TEST
-    if( S1UT_UPDATE_CREATE_REALTE & action )
+    if( GTP_U_T_UPDATE_CREATE_REALTE & action )
     {
         s1u_dst->is_create_relate = s1u_src->is_create_relate;
+        s1u_dst->mask |= GTP_U_T_CREATE_REALTE_VALID;
     }
-    if( S1UT_UPDATE_B0_NUM & action )
+    if( GTP_U_T_UPDATE_B0_NUM & action )
     {
         s1u_dst->b0_relate_gtpu_num = s1u_src->b0_relate_gtpu_num;
+        s1u_dst->mask |= GTP_U_T_B0_NUM_VALID;
     }
-    if( S1UT_UPDATE_B1_NUM & action )
+    if( GTP_U_T_UPDATE_B1_NUM & action )
     {
         s1u_dst->b1_relate_gtpu_num = s1u_src->b1_relate_gtpu_num;
+        s1u_dst->mask |= GTP_U_T_B1_NUM_VALID;
     }
 #endif
+    if(GTP_U_T_UPDATE_MOBILE_TYPE & action)
+    {
+        s1u_dst->mobile_type = s1u_src->mobile_type;
+        s1u_dst->mask |= GTP_U_T_UPDATE_MOBILE_TYPE_VALID;
+    }
+    if (GTP_U_T_UPDATE_CELL_ID & action)
+    {
+        LTE_DEBUG_PRINTF("update_s1u_cell_id !\n");
+        memcpy(&s1u_dst->cell_id, &s1u_src->cell_id, sizeof(s1u_src->cell_id));
+        s1u_dst->mask |= GTP_U_T_CELL_ID_VALID;
+    }
+    
     return MP_OK;
 }
 
@@ -406,12 +603,12 @@ mp_code_t update_s6a_table(void *dst, void *src, uint64_t action)
    if( S6_AT_UPDATE_HSSIP & action )
     {
         LTE_DEBUG_PRINTF("update_s6a_hssip !\n");
-        s6a_dst->hssip = s6a_src->hssip ;
+        memcpy(&(s6a_dst->hssip), &(s6a_src->hssip), sizeof(ip_comm_t));
     }
     if( S6_AT_UPDATE_MMEIP  & action )
     {
         LTE_DEBUG_PRINTF("update_s6a_mmeip !\n");
-        s6a_dst->mmeip= s6a_src->mmeip;
+        memcpy(&(s6a_dst->mmeip), &(s6a_src->mmeip), sizeof(ip_comm_t));
     }
     if( S6_AT_UPDATE_HOP_BY_HOP & action )
     {
@@ -628,7 +825,7 @@ mp_code_t hash_table_search_update(hash_table_t *table,
     }
 
     index  = hash_v % table->max_bucket;
-    LTE_DEBUG_PRINTF("%s: offset=%d, Key=0x%lx \n", table->name, index, control->key.data[0]);
+
     bucket = table->first_bucket + index;
 
     CVMX_MP_POINT_CHECK(bucket, M_S11, LV_ERROR);
@@ -678,9 +875,10 @@ mp_code_t hash_table_search_update(hash_table_t *table,
         if(ENABLE == control->new_enable)
         {
             /*new The cell*/
+
             if( HASH_ENTRY_VALID_SIZE_256 == table->cell_size )
             {
-                hash_cell = (hash_cell_t *)malloc(sizeof(hash_cell_t)*2);
+                hash_cell = (hash_cell_t *)HASH_CELL_NEW_256(table->pool);
             }
             else
             {
@@ -691,7 +889,7 @@ mp_code_t hash_table_search_update(hash_table_t *table,
                 LTE_HASH_TABLE_UNLOCK(bucket);
                 LOG_PRINT(M_S11, LV_ERROR, LOG_CONTENT_ALLOC_FAIL);
 
-                if( LTE_GET_TABLE_PTR(TABLE_S1U) == table )
+                if( LTE_GET_TABLE_PTR(TABLE_GTP_U) == table )
                 {
                     hydra_stat_inc(stat_pkts_s1u_new_cell_fail);
                 }
@@ -699,11 +897,11 @@ mp_code_t hash_table_search_update(hash_table_t *table,
                 {
                     hydra_stat_inc(stat_pkts_imsi_new_cell_fail);
                 }
-                else if( LTE_GET_TABLE_PTR(TABLE_S11_SGW) == table )
+                else if( LTE_GET_TABLE_PTR(TABLE_GTP_C) == table )
                 {
                     hydra_stat_inc(stat_pkts_s11_sgw_new_cell_fail);
                 }
-                else if( LTE_GET_TABLE_PTR(TABLE_S11_MME) == table )
+                else if( LTE_GET_TABLE_PTR(TABLE_GTP_C) == table )
                 {
                     hydra_stat_inc(stat_pkts_s11_mme_new_cell_fail);
                 }
@@ -723,7 +921,7 @@ mp_code_t hash_table_search_update(hash_table_t *table,
             control->bucket = bucket; 
             list_add( &(hash_cell->node),&bucket->head);
             bucket->bucket_depth++;
-            LTE_DEBUG_PRINTF("depth: %ld, %s: compare: <New>\n", bucket->bucket_depth, table->name);
+            LTE_DEBUG_PRINTF("%s: compare: <New>\n", table->name);
         }
         else
         {
@@ -741,6 +939,7 @@ mp_code_t hash_table_search_update(hash_table_t *table,
             return MP_NULL_POINT;
         }
         rv = table->update((void *)hash_cell->entry, control->d_update, control->update_action);
+
         if (cvmx_unlikely( MP_OK != rv))
         {
             LTE_HASH_TABLE_UNLOCK(bucket);
@@ -776,7 +975,6 @@ mp_code_t hash_table_get_bucket_depth_by_index(hash_table_t *table,
     LTE_HASH_TABLE_LOCK(bucket);
     *depth = bucket->bucket_depth;
     LTE_HASH_TABLE_UNLOCK(bucket);
-    LTE_DEBUG_PRINTF("====index: %d=====depth: %d==================\n", index, *depth);
     return MP_OK;
 }
 
@@ -821,6 +1019,10 @@ mp_code_t hash_table_search_by_index_and_offset(hash_table_t *table,
     LTE_HASH_TABLE_UNLOCK(bucket);
     return ret;               
 }
+
+
+
+
      
 void *hash_table_index_to_entry(hash_table_t *table, hash_table_index_t *index)
 {
@@ -1243,6 +1445,131 @@ mp_code_t hash_cell_get_by_hash( hash_table_t *table,
     return ret;
 
 }
+
+
+/******************************************************************************
+ * 函数名称    : hash_get_cell_and_index_by_hash
+ * 功能        : 根据哈希获取cell值以及该cell的索引
+ * 参数        : table:哈希表结构体，带了表头基址
+ *               key  :哈希关键字,可定位到桶子偏移,即行号
+ *                     遍历双向链表，比较cell中key是否一致,即确定列
+ *               dst_data :由调用者分配空间，将查询的值填进去
+ *               index :获取的哈希表cell的索引
+ * 说明        : key限定为表项结构中头几个字段
+ * 返回        : 错误码，查找成功返回 MP_CELL_FOUND
+******************************************************************************/
+mp_code_t hash_get_cell_and_index_by_hash( hash_table_t *table,
+                                         hash_key_t   *key,
+                                         void         *dst_data,
+                                         uint32_t      dst_len,
+                                         hash_table_index_t *index)
+{
+    mp_code_t ret = MP_OK;
+    struct list_head *pos  = NULL;
+    struct list_head *next = NULL;
+
+    hash_bucket_t  *bucket     = NULL;
+    hash_cell_t    *src_cell   = NULL;
+    hash_cmp_em_t  cmp_rlt     = HASH_CMP_DIFF;
+    uint32_t       hash_result = 0;
+    uint8_t        entry[TABLE_CELL_MAX_LEN] = {0};
+
+    CVMX_MP_POINT_CHECK(table,    M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(key,      M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(dst_data, M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(index, M_S11, LV_ERROR);
+
+    if( BYTE_GET_UINT64(key->size) > sizeof(entry) )
+    {
+        LTE_DEBUG_PRINTF("Error: The key size exceeds the entry size.\n");
+        return MP_SPACE_NOT_ENOUGH;
+    }
+    memcpy(entry, key, BYTE_GET_UINT64(key->size) );
+
+    /* 哈希运算获取桶偏移值 */
+    CVMX_MP_POINT_CHECK(table->hash, M_S11, LV_ERROR);
+    MP_ERR_PRT(table->hash(key, &hash_result));
+    hash_result = hash_result % table->max_bucket;
+
+    bucket = table->first_bucket + hash_result;
+    CVMX_MP_POINT_CHECK(bucket, M_S11, LV_ERROR);
+
+    /*遍历双向链表，比较cell中key是否一致,即确定列*/
+    LTE_HASH_TABLE_LOCK(bucket);
+    list_for_each_safe(pos, next, &(bucket->head))
+    {
+        src_cell = list_entry(pos, hash_cell_t, node);
+
+        CVMX_MP_POINT_CHECK_UNLOCK(src_cell, M_S11, LV_ERROR);
+        CVMX_MP_POINT_CHECK_UNLOCK(table->compare, M_S11, LV_ERROR);
+
+        ret = table->compare((void *)src_cell->entry, entry, &cmp_rlt);
+        if (ret != MP_OK)
+        {
+            break;
+        }
+        if(HASH_CMP_SAME == cmp_rlt)
+        {
+            index->node     = pos;
+            index->en       = ENABLE;
+            index->index    = bucket->index;
+            index->bearerid = 0;
+            ret = MP_CELL_FOUND;
+            memcpy( dst_data, src_cell->entry, MP_MIN(dst_len, table->cell_size));
+            break;
+        }
+    }
+    LTE_HASH_TABLE_UNLOCK(bucket);
+    return ret;
+
+}
+
+/******************************************************************************
+ * 函数名称    : hash_cell_delete_by_index
+ * 功能        : 根据索引删除指定cell
+ * 参数        : table:哈希表结构体，带了表头基址，带上hti中偏移index即确定桶子偏移
+ *               hti  :含cell的结点指针，比较指针
+ * 返回        : 错误码，查找成功返回MP_OK,失败返回MP_FAIL
+******************************************************************************/
+mp_code_t hash_cell_delete_by_index( hash_table_t        *table,
+                                     hash_table_index_t  *hti)
+{
+    struct list_head *pos  = NULL;
+    struct list_head *next = NULL;
+    struct list_head *node = NULL;
+    hash_bucket_t *bucket   = NULL;
+    hash_cell_t   *src_cell = NULL;
+
+    CVMX_MP_POINT_CHECK(table,    M_S11, LV_ERROR);
+    CVMX_MP_POINT_CHECK(hti,      M_S11, LV_ERROR);
+
+    /*根据基址和偏移，计算桶子地址*/
+    LTE_DEBUG_PRINTF("hit->index = %d\n", hti->index);
+    bucket =  GET_HASH_BUCKET_BY_INDEX(table, hti->index);
+    CVMX_MP_POINT_CHECK(bucket, M_S11, LV_ERROR);
+
+    /* 遍历双向链表，查找cell */
+    LTE_HASH_TABLE_LOCK(bucket);
+    node = hti->node;
+    list_for_each_safe(pos, next, &(bucket->head))
+    {
+        if(pos == node)
+        {
+            src_cell = list_entry(pos, hash_cell_t, node);
+            CVMX_MP_POINT_CHECK_UNLOCK(src_cell, M_S11, LV_ERROR);
+
+            __list_del(pos->prev, pos->next);
+            memset(src_cell, 0x0, sizeof(hash_cell_t));
+            HASH_CELL_FREE(bucket, table->pool, src_cell);
+            LTE_HASH_TABLE_UNLOCK(bucket);
+            return MP_OK;
+        }
+    }
+
+    LTE_HASH_TABLE_UNLOCK(bucket);
+    return MP_FAIL;
+}
+
 /******************************************************************************
  * 函数名称    : hash_cell_delete_by_hash
  * 功能        : 根据哈希删除cell值
@@ -1335,11 +1662,12 @@ mp_error_t create_update_table_by_hash(
     lte_table_imsi_t imsi_search_d              = {};
     lte_table_s1_mme_enodeb_t s1_mme_search_d   = {};
     lte_table_s_tmsi_t s_tmsi_search_d          = {};
-    lte_table_s11_mme_t s11_mme_search_d       = {};
-    lte_table_s11_sgw_t s11_sgw_search_d       = {};
-    lte_table_s1u_t s1u_search_d                = {};
+    lte_table_gtpc_t  gtpc_search_d             = {};
+    lte_table_gtpu_t s1u_search_d                = {};
     lte_table_s6a_t s6a_search_d                = {};
     ip_hbh_t s6a_key                            = {};
+    umts_table_p_tmsi_t p_tmsi_search_d= {};
+    lte_table_enodeb_mme_handle_node_t enodeb_mme_handle_search_d = {};
 
     hash_table_control_t table_control  = {};
 
@@ -1369,40 +1697,29 @@ mp_error_t create_update_table_by_hash(
         LTE_DEBUG_PRINTF("TABLE_IMSI key=%lx\n" , table_control.key.data[0]);
         LTE_DEBUG_PRINTF("TABLE_IMSI update_action=%lx\n" , actionType);
     }
-    else if( TABLE_S11_MME == table_type)
+    else if( TABLE_GTP_C == table_type)
     {
-        if( sizeof(lte_table_s11_mme_t) != len )
+        if( sizeof(lte_table_gtpc_t) != len )
         {
             return MP_E_PARAM;
         }
-        memcpy(&s11_mme_search_d, data, sizeof(lte_table_s11_mme_t));
+        memcpy(&gtpc_search_d, data, sizeof(lte_table_s11_mme_t));
 
-        update_fteid_hash_key(s11_mme_search_d.fteid.ip, s11_mme_search_d.fteid.teid, &(table_control.key));
-        LTE_DEBUG_PRINTF("TABLE_S11_MME key=%lx\n" , table_control.key.data[0]);
-        LTE_DEBUG_PRINTF("TABLE_S11_MME update_action=%lx\n" , actionType);
+        update_fteid_hash_key(gtpc_search_d.control_plane_ip, gtpc_search_d.teid, &(table_control.key));
+        LTE_DEBUG_PRINTF("TABLE_GTP_C key=%lx\n" , table_control.key.data[0]);
+        LTE_DEBUG_PRINTF("TABLE_GTP_C update_action=%lx\n" , actionType);
     }
-    else if( TABLE_S11_SGW == table_type)
+    else if( TABLE_GTP_U == table_type)
     {
-        if( sizeof(lte_table_s11_sgw_t) != len )
+        if( sizeof(lte_table_gtpu_t) != len )
         {
             return MP_E_PARAM;
         }
-        memcpy(&s11_sgw_search_d, data, sizeof(lte_table_s11_sgw_t));
+        memcpy(&s1u_search_d, data, sizeof(lte_table_gtpu_t));
 
-        update_fteid_hash_key(s11_sgw_search_d.fteid.ip, s11_sgw_search_d.fteid.teid, &(table_control.key));
-        LTE_DEBUG_PRINTF("TABLE_S11_SGW key=%lx\n" , table_control.key.data[0]);
-        LTE_DEBUG_PRINTF("TABLE_S11_SGW update_action=%lx\n" , actionType);
-    }
-    else if( TABLE_S1U == table_type)
-    {
-        if( sizeof(lte_table_s1u_t) != len )
-        {
-            return MP_E_PARAM;
-        }
-        memcpy(&s1u_search_d, data, sizeof(lte_table_s1u_t));
-
-        update_fteid_hash_key(s1u_search_d.fteid.ip, s1u_search_d.fteid.teid, &(table_control.key));
-        LTE_DEBUG_PRINTF("TABLE_S1U key=%lx\n" , table_control.key.data[0]);
+        update_fteid_hash_key(s1u_search_d.trans_layer_ip, s1u_search_d.teid, &(table_control.key));
+        LTE_DEBUG_PRINTF("TABLE_S1U key=%lx %lx %lx\n" , table_control.key.data[0], 
+                            table_control.key.data[1], table_control.key.data[2]);
         LTE_DEBUG_PRINTF("TABLE_S1U update_action=%lx\n" , actionType);
     }
     else if( TABLE_S6A == table_type)
@@ -1413,27 +1730,35 @@ mp_error_t create_update_table_by_hash(
         }
         memcpy(&s6a_search_d, data, sizeof(lte_table_s6a_t));
         
-        s6a_key.hss_ip = s6a_search_d.hssip;
-        s6a_key.mme_ip = s6a_search_d.mmeip;
+        memcpy(&(s6a_key.hss_ip), &(s6a_search_d.hssip), sizeof(ip_comm_t));
+        memcpy(&(s6a_key.cn_ip), &(s6a_search_d.mmeip), sizeof(ip_comm_t));
         s6a_key.hop_by_hop = s6a_search_d.hop_by_hop;
         
         update_s6a_hash_key(&s6a_key, &(table_control.key));
-        LTE_DEBUG_PRINTF("TABLE_S1U key=%lx\n" , table_control.key.data[0]);
-        LTE_DEBUG_PRINTF("TABLE_S1U update_action=%lx\n" , actionType);
+        LTE_DEBUG_PRINTF("TABLE_S6A key=%lx\n" , table_control.key.data[0]);
+        LTE_DEBUG_PRINTF("TABLE_S6A update_action=%lx\n" , actionType);
     }
-    else if( TABLE_S1_ENODEB_MME == table_type)
+    else if( TABLE_AN_INFO == table_type)
     {
         if( sizeof(lte_table_s1_mme_enodeb_t) != len )
         {
             return MP_E_PARAM;
         }
         memcpy(&s1_mme_search_d, data, sizeof(lte_table_s1_mme_enodeb_t));
-
-        update_s1_mme_hash_key(s1_mme_search_d.enode_ip, s1_mme_search_d.enode_ue_s1ap_id, &(table_control.key));
-        LTE_DEBUG_PRINTF("TABLE_S1_ENODEB_MME key=%lx\n" , table_control.key.data[0]);
+        uint8_t     reserved;
+        reserved = *(uint8_t*)data;
+        if(0 == reserved)
+        {
+            update_umts_an_info_table_key(s1_mme_search_d.umts_hash_para.rnc_m3ua_signal_code, s1_mme_search_d.umts_hash_para.rnc_sccp_id,&(table_control.key));
+        }
+        else
+        {
+            update_s1_mme_hash_key(s1_mme_search_d.lte_hash_para.access_node_ip, s1_mme_search_d.lte_hash_para.access_node_id, &(table_control.key));
+        }
+        LTE_DEBUG_PRINTF("TABLE_S1_ENODEB_MME key=%lx key=%lx\n" , table_control.key.data[0], table_control.key.data[1]);
         LTE_DEBUG_PRINTF("TABLE_S1_ENODEB_MME update_action=%lx\n" , actionType);
     }
-    else if( TABLE_S_TIMSI == table_type)
+    else if( TABLE_S_TMSI == table_type)
     {
         /* check parameter validation and set table content */
         if( sizeof(lte_table_s_tmsi_t) != len )
@@ -1444,6 +1769,39 @@ mp_error_t create_update_table_by_hash(
 
         update_s_tmsi_hash_key(s_tmsi_search_d.s_tmsi, &(table_control.key));
         LTE_DEBUG_PRINTF("TABLE_S_TIMSI key=%lx\n" , table_control.key.data[0]);
+    }
+    else if(TABLE_CN_INFO == table_type)
+    {
+        if(sizeof(lte_table_enodeb_mme_handle_node_t) != len)
+        {
+            return MP_E_PARAM;
+        }
+        memcpy(&enodeb_mme_handle_search_d,data,sizeof(lte_table_enodeb_mme_handle_node_t));
+        uint8_t     reserved;
+        /*判断是要查找3g表项还是4g表项，4g和3g他们的hash方法不一样*/
+        reserved = *(uint8_t*)data;
+
+        if(0 == reserved)
+        {
+            update_umts_cn_info_table_key(enodeb_mme_handle_search_d.umts_hash_para.sgsn_m3ua_signal_code, enodeb_mme_handle_search_d.umts_hash_para.sgsn_sccp_id, enodeb_mme_handle_search_d.umts_hash_para.rnc_m3ua_signal_code, &(table_control.key));
+        }
+        else
+        {
+            update_enb_mme_handle_table_key(enodeb_mme_handle_search_d.lte_hash_para.cn_ip, enodeb_mme_handle_search_d.lte_hash_para.cn_id, &(table_control.key));
+        }
+        LTE_DEBUG_PRINTF("TABLE_ENB_MME_HANDLE_TABLE key=%lx %lx\n" , table_control.key.data[0], table_control.key.data[1]);
+    }
+    else if( TABLE_P_TMSI == table_type)
+    {
+        /* check parameter validation and set table content */
+        if( sizeof(umts_table_p_tmsi_t) != len )
+        {
+            return MP_E_PARAM;
+        }
+        memcpy(&p_tmsi_search_d, data, sizeof(umts_table_p_tmsi_t));
+
+        update_p_tmsi_table_key(p_tmsi_search_d.p_tmsi, &(table_control.key));
+        LTE_DEBUG_PRINTF("TABLE_P_TMSI key=%lx\n" , table_control.key.data[0]);
     }
     else
     {
@@ -1456,6 +1814,18 @@ mp_error_t create_update_table_by_hash(
     {   
         LTE_DEBUG_PRINTF("Create or Update Table : <Failed>\n");
         return ret;
+    }
+    else 
+    {
+        if(CREATE_TABLE == opType)
+        {
+            ret = get_umts_table_create_statistics(table_type);
+            if(MP_E_NONE != ret)
+            {
+                LTE_DEBUG_PRINTF("Get create table statistics failed! \n");
+                return ret;
+            }
+        }
     }
 
     if(NULL != table_control.bucket)

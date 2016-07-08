@@ -9,7 +9,7 @@ extern mp_code_t s6a_table_hash(hash_key_t *key, uint32_t *hash_result);
 
 extern mp_code_t get_kasme_by_imsi(const imsi_rand_info_t *indata,lte_kasme_t *kasme,uint32_t *len);
 
-extern mp_code_t del_s6a_node_by_imsi(lte_imsi_t imsi,const uint32_t len );
+extern mp_code_t del_s6a_node_by_imsi(lte_imsi_t imsi );
 
 extern inline mp_code_t update_s6a_hash_key(ip_hbh_t *indata,  hash_key_t *key);
 

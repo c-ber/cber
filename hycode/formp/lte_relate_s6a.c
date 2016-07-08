@@ -39,9 +39,10 @@ mp_code_t get_s6a_node_by_imsi(lte_imsi_t imsi,lte_table_s6a_t *node,uint32_t le
 {
     lte_table_imsi_t imsi_search_d;
     lte_table_s6a_t s6a_search_d ;
-    hash_key_t  key;
+    hash_key_t  key = {};
     mp_code_t rv = MP_OK;
 
+    CVMX_MP_POINT_CHECK(node, M_S6A, LV_ERROR);
 
     memset(&imsi_search_d,0,sizeof(imsi_search_d));
     memset(&s6a_search_d,0,sizeof(s6a_search_d));
@@ -76,8 +77,11 @@ mp_code_t get_s6a_node_by_imsi(lte_imsi_t imsi,lte_table_s6a_t *node,uint32_t le
 mp_code_t get_s6a_node_by_ip_hbh(ip_hbh_t *indata,lte_table_s6a_t*node)
 {
     lte_table_s6a_t s6a_search_d = {};
-    hash_key_t  key;
+    hash_key_t  key = {};
     mp_code_t rv = MP_OK;
+
+    CVMX_MP_POINT_CHECK(indata, M_S6A, LV_ERROR);
+    CVMX_MP_POINT_CHECK(node,   M_S6A, LV_ERROR);
 
     memset(&key,0,sizeof(key));
     update_s6a_hash_key(indata,&key);    
@@ -88,7 +92,7 @@ mp_code_t get_s6a_node_by_ip_hbh(ip_hbh_t *indata,lte_table_s6a_t*node)
         LTE_DEBUG_PRINTF("not found s6a table node");
         return rv;
     }
-    LTE_DEBUG_PRINTF("hss ip:%d,mme ip:%d,hbh:%x\n",s6a_search_d.hssip,s6a_search_d.mmeip,s6a_search_d.hop_by_hop);
+
     memcpy(node,&s6a_search_d,sizeof(lte_table_s6a_t));
     return MP_OK;
     
@@ -101,6 +105,9 @@ mp_code_t get_kasme_by_imsi(const imsi_rand_info_t *indata,lte_kasme_t *kasme,ui
     uint32_t kasme_len = 0;
     lte_imsi_t imsi;
 
+    CVMX_MP_POINT_CHECK(indata, M_S6A, LV_ERROR);
+    CVMX_MP_POINT_CHECK(kasme,  M_S6A, LV_ERROR);
+    CVMX_MP_POINT_CHECK(len,    M_S6A, LV_ERROR);
 
     memset(imsi,0,sizeof(imsi));
     memcpy(imsi,indata->imsi,sizeof(imsi));
@@ -132,13 +139,13 @@ mp_code_t get_kasme_by_imsi(const imsi_rand_info_t *indata,lte_kasme_t *kasme,ui
     }
     return MP_NOT_FOUND;
 }
-mp_code_t del_s6a_node_by_imsi(lte_imsi_t imsi,const uint32_t len )
+mp_code_t del_s6a_node_by_imsi(lte_imsi_t imsi )
 {
 
     mp_code_t rv = MP_OK;
-    hash_key_t  key;
+    hash_key_t  key = {};
     lte_table_imsi_t imsi_cell={};
-    if(NULL == imsi||len < sizeof(lte_table_imsi_t))
+    if(NULL == imsi)
     {
         return MP_FAIL;
     }
@@ -149,24 +156,27 @@ mp_code_t del_s6a_node_by_imsi(lte_imsi_t imsi,const uint32_t len )
         LTE_DEBUG_PRINTF("not found Ims table node\n");
         return rv;
     }
-    if(MP_OK != hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S6A),\
-                                                &imsi_cell.pos_s6a,LTE_AGING_TIMER_LOWER_LIMIT))
+    rv = hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S6A),\
+                                                &imsi_cell.pos_s6a,LTE_AGING_TIMER_LOWER_LIMIT);
+    if(rv != MP_OK)
     {
-        LTE_DEBUG_PRINTF("not found Ims table node\n");
+        LTE_DEBUG_PRINTF("set s6a time fail,rv = %d\n",rv);
         return rv;
     }
     return rv;
 }
 inline mp_code_t update_s6a_hash_key(ip_hbh_t *indata,  hash_key_t *key)
 {
-    uint32_t *ptr = (uint32_t *)key->data;
+    uint8_t *ptr = (uint8_t *)key->data;
+    CVMX_MP_POINT_CHECK(indata, M_S6A, LV_ERROR);
+    CVMX_MP_POINT_CHECK(key, M_S6A, LV_ERROR);
 
+    IP_TRASNFER_TO_KEY(ptr, indata->hss_ip);
+    IP_TRASNFER_TO_KEY(ptr, indata->cn_ip);
 
-     ptr[0] = indata->hss_ip;
-     ptr[1] = indata->mme_ip;
-     ptr[2] = indata->hop_by_hop;
-     key->size = 2;
-     return MP_OK;
+    memcpy(ptr, &(indata->hop_by_hop), sizeof(indata->hop_by_hop));
+    key->size = 5;
+    return MP_OK;
 }
 int32_t lte_s6a_dmt_auth_request(parse_diameter_t *diameter)
 {
@@ -183,17 +193,16 @@ int32_t lte_s6a_dmt_auth_request(parse_diameter_t *diameter)
 
     if(!((diameter->valid_mask&DMT_HOP_BY_HOP_VALID)
         &&(diameter->valid_mask&DMT_USER_NAME_VALID)
-        &&(0 != diameter->hss_ip)
-        &&(0!= diameter->s6a_mme_ip))
-      )
+        &&(0 != (diameter->hss_ip.ip.u64[0] || diameter->hss_ip.ip.u64[1]) )
+        &&(0 != (diameter->s6a_mme_ip.ip.u64[0] || diameter->s6a_mme_ip.ip.u64[1])) ))
     {
         LTE_DEBUG_PRINTF("diameter auth request: Check info <incompelte>\n");
         hydra_stat_inc(stat_business_dmt_auth_msg_incompelte);
         return MP_E_NONE;
     }
-    s6a_search_d.hssip=diameter->hss_ip;
+    memcpy(&s6a_search_d.hssip, &diameter->hss_ip, sizeof(ip_comm_t));
     updata_opt_mask |= S6_AT_UPDATE_HSSIP;
-    s6a_search_d.mmeip=diameter->s6a_mme_ip;
+    memcpy(&s6a_search_d.mmeip, &diameter->s6a_mme_ip, sizeof(ip_comm_t));
     updata_opt_mask |= S6_AT_UPDATE_MMEIP;
     s6a_search_d.hop_by_hop = diameter->hop_by_hop;
     updata_opt_mask |= S6_AT_UPDATE_HOP_BY_HOP;
@@ -216,13 +225,16 @@ int32_t lte_s6a_dmt_auth_request(parse_diameter_t *diameter)
     }
     updata_opt_mask = HASH_TAB_UPDTAE_NONE;
     imsi_search_d.pos_s6a = index;
-    updata_opt_mask |= IMSIT_UPDATE_POS_S6A;
+    updata_opt_mask |= IMSI_T_UPDATE_POS_S6A;
     memcpy(imsi_search_d.imsi,diameter->user_name,sizeof(lte_imsi_t));
-    updata_opt_mask |= IMSIT_UPDATE_IMSI;
+    updata_opt_mask |= IMSI_T_UPDATE_IMSI;
 #ifdef RELATE_AGING
     imsi_search_d.aging = (uint16_t)g_aging_timer_max;
-    updata_opt_mask |= IMSIT_UPDATE_AGING;
+    updata_opt_mask |= IMSI_T_UPDATE_AGING;
 #endif
+    imsi_search_d.mobile_type = MCS_LTE;/*用于标志为4g*/
+    updata_opt_mask |= IMSI_T_UPDATE_MOBILE_TYPE;
+
     rv = create_update_table_by_hash(TABLE_IMSI,CREATE_TABLE,\
                                     updata_opt_mask,\
                                     (void *)&imsi_search_d,\
@@ -255,16 +267,16 @@ int32_t lte_s6a_dmt_auth_response(parse_diameter_t *diameter)
 
     if(!((diameter->valid_mask&DMT_HOP_BY_HOP_VALID)
         &&(diameter->valid_mask&DMT_KASME_RAND_PAIR_VALID)
-        &&(0 != diameter->hss_ip)
-        &&(0!= diameter->s6a_mme_ip))
-       )
+        &&(0 != (diameter->hss_ip.ip.u64[0] || diameter->hss_ip.ip.u64[1]))
+        &&(0 != (diameter->s6a_mme_ip.ip.u64[0] || diameter->s6a_mme_ip.ip.u64[1]))))
     {
         LTE_DEBUG_PRINTF("diameter auth responsae: Check info <incompelte>\n");
         hydra_stat_inc(stat_business_dmt_auth_msg_incompelte);
         return MP_E_NONE;
     }
-    s6a_search_d.hssip = diameter->hss_ip;
-    s6a_search_d.mmeip = diameter->s6a_mme_ip;
+
+    memcpy(&(s6a_search_d.hssip), &(diameter->hss_ip), sizeof(ip_comm_t));
+    memcpy(&(s6a_search_d.mmeip), &(diameter->s6a_mme_ip), sizeof(ip_comm_t));
     s6a_search_d.hop_by_hop = diameter->hop_by_hop;
     for(count = 0;count < diameter->valid_kasme_rand_pair_num&&count<MAX_KASME_RAND_PAIR;count++)
     {
@@ -307,10 +319,11 @@ mp_code_t s6a_table_compare(void *src, void* dst, hash_cmp_em_t *cmp)
     print_buff(ptr,16);
     lte_table_s6a_t *sentry = (lte_table_s6a_t *)src;
     lte_table_s6a_t *dentry = (lte_table_s6a_t *)dst;
-    LTE_DEBUG_PRINTF("sentry:hssip=%x,mmeip=%x,hbh=%x\n",sentry->hssip,sentry->mmeip,sentry->hop_by_hop);
-    LTE_DEBUG_PRINTF("dentry:hssip=%x,mmeip=%x,hbh=%x\n",dentry->hssip,dentry->mmeip,dentry->hop_by_hop);
-    if(sentry->hssip == dentry->hssip\
-        &&sentry->mmeip == dentry->mmeip\
+
+    if( sentry->hssip.ip.u64[0] == dentry->hssip.ip.u64[0]\
+        &&sentry->hssip.ip.u64[1] == dentry->hssip.ip.u64[1]\
+        &&sentry->mmeip.ip.u64[0] == dentry->mmeip.ip.u64[0]\
+        &&sentry->mmeip.ip.u64[1] == dentry->mmeip.ip.u64[1]\
         &&sentry->hop_by_hop == dentry->hop_by_hop\
     )
     {

@@ -45,4 +45,20 @@ typedef struct
     uint8_t packet_data[96];
 }cvmx_wqe_t;
 
+
+/*用于支持IPV4和IPV6*/
+typedef union
+{
+    uint64_t u64[2];
+    uint32_t v4;
+    uint64_t v6[2];
+}mp_ip_t;
+
+typedef struct
+{
+    uint8_t version;
+    mp_ip_t ip;
+}__attribute__((packed)) ip_comm_t;
+
+
 #endif /* CVMX_COMMON_H_ */

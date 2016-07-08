@@ -58,6 +58,7 @@ typedef enum
 {
     NAS_MSG_TYPE_ATTACH_ACCEPT = 0x42,
     NAS_MSG_TYPE_TAU_ACCEPT = 0x49,
+    NAS_MSG_GUTI_REALLOCATION_CMD = 0x50,
     NAS_MSG_TYPE_MAX
 }NAS_MSG_TYPE_E;
 
@@ -77,11 +78,8 @@ struct nas_ele_hdr
 
 #define EPS_ATTACT_RESULT_LEN  1
 #define T3412_LEN 1
+#define TAU_ACCEPT_T3412_LEN 2
 
-
-mp_error_t nas_pdu_decrypt(nas_info_t *src, nas_plain_t *dst);
-
-mp_error_t nas_pdu_parse_guti(nas_plain_t *code,  lte_guti_t *guti);
 
 #endif /* __NAS_H__ */
 

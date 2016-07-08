@@ -56,10 +56,11 @@ mp_code_t lte_aging_clear_relate_by_imsi(lte_imsi_t imsi)
 
 
     /* 删除s11-sgw,s11-mme，删除其下s1u表 */
-    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S11_SGW), &(imsi_cell.pos_s11_sgw));
-    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S11_MME), &(imsi_cell.pos_s11_mme));
+    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_GTP_C), &(imsi_cell.pos_ul_gtp_c));
+    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_GTP_C), &(imsi_cell.pos_dl_gtp_c));
     hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S6A), &(imsi_cell.pos_s6a));
-    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_S1_ENODEB_MME), &(imsi_cell.pos_s1_mme));
+    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_AN_INFO), &(imsi_cell.pos_an_info));
+    hash_table_remove_entry_by_index(LTE_GET_TABLE_PTR(TABLE_CN_INFO), &(imsi_cell.pos_cn_info));
 
     /*采用哈希方式删除imsi总表*/
     hash_cell_delete_by_hash(LTE_GET_TABLE_PTR(TABLE_IMSI),&(key));
@@ -89,20 +90,51 @@ mp_code_t lte_aging_relate_update_timer_by_imsi(lte_imsi_t imsi)
     hash_cell_update_timer_by_hash (LTE_GET_TABLE_PTR(TABLE_IMSI),
                                     &key,                   g_aging_timer_max);
 
-    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S11_SGW),
-                                    &(tb_imsi.pos_s11_sgw), g_aging_timer_max);
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_GTP_C),
+                                    &(tb_imsi.pos_ul_gtp_c), g_aging_timer_max);
 
-    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S11_MME),
-                                    &(tb_imsi.pos_s11_mme), g_aging_timer_max);
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_GTP_C),
+                                    &(tb_imsi.pos_dl_gtp_c), g_aging_timer_max);
 
-    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S1_ENODEB_MME),
-                                    &(tb_imsi.pos_s1_mme),  g_aging_timer_max);
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_AN_INFO),
+                                    &(tb_imsi.pos_an_info),  g_aging_timer_max);
+
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_CN_INFO),
+                                    &(tb_imsi.pos_cn_info),  g_aging_timer_max);
 
     hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_S6A),
                                     &(tb_imsi.pos_s6a),     g_aging_timer_max);
 
     return ret;
 }
+
+/* 根据s1u更新imsi,sgw,s11-mme,s1-mme,s6a表计数器 ,
+ * 解锁了imsi表，不会产生死锁，同时cell被删也没事 */
+mp_code_t umts_Iups_aging_update_timer_by_imsi(lte_imsi_t imsi)
+{
+    mp_code_t ret = MP_OK;
+    hash_key_t key = {};
+    lte_table_imsi_t     tb_imsi    = {};
+
+    CVMX_MP_POINT_CHECK(imsi, M_AGING, LV_ERROR);
+
+    update_imsi_hash_key(imsi, &key);
+    ret = hash_cell_get_by_hash(LTE_GET_TABLE_PTR(TABLE_IMSI),
+                                &key, &tb_imsi, sizeof(tb_imsi));
+    if(MP_CELL_FOUND != ret)
+    {
+        return ret;
+    }
+
+    hash_cell_update_timer_by_hash (LTE_GET_TABLE_PTR(TABLE_IMSI),
+                                    &key,                   g_aging_timer_max);
+
+    hash_cell_update_timer_by_index(LTE_GET_TABLE_PTR(TABLE_CN_INFO),
+                                    &(tb_imsi.pos_cn_info),  g_aging_timer_max);
+
+    return ret;
+}
+
 
 
 /******************************************************************************
@@ -134,7 +166,7 @@ static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
             hash_cell = list_entry(pos, hash_cell_t, node);
             CVMX_MP_POINT_CHECK_UNLOCK(hash_cell, M_AGING, LV_ERROR);
 
-            lte_table_s1u_t *s1u_cell = (lte_table_s1u_t *)(hash_cell->entry);
+            lte_table_gtpu_t *s1u_cell = (lte_table_gtpu_t *)(hash_cell->entry);
             CVMX_MP_POINT_CHECK_UNLOCK(s1u_cell, M_AGING, LV_ERROR);
 
             if ( true == s1u_cell->ex_field.updt_tim )
@@ -143,6 +175,67 @@ static mp_code_t lte_aging_search_s1u_table( hash_table_t *table )
                 //更新关联表其他cell的计数器值
                 lte_aging_relate_update_timer_by_imsi(s1u_cell->imsi);
                 s1u_cell->ex_field.updt_tim = false;//必须要恢复更新计数器值的标志
+            }
+
+#ifdef RELATE_AGING
+            CVMX_MP_POINT_CHECK_UNLOCK(table->set_timer, M_AGING, LV_ERROR);
+
+            tim = table->set_timer((void *)hash_cell->entry, TIMER_REDUCE, 1);
+            if( tim <= LTE_AGING_TIMER_LOWER_LIMIT )
+            {
+                /* 删除cell,这里要用统一接口，待优化 */
+                __list_del( hash_cell->node.prev, hash_cell->node.next);
+                HASH_CELL_FREE(bucket, table->pool, hash_cell);
+            }
+#endif
+        }
+
+        LTE_HASH_TABLE_UNLOCK(bucket);
+    }
+    return MP_OK;
+}
+
+/******************************************************************************
+ * 函数名称    : lte_aging_search_an_info_table
+ * 功能        : 扫描an_info表,如果更新标志变化，需要同步imsi，cn_info表的计数器,
+ *               否则只更新an_info的计数器，删除an_info表
+ * 参数        :
+ * 返回        : 错误码，见错误码定义
+******************************************************************************/
+static mp_code_t lte_aging_search_an_info_table( hash_table_t *table )
+{
+    int i = 0;
+    uint16_t tim = 0;
+    hash_bucket_t    *bucket    = NULL;
+    hash_cell_t *hash_cell = NULL;
+    struct list_head *pos = NULL, *next = NULL;
+
+    CVMX_MP_POINT_CHECK(table, M_AGING, LV_ERROR);
+    CVMX_MP_POINT_CHECK(table->first_bucket, M_AGING, LV_ERROR);
+
+    for ( i = 0; i < table->max_bucket; i++ )
+    {
+        bucket = table->first_bucket + i;
+        CVMX_MP_POINT_CHECK(bucket, M_AGING, LV_ERROR);
+
+        LTE_HASH_TABLE_LOCK(bucket); /*锁住桶子，下面是遍历cell链表*/
+        list_for_each_safe( pos, next, &(bucket->head) )
+        {
+            hash_cell = list_entry(pos, hash_cell_t, node);
+            CVMX_MP_POINT_CHECK_UNLOCK(hash_cell, M_AGING, LV_ERROR);
+
+            umts_table_rnc_iu_info_t *an_info_cell = (umts_table_rnc_iu_info_t *)(hash_cell->entry);
+            CVMX_MP_POINT_CHECK_UNLOCK(an_info_cell, M_AGING, LV_ERROR);
+
+            if(0 == an_info_cell->umts_hash_para.reserved)
+            {
+                if ( true == an_info_cell->updt_tim_flag )
+                {
+                    //通过imsi关联其他表项
+                    //更新关联表其他cell的计数器值
+                    umts_Iups_aging_update_timer_by_imsi(an_info_cell->imsi);
+                    an_info_cell->updt_tim_flag = false;//必须要恢复更新计数器值的标志
+                }
             }
 
 #ifdef RELATE_AGING
@@ -255,13 +348,14 @@ mp_code_t lte_aging_process_check()
     if( 0 != g_max_relate_lifetime  &&  true == g_lte_start_flag )
     {
         /*遍历整个关联表*/
-        lte_aging_search_s1u_table( LTE_GET_TABLE_PTR(TABLE_S1U) );
+        lte_aging_search_s1u_table( LTE_GET_TABLE_PTR(TABLE_GTP_U) );
         lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_IMSI) );
         //lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_IMSI) );
-        lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_SGW) );
-        lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_S11_MME) );
-        lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_S1_ENODEB_MME) );
+        lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_GTP_C) );
+        //lte_aging_search_table( LTE_GET_TABLE_PTR(TABLE_GTP_C) );
+        lte_aging_search_an_info_table(LTE_GET_TABLE_PTR(TABLE_AN_INFO));
         lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_S6A));
+        lte_aging_search_table(LTE_GET_TABLE_PTR(TABLE_CN_INFO) );
     }
     return MP_OK;
 }

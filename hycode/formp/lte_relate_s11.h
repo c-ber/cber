@@ -76,8 +76,6 @@ inline mp_code_t lte_update_s1u_bearer(hash_table_index_t *pos_index, uint32_t i
 //
 //inline mp_code_t lte_sgw_delete_s1u(lte_table_ctrl_sgw_t*table_sgw_e, uint8_t bearerid);
 
-mp_code_t check_TBCD_encode(uint16_t ie_len, uint8_t *ie_buf);
-
 mp_code_t lte_s11_gtpc_create_session_requset(parse_gtpc_t *gtpc);
 
 mp_code_t lte_s11_gtpc_create_session_response(parse_gtpc_t *gtpc);

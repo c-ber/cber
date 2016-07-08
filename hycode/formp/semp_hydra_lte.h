@@ -90,13 +90,14 @@
                                     {\
                                       if(i%8 == 7)\
                                       {\
-                                        printf("%x\n",ptr[i]);\
+                                        printf("%02x\n",ptr[i]);\
                                       }\
                                       else\
                                       {\
-                                        printf("%x ",ptr[i]);\
+                                        printf("%02x ",ptr[i]);\
                                       }\
                                     }\
+                                    printf("\n");\
                                   }
                                     
                                     
@@ -125,18 +126,38 @@
 
 
 typedef enum {
-	S11_MME, /*contorl cell MME*/
-	S11_SGW, /*contorl cell SGW*/
-	S1U_SGW,  
-	S1U_ENODEB,
-	S_MAX,
+    S11_MME, /*contorl cell MME*/
+    S11_SGW, /*contorl cell SGW*/
+    S1U_SGW,  
+    S1U_ENODEB,
+    S_MAX,
 }lte_ne_tunnel_t;
 
+typedef enum {
+ GTP_C_UL, /*contorl cell ggsn*/
+ GTP_C_DL, /*contorl cell sgsn*/
+ GTP_U_UL,  
+ GTP_U_DL,
+ GTP_MAX
+}umts_tunnel_node_t;
+
+#define IP_V4 4 /*标志IP版本为4*/
+#define IP_V6 6 /*标志IP版本为6*/
 
 /*BCD Code*/
 #define LTE_IMEI_LEN  8
 #define LTE_IMSI_LEN  8 
 #define LTE_MSISDN_LEN 8
+#define MSISDN_BCD_LEN  16
+
+/*usr information tlv type*/
+#define MSISDN_TYPE         0x02
+#define ULI_TYPE            0x06
+#define GUTI_TYPE           0x05
+#define IMEI_TYPE           0x03
+#define IMSI_TYPE           0x04
+#define MNC_TYPE            0x0e
+#define ECGI_TYPE           0x0f
 
 typedef   uint32_t    lte_teid_t;
 typedef   uint8_t    lte_imsi_t [LTE_IMSI_LEN] ;
@@ -155,11 +176,27 @@ typedef   uint8_t    lte_guti_t[LTE_GUTI_LEN] ;
 #define LTE_TAI_MAX_LEN 5   //LTE_TAI_MAX_LEN = LTE_PLMN_MAX_LEN + LTE_TAC_MAX_LEN
 #define LTE_PLMN_MAX_LEN 3
 #define LTE_TAC_MAX_LEN 2
+#define LTE_CELLID_MAX_LEN 4 /*一般28位，为了填充所以是4个字节*/
+#define LTE_CELLID_AND_TAC_MAX_LEN ((LTE_TAC_MAX_LEN)+ (LTE_CELLID_MAX_LEN))
 typedef   uint8_t   lte_tai_t[LTE_TAI_MAX_LEN];
 
 #define LTE_STMSI_LEN  5
+#define PTMSI_LEN      4 /*ptmsi长度为4字节*/
 #define LTE_STMSI_OFFSET 5
 typedef   uint8_t    lte_s_tmsi_t[LTE_STMSI_LEN] ;
+typedef   uint8_t   lte_plmn_t[LTE_PLMN_MAX_LEN];
+typedef   uint8_t   lte_cellid_t[LTE_CELLID_MAX_LEN];
+
+#define LTE_ECGI_MAX_LEN 7
+typedef struct tag_lte_ecgi_t
+{
+    lte_plmn_t    lte_plmn;
+    lte_cellid_t  lte_cellid;
+}lte_ecgi_t;
+
+#define LTE_MNC_MAX_LEN 2
+typedef   uint8_t   lte_mnc_t[LTE_MNC_MAX_LEN];
+
 
 
 #if 0
@@ -174,29 +211,30 @@ typedef union
 #pragma pack(1)
 typedef struct
 {
-    uint8_t  pdn_type;          /*IP版本: 0x01:IPV4,0x02:IPV6*/
-    uint32_t pdn_addr;          /*UE IP*/
-} lte_pdn_t;
+    uint8_t   pdn_type;          /*IP版本: 0x01:IPV4,0x02:IPV6*/
+    ip_comm_t pdn_addr;          /*UE IP*/
+} pdn_t;
 #pragma pack()
 
 typedef union
 {
-		struct
+        struct
         {
-			uint32_t ip;
-			uint32_t teid;
-		};
-        uint64_t data;
+            ip_comm_t ip;
+            uint32_t teid;
+        };
+        uint64_t data[4];
 }lte_fteid_t;
 
 typedef enum 
 {
-	FS_LTE_GTPV1C,
-	FS_LTE_GTPV2C,
-	FS_LTE_GTPV1U,
-	FS_LTE_S1AP,
-	FS_LTE_DIAMETER,
-	FS_LTE_MAX,
+    FS_UMTS_RANAP,
+    FS_LTE_GTPV1C,
+    FS_LTE_GTPV2C,
+    FS_LTE_GTPV1U,
+    FS_LTE_S1AP,
+    FS_LTE_DIAMETER,
+    FS_LTE_MAX,
 }LTE_CONTROL_TYPE_EM; 
 
 typedef struct
@@ -254,7 +292,7 @@ typedef struct hydra_lte_port_set
 #define DMT_XRES_LEN                (8)
 #define DMT_AUTN_LEN                (16)
 #define DMT_KASME_LEN               (32)
-#define MAX_KASME_RAND_PAIR         (4)
+#define MAX_KASME_RAND_PAIR         (3)      //由于编译过程中超长问题，所以将4改为3
 
 typedef struct
 {
@@ -276,31 +314,44 @@ typedef struct {
     }imsi_rand_info_t;
 
 typedef struct {
-    uint32_t hss_ip;
-    uint32_t mme_ip;
+    ip_comm_t hss_ip;
+    ip_comm_t cn_ip;
     uint32_t hop_by_hop;
-}ip_hbh_t;
+}__attribute__((packed)) ip_hbh_t;
+
 
 typedef struct{
     uint8_t valid_flag:1;
-    uint32_t hss_ip;
-    uint32_t mme_ip;
+    ip_comm_t hss_ip;
+    ip_comm_t cn_ip;
     uint32_t hop_by_hop;
     lte_imsi_t username;
     uint8_t valid_key_num;
     rand_kasme_pair_t key_info[MAX_KASME_RAND_PAIR];
 }s6a_table_node_info_t;
 
+typedef struct
+{
+    uint32_t        sgsn_m3ua_signal_code;/*m3ua信令点码*/
+    uint32_t        sgsn_sccp_id;
+    uint32_t        rnc_m3ua_signal_code;/*m3ua信令点码*/
+}umts_cn_info_table_search_t;
 
 typedef enum {
-    EMM_MSG_SERVICE_REQUEST   = 0x0,
-    EMM_MSG_ATTACH_REQUEST    = 0x41,
-    EMM_MSG_ATTACH_ACCEPT       = 0x42,
-    EMM_MSG_TAU_REQUEST         = 0x48,
-    EMM_MSG_TAU_ACCEPT          = 0x49,
-    EMM_MSG_AUTH_REQUEST      = 0x52,
-    EMM_MSG_IDENTIFY_RESPONSE = 0x56,
-    EMM_SECURITE_COMMAND      = 0x5d,
+    EMM_MSG_SERVICE_REQUEST                 = 0x0,
+    EMM_MSG_ATTACH_REQUEST                  = 0x41,
+    EMM_MSG_ATTACH_ACCEPT                   = 0x42,
+    EMM_ATTACH_COMPELETE                    = 0x43,
+    EMM_MSG_DETACH_REQUEST                  = 0x45,/*detach request*/
+    EMM_MSG_DETACH_ACCEPT                   = 0x46,/*detach accept*/       
+    
+    EMM_MSG_TAU_REQUEST                     = 0x48,
+    EMM_MSG_TAU_ACCEPT                      = 0x49,
+    EMM_MSG_GUTI_REOCATION_CMD              = 0x50,
+    EMM_MSG_GUTI_REOCATION_COMPELETE        = 0x51,
+    EMM_MSG_AUTH_REQUEST                    = 0x52,
+    EMM_MSG_IDENTIFY_RESPONSE               = 0x56,
+    EMM_SECURITE_COMMAND                    = 0x5d,
 }EMM_Message_Type_enum;
 
 typedef enum{
@@ -312,5 +363,84 @@ typedef struct{
     oifgrp_lte_check_mask_en_t lte_mask_en;
     uint32_t oifgrp_index;
 }oifgrp_lte_check_mask_config_t; 
+
+
+/**************************后面是3G的公共结构体定义，以后如果创建单独文件直接复制过去即可**************************/
+
+
+#define RAI_LEN     6
+#define P_TMSI_LEN  4
+#define LAC_LEN     2
+#define RAC_LEN     1
+#define IMSI_LEN    LTE_IMSI_LEN
+#define IMEI_LEN    LTE_IMEI_LEN
+#define TL_LEN      2/*tlv格式中type和length的长度*/
+#define PLMN_LEN    3
+#define CELL_ID_LEN    2
+
+/*以AN/CN表项中第一个字节区分开3、4G的表项，当第一个字节为0时，为3g的an/cn info表项*/
+#define MOBILE_TYPE_UMTS_FLAG 0
+
+typedef uint8_t lac_t[LAC_LEN];
+typedef uint8_t rac_t[RAC_LEN];
+typedef uint8_t plmn_t[PLMN_LEN];
+typedef lte_imsi_t imsi_t;
+typedef lte_imei_t imei_t;
+typedef lte_msisdn_t msisdn_t;
+typedef uint8_t p_tmsi_t[P_TMSI_LEN];
+typedef uint8_t cell_id_t[CELL_ID_LEN];
+
+
+enum NAS_PARSE_VALID_MASK
+{
+    IMSI_VALID          = (1<<0),
+    IMEI_VALID          = (1<<1),
+    RAI_VALID           = (1<<2),
+    P_TMSI_VALID        = (1<<3),
+    IDENTITY_TYPE_VALID = (1<<4),
+};
+
+enum MS_IDENTITY
+{
+    UNKNOW_IDENTITY_TYPE,
+    IMSI,
+    IMEI,
+    IMEISV,
+    PTMSI,
+};
+
+
+enum PD
+{
+    PD_GMM = 0x8,
+};
+enum
+{
+    GMM_UNKNOW              = 0x00,/*未知的message type*/
+    GMM_ATTACH_REQUEST      = 0x01,/*attach request*/
+    GMM_ATTACH_ACCEPT       = 0x02,/*attach accept*/
+    GMM_DETACH_QUEST        = 0x05,/*detach request*/
+    GMM_DETACH_ACCEPT       = 0x06,/*detach accept*/
+    GMM_IDENTITY_RESPONSE   = 0x16,/*identity response*/
+    GMM_RAU_REQUEST         = 0x08,/*RAU request*/
+    GMM_RAU_ACCEPT          = 0x09,/*RAU accept*/
+    PTMSI_RELOC_CMD         = 0x10,/*PTMSI重分配*/
+};
+
+/*add by zhengwan for 3g, begin*/
+typedef struct tag_rai_t    
+{
+    plmn_t  plmn;
+    lac_t   lac;
+    rac_t   rac;
+}__attribute__((packed))rai_t;
+
+
+
+
+
+
+
+
 
 #endif /* end of__SEMP_HYDRA_LTE_H__ */

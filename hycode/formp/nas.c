@@ -30,7 +30,7 @@ mp_error_t nas_pdu_decrypt(nas_info_t *src, nas_plain_t *dst)
 
 
 
-inline mp_error_t nas_attach_accept_parse(struct pbuf *p, lte_guti_t *guti)
+inline mp_error_t nas_attach_accept_parse(struct pbuf *p, lte_guti_t guti)
 {
 
     return MP_E_NONE;

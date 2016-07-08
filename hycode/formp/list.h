@@ -403,6 +403,23 @@ static inline void list_splice_tail_init(struct list_head *list,
     for (pos = (head)->next, n = pos->next; pos != (head); \
             pos = n, n = pos->next)
 
+//void test()
+//{
+//    uint8_t *pcell = (*pos - table.cell_size-16);
+//    for(i = 0 ; i < table.cell_size;i++)
+//    {
+//        printf("%02x ", *(pcell+i));
+//    }
+//}
+#define list_for_each_safe_debug(pos, n, head) \
+    for (pos = (head)->next, \
+{if(NULL == pos){printf("1-NULL Point Error[TABLE:%s]:hash_result=%d\n",table.name, hash_result);\
+printf("head addr = %p \n", head);}\
+         n = pos->next; \
+         pos != (head); \
+         pos = n, \
+if(NULL == pos){printf("2-NULL Point Error[TABLE:%s]:hash_result=%d\n",table.name, hash_result);}\
+         n = pos->next)
 /**
  * list_for_each_prev_safe - iterate over a list backwards safe against removal of list entry
  * @pos:    the &struct list_head to use as a loop cursor.
