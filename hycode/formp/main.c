@@ -42,6 +42,7 @@ int s1u_sgw_ip   = 0xac143687; //sgw ip只有一个，但隧道号有多个
 int s1u_sgw_teid = 0x00017469;
 
 /*s1关联 */
+lte_ecgi_t ecgi = {0x64, 0xf0, 0x00, 0xa1, 0x20, 0x40, 0x10};
 lte_tai_t tai = {0x64, 0xf0, 0x00, 0x28, 0xb2};
 lte_guti_t guti = {0x64, 0xf0, 0x00, 0x03, 0x6e, 0x84, 0xe5, 0x12, 0x3a, 0x9a};
 lte_guti_t guti_new = {0x66, 0xf0, 0x00, 0x03, 0x6e, 0x84, 0xe5, 0x12, 0x3a, 0x99};
@@ -272,9 +273,11 @@ void test_s1_1()
     memset(&s1ap, 0 , sizeof(parse_s1ap_t));
 
     s1ap.nas.EMM_message_type = EMM_MSG_ATTACH_REQUEST;
-//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-//    s1ap.mme_ip = s11_mme_ip;
-//    s1ap.enode_ip = s1u_enode_ip;
+    s1ap.access_node_id = enode_ue_s1ap_id;
+    s1ap.cn_ip.version = 4;
+    s1ap.cn_ip.ip.v4 = s11_mme_ip;
+    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
+    s1ap.access_node_ip.version = 4;
     memcpy(s1ap.tai, tai, sizeof(tai));
     //s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
     s1ap.nas.type_of_identity = TYPE_IMSI;
@@ -296,9 +299,11 @@ void test_s1_1_old()
     memset(&s1ap, 0 , sizeof(parse_s1ap_t));
 
     s1ap.nas.EMM_message_type = EMM_MSG_ATTACH_REQUEST;
-//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-//    s1ap.mme_ip = s11_mme_ip;
-//    s1ap.enode_ip = s1u_enode_ip;
+    s1ap.access_node_id = enode_ue_s1ap_id;
+    s1ap.cn_ip.version = 4;
+    s1ap.cn_ip.ip.v4 = s11_mme_ip;
+    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
+    s1ap.access_node_ip.version = 4;
     memcpy(s1ap.tai, tai, sizeof(tai));
     s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
     //s1ap.nas.type_of_identity = TYPE_IMSI;
@@ -322,10 +327,12 @@ void test_s1_2()
 
     s1ap.nas.EMM_message_type = 0x42;
     s1ap.nas.ciphered_flag = false;
-//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-//
-//    s1ap.enode_ip = s1u_enode_ip;
-//    s1ap.mme_ip   = s11_mme_ip;
+
+    s1ap.access_node_id = enode_ue_s1ap_id;
+    s1ap.cn_ip.version = 4;
+    s1ap.cn_ip.ip.v4 = s11_mme_ip;
+    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
+    s1ap.access_node_ip.version = 4;
 
     memcpy(s1ap.nas.guti, guti, sizeof(lte_guti_t));
     ret = lte_s1ap_InitialContextSetup(packet_ptr, &s1ap);
@@ -344,10 +351,12 @@ void test_s1_2_new_guti()
 
     s1ap.nas.EMM_message_type = 0x42;
     s1ap.nas.ciphered_flag = false;
-//    s1ap.enode_ue_s1ap_id = enode_ue_s1ap_id;
-//
-//    s1ap.enode_ip = s1u_enode_ip;
-//    s1ap.mme_ip   = s11_mme_ip;
+
+    s1ap.access_node_id = enode_ue_s1ap_id;
+    s1ap.cn_ip.version = 4;
+    s1ap.cn_ip.ip.v4 = s11_mme_ip;
+    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
+    s1ap.access_node_ip.version = 4;
 
     memcpy(s1ap.nas.guti, guti_new, sizeof(lte_guti_t));
     ret = lte_s1ap_InitialContextSetup(packet_ptr, &s1ap);
@@ -364,10 +373,15 @@ void test_s1_3()
     memset(&s1ap, 0 , sizeof(parse_s1ap_t));
 
     s1ap.nas.EMM_message_type = EMM_MSG_IDENTIFY_RESPONSE;
-    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
-    s1ap.access_node_id       = enode_ue_s1ap_id;
-    s1ap.cn_ip.ip.v4          = s11_mme_ip;
-    s1ap.cn_id                = mme_ue_s1ap_id;
+
+    s1ap.cn_id                  = mme_ue_s1ap_id;
+    s1ap.access_node_id         = enode_ue_s1ap_id;
+    s1ap.cn_ip.version          = 4;
+    s1ap.cn_ip.ip.v4            = s11_mme_ip;
+    s1ap.access_node_ip.version = 4;
+    s1ap.access_node_ip.ip.v4   = s1u_enode_ip;
+
+
     s1ap.nas.type_of_identity = TYPE_IMSI;
 
     memcpy(s1ap.nas.init_identify.imsi, imsi_base, sizeof(imsi_base));
@@ -390,12 +404,45 @@ void test_s1_4()
 
     //s1ap.nas.EMM_message_type = EMM_SECURITE_COMMAND;
     s1ap.nas.EMM_message_type = EMM_MSG_AUTH_REQUEST;
-    s1ap.access_node_ip.ip.v4 = s1u_enode_ip;
-    s1ap.access_node_id       = enode_ue_s1ap_id;
+
+    s1ap.cn_id                  = mme_ue_s1ap_id;
+    s1ap.access_node_id         = enode_ue_s1ap_id;
+    s1ap.cn_ip.version          = 4;
+    s1ap.cn_ip.ip.v4            = s11_mme_ip;
+    s1ap.access_node_ip.version = 4;
+    s1ap.access_node_ip.ip.v4   = s1u_enode_ip;
 
     memcpy( s1ap.nas.rand, rand_base, sizeof(rand_base));
 
     ret = lte_s1ap_downlinkNASTransport(NULL, &s1ap);
+    if( MP_OK != ret )
+    {
+        printf("s1 step 4 ,code[%d]\n", ret);
+    }
+}
+void test_s1_uplink_tau_req()
+{
+    mp_code_t ret = MP_OK;
+    parse_s1ap_t s1ap;
+    memset(&s1ap, 0 , sizeof(parse_s1ap_t));
+
+    s1ap.nas.EMM_message_type = EMM_MSG_TAU_REQUEST;
+
+    s1ap.cn_id                  = mme_ue_s1ap_id;
+    s1ap.access_node_id         = enode_ue_s1ap_id;
+    s1ap.cn_ip.version          = 4;
+    s1ap.cn_ip.ip.v4            = s11_mme_ip;
+    s1ap.access_node_ip.version = 4;
+    s1ap.access_node_ip.ip.v4   = s1u_enode_ip;
+
+    s1ap.nas.type_of_identity = TYPE_OLD_GUTI;
+    memcpy(s1ap.nas.init_identify.guti, guti, sizeof(lte_guti_t));
+
+    s1ap.ecgi_exist = 1;
+    s1ap.ecgi = ecgi;
+    memcpy(s1ap.tai, tai, sizeof(s1ap.tai));
+
+    ret = lte_s1ap_uplinkNASTransport(&s1ap);
     if( MP_OK != ret )
     {
         printf("s1 step 4 ,code[%d]\n", ret);
@@ -476,12 +523,13 @@ void test_3g_1(int flag_with_imsi)
 
 char * tablename[]={
 "TABLE_IMSI",
-"TABLE_S11_MME",
-"TABLE_S11_SGW",
-"TABLE_S1",
+"TABLE_GTP_C",
+"TABLE_GTP_U",
 "TABLE_S6A",
-"TABLE_S1_ENODEB_MME",
-"TABLE_S_TIMSI",
+"TABLE_AN_INFO",
+"TABLE_S_TMSI",
+"TABLE_CN_INFO",
+"TABLE_P_TMSI",
 "TABLE_MAX"
 };
 
@@ -490,24 +538,16 @@ void show_memory()
 {
     int i = 0;
     int n = 0;
-    int cell_num = TABLE_MAGNITUDE;
+
     hash_bucket_t    *bucket    = NULL;
     hash_cell_t *hash_cell = NULL;
     struct list_head *pos = NULL, *next = NULL;
     printf("---------------------------------> memory use list:\n");
-    for(n = 0 ; n < 7; n++)
+    for(n = 0 ; n < 9; n++)
     {
-        if(n == 3)
-        {
-            cell_num = cell_num *2;
-        }
-        else
-        {
-            cell_num = TABLE_MAGNITUDE;
-        }
         hash_table_t *table = LTE_GET_TABLE_PTR(n);
         printf("\n%s:\n", tablename[n]);
-        for(i = 0 ; i < cell_num; i++)
+        for(i = 0 ; i < table->max_bucket; i++)
         {
             bucket = table->first_bucket + i;
             printf("test---------->%08x", &(bucket->lock.__data.__lock));
@@ -557,12 +597,16 @@ void test()
         printf("cell[%02d]:\n",i);
         printf("*******************************\n");
 
-        test_3g_1(1);
-        test_3g_1(0);
+//        test_3g_1(1);
+//        test_3g_1(0);
 
-        //test_s1_1();
-        //test_s1_2();
-//        test_s1_1_old();
+        test_s1_1();
+        show_memory();
+        test_s1_2();
+        show_memory();
+        test_s1_1_old();
+        show_memory();
+        test_s1_uplink_tau_req();
 //        test_s1_2_new_guti();
         //test_s1_3();
         //test_s1_4();
@@ -604,20 +648,8 @@ void test()
 int main(int argc,char * argv[])
 {
 
-//    pthread_t pid = -1;
-//    pthread_create(&pid, NULL, npcp_update_cell_timer, (void *)NULL);
-
-    int i = -5;
-    uint32_t x = 5;
-    if(x > i )
-        printf("fdlkjfkl");
-
-
-//    dataplane_lte_relate_init();
-//    test();
-
-
-    //pthread_join(pid,NULL);
+    dataplane_lte_relate_init();
+    test();
 
     return 0;
 } 
