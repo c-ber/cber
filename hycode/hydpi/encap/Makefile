@@ -4,20 +4,16 @@ PUBSO = alg
 
 CC = gcc
 
-CFLAGS = -g #-Wall
-INCL = -I. -I../
-LIBS = -lpthread
+CFLAGS = -g -Wall
+INCL = -I. -I../common/
+LIBS = -lpthread -lrt
 
 SOURCES := $(wildcard *.c)
 OBJS := $(patsubst %.c,%.o,$(SOURCES))
 
 
-all: $(PUBSO)
-	@echo $(PUBSO) 
+all: $(OBJS)
 
-$(PUBSO):$(OBJS)
-	$(CC)  -o $@ $(OBJS) -L ./ libappengine.a $(LIBS)
-	
 .c.o:
 	$(CC) $(CFLAGS) -c $< $(INCL)
 	
