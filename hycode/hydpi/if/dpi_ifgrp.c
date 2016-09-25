@@ -193,6 +193,7 @@ static int npcp_cmd_oifgrp_issued(uint16_t ilen, void *idata, uint16_t *olen, vo
 {
     oifgrp_st  *s_grp = (oifgrp_st *)idata;
     uint8_t    grp_id = s_grp->if_grp_id;
+    oifgrp_st  oifgrp_entry = {};
     
     oifgrp_st  *d_grp =  NULL;
 
@@ -206,6 +207,7 @@ static int npcp_cmd_oifgrp_issued(uint16_t ilen, void *idata, uint16_t *olen, vo
     memcpy(d_grp, s_grp, sizeof (oifgrp_st));
 #else
     SHM_SET_DATA(OFFSET_OIF(grp_id-1), s_grp, sizeof(oifgrp_st));
+    SHM_GET_DATA(&oifgrp_entry, OFFSET_OIF(grp_id-1), sizeof(oifgrp_st));
 #endif
 
     return DPI_OK;

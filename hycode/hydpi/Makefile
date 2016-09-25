@@ -1,24 +1,48 @@
+PROGRAMS=dpi
+
+DPI_ROOT =$(shell pwd)
+
 CC_PATH=/opt/tools-SDK_3_1_1_build_41/bin/
 
-#CC = ${C_PATH}mips64-octeon-linux-gnu-gcc
-CC=gcc
+CC = gcc
 
-CPUS = $(shell grep -c processor /proc/cpuinfo)
+export CC
+
+PRO_DIR = daemon    \
+          libipc    \
+          npcp      \
+          stat      \
+          flow      \
+          if        \
+          encap     \
+          sap       \
 
 
-all: 
+all:$(PROGRAMS)
+	@echo "         ^_^       Compile successful!!!! "
+	find $(DPI_ROOT) -regex '.*\.c\|.*\.h'|xargs tar cvf $(DPI_ROOT)/bin/src.tgz;
+	tar cvf $(DPI_ROOT)/bin/bin.tgz bin/npcp bin/flow bin/dpi bin/watch
+	cp $(DPI_ROOT)/debug.sh bin/
+	@echo "         ^_^       Package successful!!!! "
+dpi: 
 	@-mkdir -p bin
 	@-mkdir -p libs
-	(cd sap;      $(MAKE) -j${CPUS})
-	(cd daemon;   $(MAKE) -j${CPUS})
+
+	for dir in $(PRO_DIR);\
+	do\
+		make -C $$dir;\
+	done
+
 
 	@echo "[Susccess] Dpi Compile Completed!"
-	
-clean:
-	(cd sap;      make clean )
-	(cd daemon;   make clean )
 
-	
+clean:
+	for dir in $(PRO_DIR);\
+	do\
+		make -C $$dir clean;\
+	done
+
+
 	@rm -f libs/*.so
 	@rm -f bin/*
 	@echo "[Success] Dpi Clean Completed!"

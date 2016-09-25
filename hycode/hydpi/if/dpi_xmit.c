@@ -4,6 +4,12 @@
 int dpi_xmit_packet(work_entry_st *work, uint8_t oifgrp);
 static  uint8_t   eport_calc(oifgrp_st *oifgrp_entry, work_entry_st *work);
 
+char pkg[] = { 0x48,0x62,0x76,0x0c,0x21,0x70,0x34,0xe0,0xcf,0xff,0xc7,0xd0,0x81,0x00,0x00,0x7e
+,0x08,0x00,0x45,0xc0,0x00,0x30,0xaf,0x85,0x00,0x00,0xfa,0x84,0x68,0x8e,0x64,0x41
+,0xe7,0x2d,0x64,0x41,0xf7,0xc5,0x8e,0x3c,0x8e,0x3c,0xba,0x54,0x5a,0xea,0xc1,0x3d
+,0x94,0x64,0x03,0x00,0x00,0x10,0xba,0x5a,0x2e,0x16,0x00,0x02,0xb3,0xfc,0x00,0x00
+,0x00,0x00};
+
 
 static inline uint8_t EportGetByHashSourceIpAddress (uint8_t iport, oifgrp_st *oifgrp, 
                                                       ip5tuple_st *ipv45tuple, uint16_t protocol)
@@ -166,8 +172,8 @@ static send_tunnel_st send_socket[BUSINESS_PORT_NUM];
 
 int dpi_xmit_init(void)
 {
-    char *business_port_list[BUSINESS_PORT_NUM] = {"eth4", "eth5", "eth6", "eth7", "eth8", "eth9", 
-                                                      "eth10", "eth11", "eth12", "eth13", "eth14", "eth15"};
+    char *business_port_list[BUSINESS_PORT_NUM] = {"eth4"};//, "eth5", "eth6", "eth7", "eth8", "eth9", 
+                                                      //"eth10", "eth11", "eth12", "eth13", "eth14", "eth15"};
     struct ifreq ifr = {};
     int i;
     int ret = -1;
@@ -184,7 +190,7 @@ int dpi_xmit_init(void)
         send_socket[i].socket = ret;
         
         /* network card interface name */
-        memcpy(ifr.ifr_name, business_port_list[i], IFNAMSIZ);
+        memcpy(ifr.ifr_name, "eth4", IFNAMSIZ);
     
         /* get ethernet card index */
         if ((ret = ioctl(send_socket[i].socket, SIOCGIFINDEX, &ifr)) == -1)
@@ -194,15 +200,25 @@ int dpi_xmit_init(void)
             return ret;
         }   
 
+
         
         send_socket[i].stTagAddr.sll_ifindex = ifr.ifr_ifindex;
         send_socket[i].stTagAddr.sll_family = PF_PACKET;
         send_socket[i].stTagAddr.sll_protocol = htons(ETH_P_ALL);
+        send_socket[i].stTagAddr.sll_pkttype   = PACKET_OUTGOING;
+        send_socket[i].stTagAddr.sll_halen     = 6;
 
+
+        if((ret = bind(send_socket[i].socket, (struct sockaddr *)&send_socket[i].stTagAddr, sizeof(struct sockaddr_ll))) == - 1)
+        {
+            ifgrp_sprint("bind()\n"); 
+            return DPI_FAIL;
+        }    
     }
 
+#ifdef USE_SHM
     dpi_shm_data_init(KEY_IFGRP, sizeof(ifgrp_global_var_t));
-    
+#endif
 
     return 0;
 }
@@ -259,7 +275,6 @@ int dpi_xmit_packet(work_entry_st *work, uint8_t oifgrp)
     oifgrp_st  oifgrp_entry = {};
     uint8_t    oif = 0xFF;
     int rv = 0;
-    struct sockaddr_ll saddr_ll = {};
     static int poll_cnt = 0;
     send_tunnel_st  *out_tunnel = NULL;
 
@@ -270,7 +285,8 @@ int dpi_xmit_packet(work_entry_st *work, uint8_t oifgrp)
 #endif
     interfaces      =   oifgrp_entry.up_port.up_port_num;
 
-    oif = eport_calc(&oifgrp_entry, work);
+    //oif = eport_calc(&oifgrp_entry, work);
+    oif = 1;
 
     if (interfaces && (oif !=  INVALID_PORT_NUMBER))
     {
@@ -290,9 +306,10 @@ int dpi_xmit_packet(work_entry_st *work, uint8_t oifgrp)
         while (NULL == (out_tunnel = &send_socket[poll_cnt++ % BUSINESS_PORT_NUM]))
         {;}
         
-        rv = sendto(out_tunnel->socket, work->ptr, work->len, 0, (struct sockaddr *)&out_tunnel->stTagAddr, sizeof(struct sockaddr_ll));
+        rv = sendto(out_tunnel->socket, pkg, sizeof(pkg), 0, (struct sockaddr *)&out_tunnel->stTagAddr, sizeof(struct sockaddr_ll));
         if (rv != work->len)
         {
+            printf("errno: %d, %s\n", errno, strerror(errno));
             ifgrp_sprint("send fail!\n");
             return rv;
         }
@@ -367,5 +384,23 @@ static  uint8_t   eport_calc(oifgrp_st *oifgrp_entry, work_entry_st *work)
 }
 
 
+
+int main_test_xmit(void)
+{
+    work_entry_st work = {};
+
+    work.action = ACTION_FORWARD;
+    work.fwd_oifgrp_num = 1;
+    work.oifgrp[0] = 1;
+    work.protocol = ETHERTYPE_IP4;
+    work.ptr = pkg;
+    work.len = sizeof(pkg);
+    
+    dpi_xmit_init();
+
+    dpi_xmit_packet(&work, 1);
+
+    
+}
 
 

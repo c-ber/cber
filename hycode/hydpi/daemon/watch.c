@@ -21,6 +21,8 @@
 static pid_t dpi_proc[DPI_PROC_NUM] = {0};    /* dpi进程id */
 
 static pid_t flow_proc = 0;    /* flow进程id */
+static pid_t stat_proc = 0;    /* stat进程id */
+static pid_t npcp_proc = 0;    /* npcp进程id */
 
 /******************************************************************************
  * 函数名称    : running_dpi
@@ -46,7 +48,7 @@ void running_dpi ( int pid )
     }
     else if (dpi_proc[pid] == 0)
     {
-        execv("/usr/sbin/dpi", pSubArgv);
+        execv("/storage/bin/dpi", pSubArgv);
         exit (1);
     }
     return;
@@ -73,11 +75,33 @@ void running_flow()
     }
     else if (flow_proc == 0)
     {
-        execv("/usr/sbin/flow", pSubArgv);
+        execv("/storage/bin/flow", pSubArgv);
         exit (1);
     }
     return;
 }
+
+
+void running_npcp()
+{
+    char *pSubArgv[1]   = {NULL};
+    pSubArgv[0] = (char *)"npcp";
+
+    npcp_proc = vfork ();
+    if ( npcp_proc < 0 )
+    {
+        //进程分配失败
+        printf("npcp init fail.\n");
+        return;
+    }
+    else if (npcp_proc == 0)
+    {
+        execv("/storage/bin/npcp", pSubArgv);
+        exit (1);
+    }
+    return;
+}
+
 
 /******************************************************************************
  * 函数名称    : check_proc_running
@@ -105,6 +129,24 @@ static void check_proc_running ()
             }
         }
     }
+
+    if(flow_proc != 0)
+    {
+        if (waitpid (flow_proc, NULL, WNOHANG) != 0)
+        {
+            running_flow(i);
+        }
+    }
+
+    if(npcp_proc != 0)
+    {
+        if (waitpid (npcp_proc, NULL, WNOHANG) != 0)
+        {
+            running_npcp(i);
+        }
+    }
+
+
     return;
 }
 
@@ -176,11 +218,15 @@ static void init_signal( void )
 
 int main()
 {
+    int i = 0;
     printf("daemon proc init and start !\n");
 
     init_signal();
 
-    int i = 0;
+    running_npcp();
+
+    running_flow();
+
     for(i = 0 ; i < DPI_PROC_NUM; i++)
     {
         running_dpi(i);

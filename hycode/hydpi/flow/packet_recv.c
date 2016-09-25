@@ -156,7 +156,7 @@ void test_main_flow()
         //为16个线程分配一块数据区域，用于存储报文，由多进程负责轮询访问
         dpi_shm_data_init(KYE_PKT_BUF01 + i, sizeof(pkt_buff_t));
 
-        sprintf(rtargs[i].eth_name, "eth%d", i+1);
+        sprintf(rtargs[i].eth_name, "eth%d", i);
         rtargs[i].sockfd    = -1;
         rtargs[i].thread_id = i;
         pthread_create(&(pid[i]), NULL, listen_raw_socket, (void *)&(rtargs[i]));

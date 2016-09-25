@@ -5,25 +5,21 @@ PUBSO = alg
 CC = gcc
 
 CFLAGS = -g -Wall
-
-INCL = -I. -I../common/ -I../if
-
-LIBS = -lpthread -lrt
-
-OBJ_DIR = objs
+INCL = -I. 
+LIBS = -lpthread -lpcap
 
 SOURCES := $(wildcard *.c)
-
 OBJS := $(patsubst %.c,%.o,$(SOURCES))
 
 
-all: $(OBJS)
-	mv $(OBJS) $(OBJ_DIR)
+all: $(PUBSO)
+	@echo $(PUBSO) 
 
+$(PUBSO):$(OBJS)
+	$(CC)  -o $@ $(OBJS) -L../libs $(LIBS)
+	
 .c.o:
 	$(CC) $(CFLAGS) -c $< $(INCL)
-	mkdir -p   $(OBJ_DIR)
 	
 clean:
 	rm -f *.o $(PUBSO) *.bak
-	rm -rf $(OBJ_DIR)/

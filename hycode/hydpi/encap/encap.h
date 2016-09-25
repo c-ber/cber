@@ -5,6 +5,7 @@
 #include "pub_header.h"
 #include "dpi_errno.h"
 #include "sapl_dpi_sdk.h"
+#include "../if/dpi_xmit.h"
 
 
 /***********************临时定义********************/
@@ -16,10 +17,13 @@ typedef unsigned short  uint16_t;
 typedef short           int16_t;
 typedef unsigned char   uint8_t;
 
-#define OIFGRP_MAX_SIZE (4)
+//#define OIFGRP_MAX_SIZE (4)
 
 #define CPU_ENDIAN_LITTLE LITTLE_ENDIAN
 
+//#define MAX_PKT_LEN             (2048)
+
+/*
 typedef enum
 {
     ACTION_PERMIT   = (1 << 0),    
@@ -29,7 +33,7 @@ typedef enum
     ACTION_COPYTO   = (1 << 4)
     
 } action_en;
-
+*/
 
 /************************结构体***********************/
 
@@ -112,9 +116,9 @@ typedef struct _encap_v4Udp_hdr_t
 /*转发动作*/
 typedef struct _dpi_transmmit_action_t
 {
-    uint8_t action;          /*转发动作*/
-	uint8_t oifcnt;          /*出接口数量*/
-    uint8_t oifgrpId[OIFGRP_MAX_SIZE];  /*出接口id*/
+    action_en action;          /*转发动作*/
+	uint8_t oifcnt;            /*出接口数量*/
+    uint8_t oifgrpId[MAX_FWD_OIFGRP_NUM];  /*出接口id*/
 } acl_t;
 
 
@@ -142,8 +146,6 @@ typedef struct _tlv_head_t
 #define PROTO_VLAN              (0x8100)
 #define PROTO_IPV4              (0x0800)
 #define PROTO_UDP               (17)
-
-#define MAX_PKT_LEN             (2048)
 
 
 #define MAC_HEAD_LEN            (14)

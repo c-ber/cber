@@ -1,6 +1,6 @@
-CFLAG = -g -I../common
+CFLAG = -g -I../common -I../libipc
 
-GCC ?= /opt/tools-gcc-4.7/bin/mips64-octeon-linux-gnu-gcc
+GCC = gcc
 
 src = dpi_hash.c\
 	  dpi_xmit.c\

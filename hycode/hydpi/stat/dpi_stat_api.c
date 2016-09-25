@@ -13,10 +13,8 @@
       修改    :Created file
 ******************************************************************************/
 
-#include <pthread.h> 
-#include <stdio.h>
-#include <stdlib.h>
 #include "dpi_stat_api.h"
+
 
 
 /******************************************************************************
@@ -28,11 +26,12 @@
  ******************************************************************************/
 dpi_code_t dpi_stat_init()
 {  
-    p_g_flow_stat     = g_proc_flow_stat; 
-    p_proc_stat_mutex = proc_stat_mutex;
-    p_g_sys_stat      = g_sys_stat;
+
+    int rv = DPI_OK;
+
+    dpi_shm_data_init(KEY_STAT, sizeof(proc_stat_t));
     
-    return DPI_OK;
+    return rv;
 }
 
 
@@ -45,27 +44,34 @@ dpi_code_t dpi_stat_init()
  ******************************************************************************/
 dpi_code_t dpi_flow_stat_inc(int process_id, int flow_stat_group, int stat_type)
 {
+    int rv = DPI_OK;
+       
+    if(DPI_PID_MAX < process_id || FSG_MAX < flow_stat_group || FST_MAX < stat_type)
+    {
+        return DPI_PARAM_ERR;
+    }
+    
     switch(stat_type)
     {
-        case FST_FLOW_NUM:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);   
-        p_g_flow_stat[process_id].fs[flow_stat_group].flow_num++;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        case FST_FLOW_NUM: 
+        dpi_shm_data_inc(KEY_STAT, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].flow_num), sizeof(uint64_t), 1);        
         break;
-        case FST_PACKETS:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        p_g_flow_stat[process_id].fs[flow_stat_group].packets++;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        
+        case FST_PACKETS:    
+        dpi_shm_data_inc(KEY_STAT, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].packets), sizeof(uint64_t), 1);  
         break;
+        
         case FST_BYTES:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        p_g_flow_stat[process_id].fs[flow_stat_group].bytes++;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_inc(KEY_STAT, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].bytes), sizeof(uint64_t), 1);
         break;
+        
         default:break;
     }
     
-    return DPI_OK;
+    return rv;
 }
 
 
@@ -76,29 +82,35 @@ dpi_code_t dpi_flow_stat_inc(int process_id, int flow_stat_group, int stat_type)
  * 返回        :
  * 日期        :
  ******************************************************************************/
-dpi_code_t dpi_flow_stat_set(int process_id, int flow_stat_group, int stat_type, int64_t num)
+dpi_code_t dpi_flow_stat_set(int process_id, int flow_stat_group, int stat_type, uint64_t num)
 {   
+    int rv = DPI_OK;
+    uint64_t set_data = num;
+    uint64_t *setdata_p = &set_data;
+
+    if(DPI_PID_MAX < process_id || FSG_MAX < flow_stat_group || FST_MAX < stat_type)
+    {
+        return DPI_PARAM_ERR;
+    }
+    
     switch(stat_type)
     {
         case FST_FLOW_NUM:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        p_g_flow_stat[process_id].fs[flow_stat_group].flow_num = num;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_set(KEY_STAT, (void *)setdata_p, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].flow_num), sizeof(uint64_t));          
         break;
         case FST_PACKETS:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        p_g_flow_stat[process_id].fs[flow_stat_group].packets = num;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_set(KEY_STAT, (void *)setdata_p, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].packets), sizeof(uint64_t));
         break;
         case FST_BYTES:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        p_g_flow_stat[process_id].fs[flow_stat_group].bytes = num;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_set(KEY_STAT, (void *)setdata_p, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].bytes), sizeof(uint64_t));
         break;
         default:break;
     }
     
-    return DPI_OK;
+    return rv;
 }
 
 
@@ -109,31 +121,41 @@ dpi_code_t dpi_flow_stat_set(int process_id, int flow_stat_group, int stat_type,
  * 返回        :
  * 日期        :
  ******************************************************************************/
-int64_t dpi_flow_stat_get(int process_id, int flow_stat_group, int stat_type)
+dpi_code_t dpi_flow_stat_get(int process_id, int flow_stat_group, int stat_type, uint64_t* outdata)
 {
-    int64_t outdata = 0;
+    int rv = DPI_OK;
+
+    if(NULL == outdata)
+    {
+        return DPI_NULL_POINT;
+    } 
+
+    if(DPI_PID_MAX < process_id || FSG_MAX < flow_stat_group || FST_MAX < stat_type)
+    {
+        return DPI_PARAM_ERR;
+    }
     
     switch(stat_type)
     {
         case FST_FLOW_NUM:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        outdata = p_g_flow_stat[process_id].fs[flow_stat_group].flow_num;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_get(KEY_STAT, (void *)outdata, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].flow_num), sizeof(uint64_t)); 
         break;
+        
         case FST_PACKETS:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        outdata = p_g_flow_stat[process_id].fs[flow_stat_group].packets;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_get(KEY_STAT, (void *)outdata, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].packets), sizeof(uint64_t));      
         break;
+        
         case FST_BYTES:
-        pthread_mutex_lock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
-        outdata = p_g_flow_stat[process_id].fs[flow_stat_group].bytes;
-        pthread_mutex_unlock(&p_proc_stat_mutex[process_id].stat_mutex[flow_stat_group]);
+        dpi_shm_data_get(KEY_STAT, (void *)outdata, DPI_OFFSET(proc_stat_t, 
+        proc_flow_stat[process_id].fs[flow_stat_group].bytes), sizeof(uint64_t));
         break;
+        
         default:break;
     }
     
-    return outdata;
+    return rv;
 }
 
 
@@ -166,23 +188,33 @@ dpi_code_t dpi_flow_stat_get_group(int flow_stat_group, void *outbuf)
     int rv = DPI_OK;
     int i  = 0;
     int j  = 0;
-    
-    int64_t *outdata = NULL;
+    uint64_t temp_data  = 0;
+    uint64_t outdata    = 0;
+    uint64_t *outdata_p = NULL;
     
     if(NULL == outbuf)
     {
-        return DPI_NULL_POINT;
+        return DPI_NULL_POINT; 
     }
-     
-    outdata = (int64_t *)outbuf;
     
-    for(i=0; i<FST_MAX; i++, outdata++)
+    outdata_p = (uint64_t *)outbuf;
+    
+    for(i=0; i<FST_MAX; i++, outdata_p++)
     {
         for(j=0; j<DPI_PID_MAX; j++)
         {
-            *outdata += dpi_flow_stat_get(j, flow_stat_group, i);
+            rv = dpi_flow_stat_get(j, flow_stat_group, i, &temp_data);
+            if(DPI_OK !=rv)
+            {
+                return rv;
+            }
+            outdata+=temp_data;            
         }
+        
+        *outdata_p = outdata;
+        outdata = 0;
     }
+    
     return rv;
 }
 /******************************************************************************
@@ -219,8 +251,15 @@ dpi_code_t dpi_flow_stat_clear_group(int flow_stat_group)
 dpi_code_t dpi_sys_stat_inc(int process_id, int sys_stat_type)
 {
     int rv = DPI_OK;
-    
-    p_g_sys_stat[process_id].sys_stat[sys_stat_type]++;
+
+    if(DPI_PID_MAX < process_id || SST_MAX < sys_stat_type)
+    {
+        return DPI_PARAM_ERR;
+    }
+
+    dpi_shm_data_inc(KEY_STAT, DPI_OFFSET(proc_stat_t, 
+    sys_stat[process_id].sys_s[sys_stat_type]), sizeof(uint64_t), 1);
+   
     
     return rv;
 }
@@ -232,11 +271,19 @@ dpi_code_t dpi_sys_stat_inc(int process_id, int sys_stat_type)
  * 返回        :
  * 日期        :
  ******************************************************************************/
-dpi_code_t dpi_sys_stat_set(int process_id, int sys_stat_type, int64_t num)
+dpi_code_t dpi_sys_stat_set(int process_id, int sys_stat_type, uint64_t num)
 {
     int rv = DPI_OK;
+    uint64_t set_data = num;
+    uint64_t *setdata_p = &set_data;
     
-    p_g_sys_stat[process_id].sys_stat[sys_stat_type] = num;
+    if(DPI_PID_MAX < process_id || SST_MAX < sys_stat_type)
+    {
+        return DPI_PARAM_ERR;
+    }
+    
+    dpi_shm_data_set(KEY_STAT, (void *)setdata_p, DPI_OFFSET(proc_stat_t, 
+    sys_stat[process_id].sys_s[sys_stat_type]), sizeof(uint64_t));
     
     return rv;
 }
@@ -247,13 +294,19 @@ dpi_code_t dpi_sys_stat_set(int process_id, int sys_stat_type, int64_t num)
  * 返回        :
  * 日期        :
  ******************************************************************************/
-int64_t dpi_sys_stat_get(int process_id, int sys_stat_type)
+dpi_code_t dpi_sys_stat_get(int process_id, int sys_stat_type, uint64_t *outdata)
 {
-    int64_t outdata = 0;
+    int rv = DPI_OK;
+
+    if(DPI_PID_MAX < process_id || SST_MAX < sys_stat_type)
+    {
+        return DPI_PARAM_ERR;
+    }
     
-    outdata = p_g_sys_stat[process_id].sys_stat[sys_stat_type];
+    dpi_shm_data_get(KEY_STAT, (void *)outdata, DPI_OFFSET(proc_stat_t, 
+    sys_stat[process_id].sys_s[sys_stat_type]), sizeof(uint64_t));
     
-    return outdata; 
+    return rv; 
 
     
 }
@@ -282,18 +335,27 @@ dpi_code_t dpi_sys_stat_clear(int process_id, int sys_stat_type)
  * 返回        :
  * 日期        :
  ******************************************************************************/
-int64_t dpi_sys_stat_get_all(int sys_stat_type)
+dpi_code_t dpi_sys_stat_get_all(int sys_stat_type, uint64_t *outbuf)
 {
-    int rv      = DPI_OK;
-    int i       = 0;
-    int outdata = 0;
+    int i             = 0;
+    uint64_t temp_data = 0;
+    uint64_t outdata   = 0;
 
+    
+    if(NULL == outbuf)
+    {
+        return DPI_NULL_POINT;
+    }
+    
     for(i=0; i<DPI_PID_MAX; i++)
     {
-        outdata += dpi_sys_stat_get(i, sys_stat_type);
+        dpi_sys_stat_get(i, sys_stat_type, &temp_data);
+        outdata += temp_data;
     }
+    
+    *outbuf = outdata;
 
-    return outdata;
+    return DPI_OK;
 }
 
 /******************************************************************************
@@ -327,8 +389,8 @@ dpi_code_t npcp_cmd_show_stat_flow(int16_t ilen, void *idata, int16_t *olen, voi
     int i = 0;
     int rv = DPI_OK;
     
-    flow_stat_t *p_flow_stat = NULL;
-    p_flow_stat = (flow_stat_t *)odata;
+    flw_stat_t *p_flow_stat = NULL;
+    p_flow_stat = (flw_stat_t *)odata;
     
     if((NULL == odata) || (NULL == idata) || (NULL == olen))
     {
@@ -382,8 +444,8 @@ dpi_code_t npcp_cmd_show_stat_app(int16_t ilen, void *idata, int16_t *olen, void
     int i = 0;
     int rv = DPI_OK;
     
-    flow_stat_t *p_flow_stat = NULL;
-    p_flow_stat = (flow_stat_t *)odata;
+    flw_stat_t *p_flow_stat = NULL;
+    p_flow_stat = (flw_stat_t *)odata;
     
     if((NULL == odata) || (NULL == idata) || (NULL == olen))
     {
@@ -425,5 +487,23 @@ dpi_code_t npcp_cmd_clear_stat_app(int16_t ilen, void *idata, int16_t *olen, voi
 }
 
 
+/******************************************************************************
+ * 函数名称    : dpi_stat_npcp_init
+ * 功能        : 统计模块npcp初始化
+ * 参数        : 
+ * 返回        :
+ * 日期        :
+ ******************************************************************************/
+dpi_code_t dpi_stat_npcp_init(void)
+{
+    int rv = DPI_OK;
+
+    NPCP_CMD_REGISTER(NPCP_CMD_DPI_SHOW_FLOW_STAT, npcp_cmd_show_stat_flow);
+    NPCP_CMD_REGISTER(NPCP_CMD_DPI_CLEAR_FLOW_STAT, npcp_cmd_clear_stat_flow);
+    NPCP_CMD_REGISTER(NPCP_CMD_DPI_SHOW_APP_STAT, npcp_cmd_show_stat_app);
+    NPCP_CMD_REGISTER(NPCP_CMD_DPI_CLEAR_APP_STAT, npcp_cmd_clear_stat_app);
+    
+    return rv;
+}
 
 

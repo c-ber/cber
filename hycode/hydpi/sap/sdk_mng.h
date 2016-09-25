@@ -20,6 +20,7 @@
 #include "pub_header.h"
 #include "api_encap.h"
 
+
 #include "shmem.h"
 
 #endif /* SAP_SDK_MNG_H_ */

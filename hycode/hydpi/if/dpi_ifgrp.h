@@ -5,11 +5,11 @@
 #include <pub_header.h>
 #include "../libipc/shmem.h"
 
-static const int if_debug = 1;
+#define if_debug    1
 
 #define USE_SHM
 
-#if if_debug == 1
+#if if_debug
 #define ifgrp_uprint(fmt, args...) fprintf(stderr, fmt, ##args)
 #define ifgrp_uprintv(fmt, args...) fprintf(stderr, "[%s-%d]: "fmt, __func__, __LINE__, ##args)
 #define ifgrp_sprint(fmt, args...) fprintf(stderr, "[%d-%s]\t"fmt, errno, strerror(errno), ##args);

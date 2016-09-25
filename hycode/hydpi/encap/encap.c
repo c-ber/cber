@@ -249,6 +249,7 @@ dpi_code_t identity_result_transmit(uint8_t * pPktData, uint8_t *pResultData,
     uint8_t *pData                  = NULL; /*指向payload层后的数据部分*/
     uint32_t MaxDataLenPerPkt       = 0;    /*出头前四层和payload的头剩余能传输数据的最大长度*/
     uint16_t PktLen                 = 0;    /*每次发送的报文长度*/
+    work_entry_st work              = {0};
 
     if((NULL == pAcl) || (NULL == pPktData) ||
           (NULL == pResultData) || (NULL == pEncapCtr_t))
@@ -315,6 +316,13 @@ dpi_code_t identity_result_transmit(uint8_t * pPktData, uint8_t *pResultData,
                 NETWORK_ORDER_UINT16(((v4Udp_hdr_t *)pPktData)->udp.len
                                         , UDP_HEAD_LEN+PAYLOAD_HDR_LEN+SendDataLen);
                 PktLen = MAC_HEAD_LEN + VLAN_HEAD_LEN + IPV4_HEAD_LEN+UDP_HEAD_LEN+PAYLOAD_HDR_LEN+SendDataLen;
+                work.tuple.v4.src_ip = pEncapCtr_t->ipv4.saddr;
+                work.tuple.v4.dst_ip = pEncapCtr_t->ipv4.daddr;
+                work.tuple.v4.dst_port = pEncapCtr_t->udp.dest;
+                work.tuple.v4.src_port = pEncapCtr_t->udp.source;
+                work.tuple.v4.protocol = PROTO_UDP;
+                work.tuple.v4.iifgrp = 0;
+                work.protocol = PROTO_IPV4;
                 break;
 
             default:
@@ -329,6 +337,16 @@ dpi_code_t identity_result_transmit(uint8_t * pPktData, uint8_t *pResultData,
             printf("transmit packet fail!\n");
             return ret;
         }
+        
+        work.action = pAcl->action;
+        work.ptr = (void *)pPktData;
+        work.len = PktLen;
+        memcpy(work.oifgrp, pAcl->oifgrpId, sizeof(work.oifgrp));
+        work.fwd_oifgrp_num = pAcl->oifcnt;
+        work.iif = 0;
+ 
+        dpi_xmit(&work);
+        
 #ifdef SAVE_PKT_TO_FILE
         char name[20] = {0};
         sprintf(name, "test_%d.pcap", syn);
@@ -474,7 +492,12 @@ dpi_code_t pkt_transmmit_init()
 
     memset(&g_acl_t, 0, sizeof(g_acl_t));
 
-    g_acl_t.action = ACTION_PERMIT;
+    g_acl_t.action = ACTION_FORWARD;
+    g_acl_t.oifcnt = 4;
+    g_acl_t.oifgrpId[0] = 1;
+    g_acl_t.oifgrpId[1] = 2;
+    g_acl_t.oifgrpId[2] = 3;
+    g_acl_t.oifgrpId[3] = 4;
 
     return ret;
 }
@@ -543,6 +566,8 @@ dpi_code_t dpi_encap_init(void)
     }
 
     memset(&g_encode_buf, 0, sizeof(g_encode_buf));
+
+    dpi_xmit_init();
     
     return ret;
 }

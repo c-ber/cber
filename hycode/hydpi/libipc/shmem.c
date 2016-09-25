@@ -79,6 +79,33 @@ dpi_shm_t  shm[KEY_MAX] = {
         {-1, 0, NULL, -1},
 };
 
+/*连接共享内存*/
+dpi_code_t _dpi_shm_attach(shm_key_type_t key)
+{
+    shm[key].addr = shmat(shm[key].id, NULL, 0);
+    if( NULL == shm[key].addr)
+    {
+        return DPI_SHM_ATTACH_FAIL;
+    }
+    return DPI_OK;
+}
+
+/*如果去连接失败，需要查明原因，否则导致连接未释放，造成共享内存无法使用*/
+dpi_code_t _dpi_shm_detach(shm_key_type_t key)
+{
+    if( shm[key].addr != NULL && shm[key].addr != (void *)-1 )
+    {
+        if(0 != shmdt( shm[key].addr ))
+        {
+            return DPI_SHM_DETACH_FAIL;
+        }
+        //shm[key].id = -1;//这里如果置位导致无法再连接
+        shm[key].addr = NULL;
+    }
+    return DPI_OK;
+}
+
+
 /*共享内存初始化函数*/
 dpi_code_t dpi_shm_data_init(shm_key_type_t key, size_t __size)
 {
@@ -100,31 +127,8 @@ dpi_code_t dpi_shm_data_init(shm_key_type_t key, size_t __size)
     /*初始化信号量*/
     sem_service_init(key+100, &(shm[key].sem_id));
 
-    return DPI_OK;
-}
+    _dpi_shm_attach(key);
 
-/*如果去连接失败，需要查明原因，否则导致连接未释放，造成共享内存无法使用*/
-dpi_code_t _dpi_shm_detach(shm_key_type_t key)
-{
-    if( shm[key].addr != NULL && shm[key].addr != (void *)-1 )
-    {
-        if(0 != shmdt( shm[key].addr ))
-        {
-            return DPI_SHM_DETACH_FAIL;
-        }
-        shm[key].id = -1;
-        shm[key].addr = NULL;
-    }
-    return DPI_OK;
-}
-
-dpi_code_t _dpi_shm_attach(shm_key_type_t key)
-{
-    shm[key].addr = shmat(shm[key].id, NULL, 0);
-    if( NULL == shm[key].addr)
-    {
-        return DPI_SHM_ATTACH_FAIL;
-    }
     return DPI_OK;
 }
 
@@ -132,6 +136,11 @@ dpi_code_t _dpi_shm_attach(shm_key_type_t key)
 dpi_code_t _dpi_shm_data_get(shm_key_type_t key, void *pdst, int offset, int dst_len)
 {
     if ( (void *) -1 == shm[key].addr )
+    {
+        return DPI_FAIL;
+    }
+
+    if ( NULL == shm[key].addr )
     {
         return DPI_FAIL;
     }
@@ -152,23 +161,7 @@ dpi_code_t _dpi_shm_data_get(shm_key_type_t key, void *pdst, int offset, int dst
 
 dpi_code_t dpi_shm_data_get(shm_key_type_t key, void *pdst, int offset, int dst_len)
 {
-    dpi_code_t ret = DPI_OK;
-
-    ret = _dpi_shm_attach(key);
-    if(DPI_OK != ret)
-    {
-        return ret;
-    }
-
-    ret = _dpi_shm_data_get(key, pdst, offset, dst_len);
-
-    ret = _dpi_shm_detach(key);
-    if(DPI_OK != ret)
-    {
-        return ret;
-    }
-
-    return DPI_OK;
+    return _dpi_shm_data_get(key, pdst, offset, dst_len);
 }
 
 
@@ -176,6 +169,11 @@ dpi_code_t dpi_shm_data_get(shm_key_type_t key, void *pdst, int offset, int dst_
 dpi_code_t _dpi_shm_data_set(shm_key_type_t key, void *psrc, int offset, int src_len)
 {
     if ( (void *) -1 == shm[key].addr )
+    {
+        return DPI_FAIL;
+    }
+
+    if ( NULL == shm[key].addr )
     {
         return DPI_FAIL;
     }
@@ -196,23 +194,62 @@ dpi_code_t _dpi_shm_data_set(shm_key_type_t key, void *psrc, int offset, int src
 
 dpi_code_t dpi_shm_data_set(shm_key_type_t key, void *psrc, int offset, int src_len)
 {
-    dpi_code_t ret = DPI_OK;
+    return _dpi_shm_data_set(key, psrc, offset, src_len);
+}
 
-    ret = _dpi_shm_attach(key);
-    if(DPI_OK != ret)
+
+dpi_code_t _dpi_shm_data_inc(shm_key_type_t key, int offset, int src_len, int va)
+{
+    if ( (void *) -1 == shm[key].addr )
     {
-        return ret;
+        return DPI_FAIL;
     }
 
-    ret = _dpi_shm_data_set(key, psrc, offset, src_len);
-
-    ret = _dpi_shm_detach(key);
-    if(DPI_OK != ret)
+    if ( NULL == shm[key].addr )
     {
-        return ret;
+        return DPI_FAIL;
     }
 
+    if( sem_p(shm[key].sem_id) )
+    {
+        return DPI_FAIL;
+    }
+
+    switch(src_len)
+    {
+        case 1:
+            (*(((uint8_t *)(((uint8_t *)shm[key].addr) + offset)))) += va;
+            break;
+        case 2:
+            (*(((uint16_t *)(((uint8_t *)shm[key].addr) + offset)))) += va;
+            break;
+        case 4:
+            (*(((uint32_t *)(((uint8_t *)shm[key].addr) + offset)))) += va;
+            break;
+        case 8:
+            (*(((uint64_t *)(((uint8_t *)shm[key].addr) + offset)))) += va;
+            break;
+        default:
+            break;
+    }
+
+    if( sem_v(shm[key].sem_id) )
+    {
+        return DPI_FAIL;
+    }
     return DPI_OK;
+}
+
+dpi_code_t dpi_shm_data_inc(shm_key_type_t key, int offset, int src_len, int va)
+{
+    if( src_len != sizeof(uint8_t) &&
+        src_len != sizeof(uint16_t) &&
+        src_len != sizeof(uint32_t) &&
+        src_len != sizeof(uint64_t) )
+    {
+        return DPI_PARAM_ERR;
+    }
+    return _dpi_shm_data_inc(key, offset, src_len, va);
 }
 
 /*****************************************************************************/
@@ -229,6 +266,11 @@ typedef enum
 dpi_code_t _dpi_sdk_shm_data_set(shm_key_type_t key, void *psrc, int offset, int src_len)
 {
     if ( (void *) -1 == shm[key].addr )
+    {
+        return DPI_FAIL;
+    }
+
+    if ( NULL == shm[key].addr )
     {
         return DPI_FAIL;
     }
@@ -258,29 +300,18 @@ dpi_code_t _dpi_sdk_shm_data_set(shm_key_type_t key, void *psrc, int offset, int
 /*这里的offset是专门用于标志位的偏移，与前面的有区别*/
 dpi_code_t dpi_sdk_shm_data_set(shm_key_type_t key, void *psrc, int offset, int src_len)
 {
-    dpi_code_t ret = DPI_OK;
-
-    ret = _dpi_shm_attach(key);
-    if(DPI_OK != ret)
-    {
-        return ret;
-    }
-
-    ret = _dpi_shm_data_set(key, psrc, offset, src_len);
-
-    ret = _dpi_shm_detach(key);
-    if(DPI_OK != ret)
-    {
-        return ret;
-    }
-
-    return DPI_OK;
+    return _dpi_shm_data_set(key, psrc, offset, src_len);
 }
 
 /*内部函数处理*/
 dpi_code_t _dpi_sdk_shm_data_get(shm_key_type_t key, void *pdst, int offset, int dst_len)
 {
     if ( (void *) -1 == shm[key].addr )
+    {
+        return DPI_FAIL;
+    }
+
+    if ( NULL == shm[key].addr )
     {
         return DPI_FAIL;
     }
@@ -309,23 +340,7 @@ dpi_code_t _dpi_sdk_shm_data_get(shm_key_type_t key, void *pdst, int offset, int
 /*这里的offset是专门用于标志位的偏移，与前面的有区别*/
 dpi_code_t dpi_sdk_shm_data_get(shm_key_type_t key, void *pdst, int offset, int dst_len)
 {
-    dpi_code_t ret = DPI_OK;
-
-    ret = _dpi_shm_attach(key);
-    if(DPI_OK != ret)
-    {
-        return ret;
-    }
-
-    ret = _dpi_sdk_shm_data_get(key, pdst, offset, dst_len);
-
-    ret = _dpi_shm_detach(key);
-    if(DPI_OK != ret)
-    {
-        return ret;
-    }
-
-    return DPI_OK;
+    return _dpi_sdk_shm_data_get(key, pdst, offset, dst_len);
 }
 
 
