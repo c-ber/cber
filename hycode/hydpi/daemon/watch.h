@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <pub_header.h>
 
 
 #define LOG_PRINT(fmt, _arg...) printf("(%s) +%d " fmt ,__func__, __LINE__, ##_arg );

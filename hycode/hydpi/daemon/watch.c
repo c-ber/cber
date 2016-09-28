@@ -17,8 +17,7 @@
 
 #include "watch.h"
 
-#define DPI_PROC_NUM   16                     /* dpi进程个数 */
-static pid_t dpi_proc[DPI_PROC_NUM] = {0};    /* dpi进程id */
+static pid_t dpi_proc[PROC_MAX_NUM] = {0};    /* dpi进程id */
 
 static pid_t flow_proc = 0;    /* flow进程id */
 static pid_t stat_proc = 0;    /* stat进程id */
@@ -33,14 +32,16 @@ static pid_t npcp_proc = 0;    /* npcp进程id */
 ******************************************************************************/
 void running_dpi ( int pid )
 {
-    char  argv1[5]      = {0};
-    char *pSubArgv[2]   = {NULL};
+    char  argv1[32]      = {0};
+    char *pSubArgv[3]    = {NULL, NULL, NULL};
 
     sprintf(argv1, "%d", pid);
     pSubArgv[0] = (char *)"dpi";
     pSubArgv[1] = argv1;
 
     dpi_proc[pid] = vfork ();
+	
+	printf("pSubArgv 0 = %s , pSubArgv 1 =%s \n", pSubArgv[0], pSubArgv[1]);
     if (dpi_proc[pid] < 0)
     {
         //进程分配失败
@@ -48,8 +49,10 @@ void running_dpi ( int pid )
     }
     else if (dpi_proc[pid] == 0)
     {
+        usleep(500);
+        //调用成功后将永远不返回
         execv("/storage/bin/dpi", pSubArgv);
-        exit (1);
+        printf("init program dpi fail, error code: %d(%s)\n", errno, strerror(errno));
     }
     return;
 }
@@ -64,7 +67,7 @@ void running_dpi ( int pid )
 ******************************************************************************/
 void running_flow()
 {
-    char *pSubArgv[1]   = {NULL};
+    char *pSubArgv[2]   = {NULL, NULL};
     pSubArgv[0] = (char *)"flow";
 
     flow_proc = vfork ();
@@ -75,8 +78,9 @@ void running_flow()
     }
     else if (flow_proc == 0)
     {
+        //调用成功后将永远不返回
         execv("/storage/bin/flow", pSubArgv);
-        exit (1);
+        printf("init program flow fail, error code: %d(%s)", errno, strerror(errno));
     }
     return;
 }
@@ -84,7 +88,7 @@ void running_flow()
 
 void running_npcp()
 {
-    char *pSubArgv[1]   = {NULL};
+    char *pSubArgv[2]   = {NULL, NULL};
     pSubArgv[0] = (char *)"npcp";
 
     npcp_proc = vfork ();
@@ -96,8 +100,9 @@ void running_npcp()
     }
     else if (npcp_proc == 0)
     {
+        //调用成功后将永远不返回
         execv("/storage/bin/npcp", pSubArgv);
-        exit (1);
+        printf("init program npcp fail, error code: %d(%s)", errno, strerror(errno));
     }
     return;
 }
@@ -114,7 +119,7 @@ static void check_proc_running ()
 {
     int i = 0;
 
-    for (; i < DPI_PROC_NUM; i++ )
+    for (; i < PROC_MAX_NUM; i++ )
     {
         if (dpi_proc[i] != 0)
         {
@@ -122,10 +127,8 @@ static void check_proc_running ()
             //WNOHANG 若pid指定的子进程没有结束，则waitpid()函数返回0，不予以等待。若结束，则返回该子进程的ID。
             if (waitpid (dpi_proc[i], NULL, WNOHANG) != 0)
             {
-                if ( i > 0 )//进程结束了，要重新起来一个
-                {
-                    running_dpi(i);
-                }
+                printf("ERROR: dpi exception exit \n");
+                running_dpi(i);
             }
         }
     }
@@ -227,7 +230,9 @@ int main()
 
     running_flow();
 
-    for(i = 0 ; i < DPI_PROC_NUM; i++)
+    usleep(1000);
+
+    for(i = 0 ; i < PROC_MAX_NUM; i++)
     {
         running_dpi(i);
     }
@@ -235,7 +240,7 @@ int main()
 
     while(1)
     {
-        check_proc_running();
+        //check_proc_running();
         sleep(1);
     }
 

@@ -49,44 +49,8 @@ dpi_code_t work_run(int pid)
     return DPI_OK;
 }
 
-
-
-typedef struct fpa_blk
-{
-    uint64_t low_addr;
-    uint64_t hig_addr;
-}fpa_blk_t;
-
-fpa_blk_t dpi_fpa[5] = {
-        {0, 0},
-        {0, 0},
-        {0, 0},
-        {0, 0},
-        {0, 0}
-};
-
-void test_fpa_block_low_addr( int block_id)
-{
-    uint64_t a = 1;
-    uint8_t *pret = NULL;
-    uint64_t *tmp = &a;
-
-    pret = (uint8_t *)malloc(256);
-
-    *tmp = (uint64_t)pret;
-
-    dpi_fpa[block_id].low_addr = *tmp;
-    printf("addr1 = %#lx, addr2 = %p \n", dpi_fpa[block_id].low_addr, pret);
-
-    dpi_fpa[block_id].hig_addr = dpi_fpa[block_id].low_addr + 1024*1024*1024;
-
-}
-
-
-
 int main(int argc, char **argv)
 {
-    test_fpa_block_low_addr(0);
     if(argc != 2)
     {
         printf("Error:Please input only one param.\n");
@@ -96,10 +60,10 @@ int main(int argc, char **argv)
     int pid = atoi(argv[1]);
     if(pid < 0 || pid >= PROC_MAX_NUM)
     {
-        printf("The range of sdk manager process id  between 0 to %d\n",PROC_MAX_NUM-1);
+        printf("The range of sdk manager process id  between 0 to %d, pid =[%d]\n",
+                PROC_MAX_NUM - 1, pid);
         exit(-1);
     }
-
 
     work_run(pid);
 

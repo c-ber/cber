@@ -106,9 +106,11 @@ namespace SimulationTransfer
             return value;
         }
 
-        private bool parse_tlv_data(byte[] buf, ref int readlen, DataRow dr)
+        //buf_len是这条报文的总长度，仅为tcp承载
+        //pof 是这条报文这整个多条报文中的偏移
+        private bool parse_tlv_data(byte[] buf, int pof, int buf_len, ref int readlen, DataRow dr)
         {
-            tlv_type_t type = (tlv_type_t)buf[readlen];
+            tlv_type_t type = (tlv_type_t)buf[pof + readlen];
             readlen++;
             string tmp = null;
 
@@ -119,14 +121,14 @@ namespace SimulationTransfer
             //dr["应用类别"] = type;
             if (type == tlv_type_t.TLV_APP_ID)
             {
-                if (buf.Length - readlen < 2)//length
+                if (buf_len - readlen < 2)//length
                 {
                     return false;
                 }
                 UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
                 readlen += 2;
 
-                if (buf.Length - readlen < length)//length
+                if (buf_len - readlen < length)//length
                 {
                     return false;
                 }
@@ -138,14 +140,14 @@ namespace SimulationTransfer
             }
             else if (type == tlv_type_t.TLV_USER_IP)
             {
-                if (buf.Length - readlen < 2)//length
+                if (buf_len - readlen < 2)//length
                 {
                     return false;
                 }
                 UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
                 readlen += 2;
 
-                if (buf.Length - readlen < length)//length
+                if (buf_len - readlen < length)//length
                 {
                     return false;
                 }
@@ -158,14 +160,14 @@ namespace SimulationTransfer
             }
             else if (type == tlv_type_t.TLV_APP_NAME)
             {
-                if (buf.Length - readlen< 2)//length
+                if (buf_len - readlen< 2)//length
                 {
                     return false;
                 }
                 UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
                 readlen += 2;
 
-                if (buf.Length - readlen < length)//length
+                if (buf_len - readlen < length)//length
                 {
                     return false;
                 }
@@ -175,14 +177,14 @@ namespace SimulationTransfer
             }
             else if (type == tlv_type_t.TLV_APP_ACT)
             {
-                if (buf.Length - readlen < 2)//length
+                if (buf_len - readlen < 2)//length
                 {
                     return false;
                 }
                 UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
                 readlen += 2;
 
-                if (buf.Length - readlen < length)//length
+                if (buf_len - readlen < length)//length
                 {
                     return false;
                 }
@@ -193,14 +195,14 @@ namespace SimulationTransfer
             }
             else if (type == tlv_type_t.TLV_AUDIT_ACCOUNT)
             {
-                if (buf.Length - readlen < 2)//length
+                if (buf_len - readlen < 2)//length
                 {
                     return false;
                 }
                 UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
                 readlen += 2;
 
-                if (buf.Length - readlen < length)//length
+                if (buf_len - readlen < length)//length
                 {
                     return false;
                 }
@@ -210,7 +212,7 @@ namespace SimulationTransfer
             }
             else if (type == tlv_type_t.TLV_AUDIT_CONTENT)
             {
-                if (buf.Length - readlen < 2)//length
+                if (buf_len - readlen < 2)//length
                 {
                     return false;
                 }
@@ -219,7 +221,7 @@ namespace SimulationTransfer
                     (UInt16)buf[readlen + 2] * 256 + (UInt16)buf[readlen + 3]);
                 readlen += 4;
 
-                if (buf.Length - readlen < length)//length
+                if (buf_len - readlen < length)//length
                 {
                     return false;
                 }
@@ -230,53 +232,67 @@ namespace SimulationTransfer
             return true;
         }
         /// <summary>
-        /// 从FC7002B接收数据
+        /// 从FC7002B接收数据，用tcp，包速过快导致粘包
         /// </summary>
         /// <param name="s_command">发送的命令字符串</param>
         /// <returns>void</returns>
         private void OnDataReceived1(object sender, Communications.ChannelEventArgs e)
         {
-            string retStr = HexBytesToString(e.Data, 0, e.Data.Length);
-            MyInvoke mi = new MyInvoke(UpdateTextBox);
-            MyInvoke1 mi1 = new MyInvoke1(UpdateDataGridView);
-            pkt_num++;
-            this.BeginInvoke(mi, new object[] { "报文" + pkt_num.ToString(), retStr, true });
-
-            //清空一部分缓存
-            if (dt.Rows.Count >= 15)
+            try
             {
-                dt.Rows.Remove(dt.Rows[dt.Rows.Count-1]);
-                dataGridView1.DataSource = dt;
-            }
 
-            int read_len = 0;
-            if (e.Data.Length < 3)
-            {
+                string retStr = HexBytesToString(e.Data, 0, e.Data.Length);
+                MyInvoke mi = new MyInvoke(UpdateTextBox);
+                MyInvoke1 mi1 = new MyInvoke1(UpdateDataGridView);
+                pkt_num++;
+                this.BeginInvoke(mi, new object[] { "报文" + pkt_num.ToString(), retStr, true });
+
+                //清空一部分缓存
+                if (dt.Rows.Count >= 40)
+                {
+                    dt.Rows.Remove(dt.Rows[dt.Rows.Count - 1]);
+                    dataGridView1.DataSource = dt;
+                }
+
+
+                if (e.Data.Length < 3)
+                {
+                    return;
+                }
+
+                int deal_len = 0;
+                int pof = 0;
+                while (deal_len < e.Data.Length)
+                {
+                    int read_len = 0;
+
+                    if (e.Data[0 + pof] != 0x64 || e.Data[1 + pof] != 0x70 || e.Data[2 + pof] != 0x69)
+                    {
+                        return;
+                    }
+                    read_len += 3;
+
+                    UInt16 total_len = (UInt16)(((UInt16)e.Data[3 + pof] * 256) + (UInt16)(e.Data[4 + pof]));
+
+                    read_len += 2;
+
+                    DataRow dr = dt.NewRow();
+                    while (total_len - read_len > 0)
+                    {
+                        parse_tlv_data(e.Data, pof, total_len, ref read_len, dr);
+                    }
+                    dr["序号"] = ++rlt_num;
+                    dt.Rows.InsertAt(dr, 0);
+                    this.BeginInvoke(mi1, new object[] { });
+
+                    deal_len += total_len;
+                }
                 return;
             }
-            if (e.Data[0] != 0x64 || e.Data[1] != 0x70 || e.Data[2] != 0x69)
+            catch (System.Exception ex)
             {
-                return;
+                MessageBox.Show(ex.ToString());
             }
-            read_len += 3;
-
-            UInt16 total_len = (UInt16)(((UInt16)e.Data[3] * 256) + (UInt16)(e.Data[4]));
-            if (e.Data.Length != total_len)
-            {
-                return;
-            }
-            read_len += 2;
-
-            DataRow dr = dt.NewRow();
-            while (e.Data.Length - read_len > 0)
-            {
-                parse_tlv_data(e.Data, ref read_len, dr);
-            }
-            dr["序号"] = ++rlt_num;
-            dt.Rows.InsertAt(dr, 0);
-            this.BeginInvoke(mi1, new object[] {});
-            return;
-
         }
         /// <summary>
         /// 解析接收的报文
@@ -393,6 +409,7 @@ namespace SimulationTransfer
 
         private void btn_clear_Click(object sender, EventArgs e)
         {
+            rlt_num = 0;
             listView_mess.Items.Clear();
             dt.Rows.Clear();
             dataGridView1.DataSource = dt;

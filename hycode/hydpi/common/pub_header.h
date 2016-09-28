@@ -70,11 +70,10 @@
 #define DPI_OFFSET(type, va) ((size_t)(&( ((type*)0)->va )))
 
 
-
 /*多个dpi识别进程的个数*/
-#define PROC_MAX_NUM        16
+#define PROC_MAX_NUM        12
 /*多个线程来抓网卡数据包*/
-#define THREAD_MAX_NUM      1
+#define THREAD_MAX_NUM      12
 
 /*******************************************************************
 为了防止在memcpy内存拷贝时越界。“memcpy”函数的参数的检查
