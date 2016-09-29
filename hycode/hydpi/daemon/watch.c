@@ -228,6 +228,8 @@ int main()
 
     running_npcp();
 
+    usleep(1000);
+
     running_flow();
 
     usleep(1000);
