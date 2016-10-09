@@ -46,13 +46,14 @@
             this.全部删除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkBox_Log = new System.Windows.Forms.CheckBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.checkBox_utf8 = new System.Windows.Forms.CheckBox();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // btn_start
             // 
-            this.btn_start.Location = new System.Drawing.Point(408, 6);
+            this.btn_start.Location = new System.Drawing.Point(408, 4);
             this.btn_start.Name = "btn_start";
             this.btn_start.Size = new System.Drawing.Size(75, 23);
             this.btn_start.TabIndex = 0;
@@ -79,7 +80,7 @@
             // 
             // btn_close
             // 
-            this.btn_close.Location = new System.Drawing.Point(516, 6);
+            this.btn_close.Location = new System.Drawing.Point(516, 4);
             this.btn_close.Name = "btn_close";
             this.btn_close.Size = new System.Drawing.Size(75, 23);
             this.btn_close.TabIndex = 6;
@@ -89,7 +90,7 @@
             // 
             // btn_clear
             // 
-            this.btn_clear.Location = new System.Drawing.Point(622, 6);
+            this.btn_clear.Location = new System.Drawing.Point(516, 30);
             this.btn_clear.Name = "btn_clear";
             this.btn_clear.Size = new System.Drawing.Size(75, 23);
             this.btn_clear.TabIndex = 7;
@@ -195,11 +196,22 @@
             this.dataGridView1.Size = new System.Drawing.Size(771, 181);
             this.dataGridView1.TabIndex = 14;
             // 
+            // checkBox_utf8
+            // 
+            this.checkBox_utf8.AutoSize = true;
+            this.checkBox_utf8.Location = new System.Drawing.Point(659, 6);
+            this.checkBox_utf8.Name = "checkBox_utf8";
+            this.checkBox_utf8.Size = new System.Drawing.Size(48, 16);
+            this.checkBox_utf8.TabIndex = 15;
+            this.checkBox_utf8.Text = "UTF8";
+            this.checkBox_utf8.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(779, 415);
+            this.Controls.Add(this.checkBox_utf8);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.checkBox_Log);
             this.Controls.Add(this.listView_mess);
@@ -235,6 +247,7 @@
         private System.Windows.Forms.ToolStripMenuItem 全部删除ToolStripMenuItem;
         private System.Windows.Forms.CheckBox checkBox_Log;
         private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.CheckBox checkBox_utf8;
     }
 }
 

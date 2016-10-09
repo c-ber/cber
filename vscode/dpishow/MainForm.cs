@@ -231,6 +231,145 @@ namespace SimulationTransfer
             }
             return true;
         }
+        private bool parse_tlv_data_gbk(byte[] buf, int pof, int buf_len, ref int readlen, DataRow dr)
+        {
+            tlv_type_t type = (tlv_type_t)buf[pof + readlen];
+            readlen++;
+            string tmp = null;
+
+            Encoding ut = Encoding.GetEncoding("GBK");
+            //dr["应用ID"] = type;
+            //dr["应用名称"] = type;
+            //dr["应用类别"] = type;
+            if (type == tlv_type_t.TLV_APP_ID)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
+                readlen += 2;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                //tmp = Encoding.Default.GetString(buf, readlen, length);
+                dr["应用ID"] = (UInt16)((UInt16)buf[readlen] * 256 * 256 * 256 +
+                    (UInt16)buf[readlen + 1] * 256 * 256 +
+                    (UInt16)buf[readlen + 2] * 256 + (UInt16)buf[readlen + 3]);
+                readlen += length;
+            }
+            else if (type == tlv_type_t.TLV_USER_IP)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
+                readlen += 2;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                //tmp = Encoding.Default.GetString(buf, readlen, length);
+                dr["用户IP"] = buf[readlen].ToString("D") + "." +
+                               buf[readlen + 1].ToString("D") + "." +
+                               buf[readlen + 2].ToString("D") + "." +
+                               buf[readlen + 3].ToString("D");
+                readlen += length;
+            }
+            else if (type == tlv_type_t.TLV_APP_NAME)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
+                readlen += 2;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                tmp = ut.GetString(buf, readlen, length);
+                dr["应用名称"] = tmp;
+                readlen += length;
+            }
+            else if (type == tlv_type_t.TLV_APP_CLASS)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
+                readlen += 2;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                tmp = ut.GetString(buf, readlen, length);
+                dr["应用类别"] = tmp;
+                readlen += length;
+            }
+            else if (type == tlv_type_t.TLV_APP_ACT)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
+                readlen += 2;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                tmp = ut.GetString(buf, readlen, length);
+
+                dr["应用行为"] = tmp;
+                readlen += length;
+            }
+            else if (type == tlv_type_t.TLV_AUDIT_ACCOUNT)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 + (UInt16)buf[readlen + 1]);
+                readlen += 2;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                tmp = ut.GetString(buf, readlen, length);
+                dr["审计用户名"] = tmp;
+                readlen += length;
+            }
+            else if (type == tlv_type_t.TLV_AUDIT_CONTENT)
+            {
+                if (buf_len - readlen < 2)//length
+                {
+                    return false;
+                }
+                UInt16 length = (UInt16)((UInt16)buf[readlen] * 256 * 256 * 256 +
+                    (UInt16)buf[readlen + 1] * 256 * 256 +
+                    (UInt16)buf[readlen + 2] * 256 + (UInt16)buf[readlen + 3]);
+                readlen += 4;
+
+                if (buf_len - readlen < length)//length
+                {
+                    return false;
+                }
+                tmp = ut.GetString(buf, readlen, length);
+                dr["审计内容"] = tmp;
+                readlen += length;
+            }
+            return true;
+        }
         /// <summary>
         /// 从FC7002B接收数据，用tcp，包速过快导致粘包
         /// </summary>
@@ -279,7 +418,15 @@ namespace SimulationTransfer
                     DataRow dr = dt.NewRow();
                     while (total_len - read_len > 0)
                     {
-                        parse_tlv_data(e.Data, pof, total_len, ref read_len, dr);
+                        if (checkBox_utf8.Checked)
+                        {
+                            parse_tlv_data(e.Data, pof, total_len, ref read_len, dr);
+                        }
+                        else
+                        {
+                            parse_tlv_data_gbk(e.Data, pof, total_len, ref read_len, dr);
+                        }
+                        
                     }
                     dr["序号"] = ++rlt_num;
                     dt.Rows.InsertAt(dr, 0);

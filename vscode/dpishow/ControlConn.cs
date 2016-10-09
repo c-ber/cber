@@ -13,6 +13,7 @@ namespace SimulationTransfer
         TLV_APP_ACT,
         TLV_AUDIT_ACCOUNT,
         TLV_AUDIT_CONTENT,
+        TLV_APP_CLASS,
     }
 
     public enum pType
