@@ -64,7 +64,8 @@ namespace 爬虫项目
             //get_link(sender);
             get_ask(sender);
         }
-
+        public static int doc_num = 0;
+        public static int doc_total = 0;
         private void get_doc(HtmlNodeCollection dorlist, WebClient dordetail, 
                              HtmlAgilityPack.HtmlDocument dorducoment, int k)
         {
@@ -84,26 +85,38 @@ namespace 爬虫项目
             string dordetailurl = dorlist[k].SelectNodes("div")[0].
                                   SelectSingleNode("a").Attributes["href"].Value;//医生详细页面URL
             string dordetailstring = "";
-            try
+
+            dordetailurl = dordetailurl.Replace('\t', ' ');
+            dordetailurl = dordetailurl.Replace('\r', ' ');
+            dordetailurl = dordetailurl.Replace('\n', ' ');
+            dordetailurl = dordetailurl.Replace(" ", "");
+
+
+            int trynum = 0;
+            while (trynum <= 5)
             {
-                int trynum = 0;
-                while (trynum <= 5)
+                trynum++;
+                try
                 {
-                    trynum++;
                     dordetailstring = dordetail.DownloadString(dordetailurl);
-                    if (dordetailstring.Length > 0)
-                    {
-                        break;
-                    }
                 }
-
+                catch (System.Exception ex)
+                {
+                }
+                if (dordetailstring.Length > 99)
+                {
+                    break;
+                }
+                Thread.Sleep(trynum * 1000);
             }
-            catch (System.Exception ex)
-            {
 
-            }
+
+            
             if (dordetailstring.Length < 100)
             {
+                File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
+                                    + "访问到该医生的网址无效:" + dordetailurl);
+                File.AppendAllText(log_file1, Environment.NewLine);
                 return;
             }
             dorducoment.LoadHtml(dordetailstring);
@@ -144,9 +157,14 @@ namespace 爬虫项目
             int name_len = name.Trim().Length;
             if (name_len > 4)
             {
+                File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
+                                    + "无效的医生名:" + name.Trim());
+                File.AppendAllText(log_file1, Environment.NewLine);
                 return;
             }
-            str_txt = "姓名:" + name.PadRight(10) +
+
+            str_txt = "[ID = " + doc_num.ToString("D2") + "] " +
+                      "姓名:" + name.PadRight(10) +
                       "医院:" + hos.PadRight(20) +
                       "科室:" + dept.PadRight(10) +
                       "擅长:" + skill.PadRight(32) +
@@ -155,6 +173,7 @@ namespace 爬虫项目
 
             File.AppendAllText(log_file1, str_txt);
             File.AppendAllText(log_file1, Environment.NewLine);
+            doc_total++;
 
         }
         private void test_pc()
@@ -164,7 +183,8 @@ namespace 爬虫项目
             rootpage.Encoding = Encoding.UTF8;
             rootpage.BaseAddress = "http://www.guahao.com/hospital/";
 
-            string url = "125336070937502000";//上海中山医院
+            string url = "05ba2f6c-ec92-4a58-a6d0-31befb5474ed000";//中山大学附属第三医院天河医院
+            //string url = "125336070937502000";//上海中山医院
             string html = string.Empty;
             html = rootpage.DownloadString(url);//读取网页信息
 
@@ -232,8 +252,12 @@ namespace 爬虫项目
                 for (int j = 1; j <= pagecount; j++)
                 {
                     //医生列表循环
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    File.AppendAllText(log_file1, "当前科室有 " + dorlist.Count + " 个医生:");
+                    File.AppendAllText(log_file1, Environment.NewLine);
                     for (int k = 0; k < dorlist.Count; k++)
                     {
+                        doc_num = k + 1;
                         get_doc(dorlist, dordetail, dorducoment, k);
                     }
                     if (j == pagecount)
@@ -248,6 +272,10 @@ namespace 爬虫项目
                 }
 
             }
+            File.AppendAllText(log_file1, Environment.NewLine);
+            File.AppendAllText(log_file1, "总共抓了有效医生个数：" + doc_total.ToString());
+            File.AppendAllText(log_file1, Environment.NewLine);
+
             MessageBox.Show("capture data finish!");
         }
 
