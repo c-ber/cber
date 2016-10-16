@@ -10,6 +10,7 @@ using System.IO;
 using System.Net;
 using HtmlAgilityPack;
 using System.Threading;
+using MySql.Data.MySqlClient;
 
 namespace 爬虫项目
 {
@@ -17,9 +18,33 @@ namespace 爬虫项目
     {
         static string log_file = "log.txt";
         static string log_file1 = "spider.log";
+
+        MySqlConnection myCon = null;
         public Form1()
         {
             InitializeComponent();
+        }
+
+        ///执行MySqlCommand命令
+        /// 执行MySqlCommand
+        /// <param name="M_str_sqlstr">SQL语句</param>20     
+        public void sql_exec(string sql)
+        {
+            try
+            {
+
+                MySqlCommand mysqlcom = new MySqlCommand(sql, myCon);
+                mysqlcom.ExecuteNonQuery();
+                mysqlcom.Dispose();
+            }
+            catch (System.Exception ex)
+            {
+                //MessageBox.Show("数据库执行sql失败" , sql);
+            }
+            finally
+            {
+
+            }
         }
 
         void get_link(object sender)
@@ -64,8 +89,75 @@ namespace 爬虫项目
             //get_link(sender);
             get_ask(sender);
         }
+
+        private static bool SaveBinaryFile(WebResponse response, string savePath)
+        {
+            bool value = false;
+            byte[] buffer = new byte[1024];
+            Stream outStream = null;
+            Stream inStream = null;
+            try
+            {
+                if (File.Exists(savePath)) File.Delete(savePath);
+                outStream = System.IO.File.Create(savePath);
+                inStream = response.GetResponseStream();
+                int l;
+                do
+                {
+                    l = inStream.Read(buffer, 0, buffer.Length);
+                    if (l > 0) outStream.Write(buffer, 0, l);
+                } while (l > 0);
+                value = true;
+            }
+            finally
+            {
+                if (outStream != null) outStream.Close();
+                if (inStream != null) inStream.Close();
+            }
+            return value;
+        }
+        /// <summary>
+        /// 下载图片
+        /// </summary>
+        /// <param name="picUrl">图片Http地址</param>
+        /// <param name="savePath">保存路径</param>
+        /// <param name="timeOut">Request最大请求时间，如果为-1则无限制</param>
+        /// <returns></returns>
+        public static bool DownloadPicture(string picUrl, string savePath, int timeOut)
+        {
+            bool value = false;
+            WebResponse response = null;
+            Stream stream = null;
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(picUrl);
+                if (timeOut != -1) request.Timeout = timeOut;
+                response = request.GetResponse();
+                stream = response.GetResponseStream();
+                if (!response.ContentType.ToLower().StartsWith("text/"))
+                    value = SaveBinaryFile(response, savePath);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+                if (response != null) response.Close();
+            }
+            return value;
+        }
+
+        public static string utf8_chg(string src)
+        {
+            //byte[] buffer = Encoding.UTF8.GetBytes(src);
+            //return Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+            return src;
+        }
+
         public static int doc_num = 0;
-        public static int doc_total = 0;
+        public static int doc_total = 0;//当前有效医生个数
         private void get_doc(HtmlNodeCollection dorlist, WebClient dordetail, 
                              HtmlAgilityPack.HtmlDocument dorducoment, int k)
         {
@@ -81,100 +173,161 @@ namespace 爬虫项目
             string skill = "";
             string word = "";
             string img = "";
+            string zhicheng = "";
 
-            string dordetailurl = dorlist[k].SelectNodes("div")[0].
-                                  SelectSingleNode("a").Attributes["href"].Value;//医生详细页面URL
-            string dordetailstring = "";
-
-            dordetailurl = dordetailurl.Replace('\t', ' ');
-            dordetailurl = dordetailurl.Replace('\r', ' ');
-            dordetailurl = dordetailurl.Replace('\n', ' ');
-            dordetailurl = dordetailurl.Replace(" ", "");
-
-
-            int trynum = 0;
-            while (trynum <= 5)
+            try
             {
-                trynum++;
-                try
+
+                string dordetailurl = dorlist[k].SelectNodes("div")[0].
+                                      SelectSingleNode("a").Attributes["href"].Value;//医生详细页面URL
+                string dordetailstring = "";
+
+                dordetailurl = dordetailurl.Replace('\t', ' ');
+                dordetailurl = dordetailurl.Replace('\r', ' ');
+                dordetailurl = dordetailurl.Replace('\n', ' ');
+                dordetailurl = dordetailurl.Replace(" ", "");
+
+
+                int trynum = 0;
+                while (trynum <= 5)
                 {
-                    dordetailstring = dordetail.DownloadString(dordetailurl);
+                    trynum++;
+                    try
+                    {
+                        dordetailstring = dordetail.DownloadString(dordetailurl);
+                    }
+                    catch (System.Exception ex)
+                    {
+                    }
+                    if (dordetailstring.Length > 99)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(trynum * 1000);
                 }
-                catch (System.Exception ex)
+
+
+
+                if (dordetailstring.Length < 100)
                 {
+                    File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
+                                        + "访问到该医生的网址无效:" + dordetailurl);
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    return;
                 }
-                if (dordetailstring.Length > 99)
+                dorducoment.LoadHtml(dordetailstring);
+                dor = dorducoment.DocumentNode;
+
+                ht1 = dor.SelectSingleNode("//div[@class='detail word-break']");
+                if (ht1 != null)
                 {
-                    break;
+                    name = ht1.SelectSingleNode("h1").SelectSingleNode("strong").InnerText;
+                    zhicheng = ht1.SelectSingleNode("h1").SelectSingleNode("span").InnerText;
                 }
-                Thread.Sleep(trynum * 1000);
+
+                dept = dor.SelectSingleNode("//div[@class='detail word-break']").
+                          SelectSingleNode("div").SelectNodes("p")[0].SelectNodes("a")[1].
+                          InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
+
+                hos = dor.SelectSingleNode("//div[@class='detail word-break']").
+                          SelectSingleNode("//div[@class='hospital']").SelectNodes("p")[0].SelectNodes("a")[0].
+                          InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
+
+                //img = dor.SelectSingleNode("//img[@alt='" + name + "']").Attributes["src"].Value;
+
+                ht1 = dor.SelectSingleNode("//div[@class='detail word-break']");
+                ht2 = ht1.SelectSingleNode("//div[@class='goodat']");
+                ht3 = ht2.SelectSingleNode("span");
+                if (ht3 != null)
+                {
+                    skill = ht3.InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
+                }
+
+
+                ht1 = dor.SelectSingleNode("//div[@class='detail word-break']");
+                ht2 = ht1.SelectSingleNode("//div[@class='about']");
+                ht3 = ht2.SelectSingleNode("span");
+                if (ht3 != null)
+                {
+                    word = ht3.InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
+                }
+                int name_len = name.Trim().Length;
+                if (name_len > 4)
+                {
+                    File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
+                                        + "无效的医生名:" + name.Trim());
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    return;
+                }
+
+
+                //http://kano.guahao.com/8Pp2571734_image140.jpg
+                ////img.guahao.com/images/image140/8Pp2571734.jpg
+                ht1 = dor.SelectSingleNode("//section[@class='grid-section expert-card fix-clear']");
+                ht1 = ht1.SelectSingleNode("//div[@class='info']");
+                ht1 = ht1.SelectSingleNode("//div[@class='summary']");
+                ht2 = ht1.SelectNodes("p")[0].SelectSingleNode("img");
+                img = ht2.Attributes["src"].Value;
+
+                //异常图片处理
+                //img.guahao.com/img/character/doc-f-l.png?_=20121223
+                if (img.Contains("character"))
+                {
+                    if (img.Contains("doc-f-l.png"))
+                    {
+                        img = "/img/doc/" + "doc-f-l.png";
+                    }
+                    else if (img.Contains("doc-m-l.png"))
+                    {
+                        img = "/img/doc/" + "doc-m-l.png";
+                    }
+                    else
+                    {
+                        img = "/img/doc/" + "doc-unknow-l.png";
+                    }
+                }
+                else
+                {
+                    string tmp = img.Substring(24);
+                    string[] tmp1 = tmp.Split('/');
+                    string[] tmp2 = tmp1[1].Split('.');
+                    tmp = "http://kano.guahao.com/" + tmp2[0] + "_" + tmp1[0] + "." + tmp2[1];
+                    img = "/img/doc/" + doc_total.ToString("D6") + "." + tmp2[1];
+                    DownloadPicture(tmp, img, -1);
+                    img = "/img/doc/" + doc_total.ToString("D6") + "." + tmp2[1];
+                }
+                
+                //str_txt = "[ID = " + doc_num.ToString("D2") + "] " +
+                //          "姓名:" + name.PadRight(10) +
+                //          "职称:" + zhicheng.PadRight(10) +
+                //          "医院:" + hos.PadRight(20) +
+                //          "科室:" + dept.PadRight(10) +
+                //          "擅长:" + skill.PadRight(32) +
+                //          "简介:" + word.PadRight(20) +
+                //          "图片地址:" + img.PadRight(2);
+                String sql = "INSERT INTO ask_user set "
+                             + "username='" + utf8_chg(name) + "'"
+                             + ",password='f9f16d97c90d8c6f2cab37bb6d1f1992'"   //doctor
+                             + ",email='test@163.com'"
+                             + ",expert=1"
+                             + ",hospital='" + utf8_chg(hos) + "'"
+                             + ",dept='" + utf8_chg(dept) + "'"
+                             + ",introduction='" + utf8_chg(skill) + "'"
+                             + ",img='" + img + "'"
+                             + ",zhicheng='" + utf8_chg(zhicheng) + "'"
+                             + ";commit;\n";
+                sql_exec(sql);
+                //File.AppendAllText(log_file1, str_txt);
+                //File.AppendAllText(log_file1, Environment.NewLine);
+                doc_total++;
             }
-
-
-            
-            if (dordetailstring.Length < 100)
+            catch (System.Exception ex)
             {
-                File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
-                                    + "访问到该医生的网址无效:" + dordetailurl);
-                File.AppendAllText(log_file1, Environment.NewLine);
-                return;
+
             }
-            dorducoment.LoadHtml(dordetailstring);
-            dor = dorducoment.DocumentNode;
-            
-            ht1 = dor.SelectSingleNode("//div[@class='detail word-break']");
-            if (ht1 != null)
+            finally
             {
-                name = ht1.SelectSingleNode("h1").SelectSingleNode("strong").InnerText;
             }
-
-            dept = dor.SelectSingleNode("//div[@class='detail word-break']").
-                      SelectSingleNode("div").SelectNodes("p")[0].SelectNodes("a")[1].
-                      InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
-
-            hos = dor.SelectSingleNode("//div[@class='detail word-break']").
-                      SelectSingleNode("//div[@class='hospital']").SelectNodes("p")[0].SelectNodes("a")[0].
-                      InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
-
-            //img = dor.SelectSingleNode("//img[@alt='" + name + "']").Attributes["src"].Value;
-
-            ht1 = dor.SelectSingleNode("//div[@class='detail word-break']");
-            ht2 = ht1.SelectSingleNode("//div[@class='goodat']");
-            ht3 = ht2.SelectSingleNode("span");
-            if (ht3 != null)
-            {
-                skill = ht3.InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
-            }
-
-
-            ht1 = dor.SelectSingleNode("//div[@class='detail word-break']");
-            ht2 = ht1.SelectSingleNode("//div[@class='about']");
-            ht3 = ht2.SelectSingleNode("span");
-            if (ht3 != null)
-            {
-                word = ht3.InnerText.Replace("\n", string.Empty).Replace("\r", string.Empty).Trim();
-            }
-            int name_len = name.Trim().Length;
-            if (name_len > 4)
-            {
-                File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
-                                    + "无效的医生名:" + name.Trim());
-                File.AppendAllText(log_file1, Environment.NewLine);
-                return;
-            }
-
-            str_txt = "[ID = " + doc_num.ToString("D2") + "] " +
-                      "姓名:" + name.PadRight(10) +
-                      "医院:" + hos.PadRight(20) +
-                      "科室:" + dept.PadRight(10) +
-                      "擅长:" + skill.PadRight(32) +
-                      "简介:" + word.PadRight(20) +
-                      "图片地址:" + img.PadRight(2);
-
-            File.AppendAllText(log_file1, str_txt);
-            File.AppendAllText(log_file1, Environment.NewLine);
-            doc_total++;
-
         }
         private void test_pc()
         {
@@ -281,7 +434,17 @@ namespace 爬虫项目
 
         private void button1_Click(object sender, EventArgs e)
         {
+            string M_str_sqlcon = "server=localhost;user id=root;password=cb;database=tipask;Charset=utf8"; //根据自己的设置10  
+            myCon = new MySqlConnection(M_str_sqlcon);
+            if (myCon == null)
+            {
+                MessageBox.Show("数据库连接失败");
+            }
+            myCon.Open();
             test_pc();
+            myCon.Close();
+            myCon.Dispose();
+
             //webBrowser1.Navigate("http://myzx.39.net/zb-552.html");
             //webBrowser1.Navigate("http://yyk.39.net/doctor/101000.html");
             //webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(web_DocumentCompleted);
