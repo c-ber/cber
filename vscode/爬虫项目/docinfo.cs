@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net;
+using HtmlAgilityPack;
+using System.IO;
+using System.Threading;
 
 namespace 爬虫项目
 {
@@ -16,5 +20,6 @@ namespace 爬虫项目
     }
     class docinfo
     {
+       
     }
 }

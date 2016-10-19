@@ -39,12 +39,36 @@ namespace 爬虫项目
             }
             catch (System.Exception ex)
             {
-                //MessageBox.Show("数据库执行sql失败" , sql);
+                MessageBox.Show("数据库执行sql失败" , sql);
             }
             finally
             {
 
             }
+        }
+
+        public DataTable sql_select(string  table_name ,string sql)
+        {
+            MySqlCommand mysqlcom = null;
+            DataTable dt = new DataTable(table_name);
+            try
+            {
+                mysqlcom = new MySqlCommand(sql, myCon);
+                MySqlDataAdapter da = new MySqlDataAdapter(mysqlcom);
+                da.Fill(dt);
+                mysqlcom.Dispose();
+
+            }
+            catch (System.Exception ex)
+            {
+                //MessageBox.Show("数据库执行sql失败" , sql);
+            }
+            finally
+            {
+                if (mysqlcom != null)
+                    mysqlcom.Dispose();
+            }
+            return dt;
         }
 
         void get_link(object sender)
@@ -432,16 +456,231 @@ namespace 爬虫项目
             MessageBox.Show("capture data finish!");
         }
 
+        private void get_wenti(HtmlNodeCollection dorlist, WebClient dordetail,
+                     HtmlAgilityPack.HtmlDocument dorducoment, int k)
+        {
+            HtmlNode question_page;
+            HtmlNode ht1 = null;
+            HtmlNode ht2 = null;
+            HtmlNode ht3 = null;
+
+            String sql = "";
+            string wenti = "";
+            string desc = "";
+            //多个回答
+
+            try
+            {
+                string dordetailurl = dorlist[k].Attributes["href"].Value;//医生详细页面URL
+                string dordetailstring = "";
+
+
+                int trynum = 0;
+                while (trynum <= 5)
+                {
+                    trynum++;
+                    try
+                    {
+                        dordetailstring = dordetail.DownloadString(dordetailurl);
+                    }
+                    catch (System.Exception ex)
+                    {
+                    }
+                    if (dordetailstring.Length > 99)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(trynum * 1000);
+                }
+
+
+
+                if (dordetailstring.Length < 100)
+                {
+                    File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
+                                        + "访问到该问题的网址无效:" + dordetailurl);
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    return;
+                }
+                dorducoment.LoadHtml(dordetailstring);
+                question_page = dorducoment.DocumentNode;
+
+                //获取问题和描述
+                ht1 = question_page.SelectSingleNode("//div[@class='b_askti']");
+                if (ht1 == null)
+                {
+                    return;
+                }
+                ht2 = ht1.SelectSingleNode("h1");
+                wenti = ht2.InnerText.Trim();
+
+
+                ht1 = question_page.SelectSingleNode("//div[@class='b_askcont']");
+                if (ht1 != null)
+                {
+                    ht2 = ht1.SelectNodes("//p[@class='crazy_new']")[0];
+                    desc = ht2.InnerText.Trim();
+                }
+
+                //获取回答
+                HtmlNodeCollection ht_collect = question_page.SelectNodes("//div[@class='b_answerli']");
+
+                Random rd = new Random();
+                sql = "INSERT INTO ask_question set "
+                    + "cid='" + "1" + "'"
+                    + ",cid1='" + "1" + "'"
+                    + ",author='游客'"
+                    + ",authorid=433"
+                    + ",answers='" + ht_collect.Count.ToString() + "'"
+                    + ",title='" + utf8_chg(wenti) + "'"
+                    + ",description='" + utf8_chg(desc) + "'"
+                    + ",views='" + rd.Next(1000,10000000).ToString("D") + "'"
+                    + ",supply='" + "0" + "'"
+                    + ";commit;\n";
+                sql_exec(sql);
+
+                //获取问题ID
+                DataTable dt = sql_select("ask_question", "SELECT max(id) FROM ask_question a;\n");
+                
+                //获取回答内容并插入
+                for (int n = 0; n < ht_collect.Count; n++ )
+                {
+                    HtmlNode tmp_hn = ht_collect[n].SelectSingleNode("//div[@class='crazy_new']");
+                    string ans_txt = tmp_hn.SelectSingleNode("p").InnerText.Trim();
+                    string[] ans_tmp = ans_txt.Replace("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", "*").Split('*');
+                    ans_txt = "<p>" + ans_tmp[1] + "<br>" + ans_tmp[2] + "</p>"
+                        + "<p>" + ans_tmp[3] + "<br>" + ans_tmp[4] + "</p>";
+                    sql = "INSERT INTO ask_answer set "
+                        + "qid='" + dt.Rows[0][0].ToString() + "'"  //问题ID
+                        + ",title='" + utf8_chg(wenti) + "'"
+                        + ",author='游客'"
+                        + ",authorid=433"
+                        + ",content='" + utf8_chg(ans_txt) + "'"
+                        + ",status='" + "1" + "'"
+                        + ",comments='" + "0" + "'"
+                        + ";commit;\n";
+                    sql_exec(sql);
+
+                }
+                doc_total++;
+            }
+            catch (System.Exception ex)
+            {
+
+            }
+            finally
+            {
+            }
+        }
+        void test_120ask()
+        {
+            WebClient rootpage = new WebClient();
+            rootpage.Encoding = Encoding.UTF8;
+            rootpage.BaseAddress = "http://www.120ask.com/";
+
+            string url = "question";
+
+            string html = string.Empty;
+            html = rootpage.DownloadString(url);//读取网页信息
+
+            HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
+            document.LoadHtml(html);//加载对象
+
+
+            HtmlNode node = null;
+            HtmlNode rootnode = document.DocumentNode;
+
+            node = rootnode.SelectSingleNode("//div[@class='guidebox clearfix']");//搜索疾病类型页面
+            HtmlNodeCollection list = node.SelectNodes("//div[@class='clearfix']");
+
+
+
+            string departmenturl = null;
+            WebClient dpt = new WebClient();
+            dpt.Encoding = Encoding.UTF8;
+            string dptstring = string.Empty;
+            HtmlNodeCollection dorlist;
+            HtmlAgilityPack.HtmlDocument deptducoment = new HtmlAgilityPack.HtmlDocument();
+            ///////////dpt
+
+            WebClient dordetail = new WebClient();
+            dordetail.Encoding = Encoding.UTF8;
+            string dordetailstring = string.Empty;
+
+            HtmlAgilityPack.HtmlDocument dorducoment = new HtmlAgilityPack.HtmlDocument();
+
+
+            File.WriteAllText(log_file1, "========== spider ===============" + Environment.NewLine);
+            for (int i = 0; i < list.Count; i++)//遍历类型
+            {
+                node = list[i].SelectSingleNode("h3").SelectSingleNode("a");
+                departmenturl = node.Attributes["href"].Value;
+
+                try
+                {
+                    dptstring = dpt.DownloadString(departmenturl);//加载科室所有问题
+                }
+                catch (System.Exception ex)
+                {
+
+                }
+                if (dptstring.Length < 1)
+                {
+                    continue;
+                }
+                deptducoment.LoadHtml(dptstring);
+
+                HtmlNode dptroot = deptducoment.DocumentNode;
+                dorlist = dptroot.SelectNodes("//a[@class='q-quename']");//获得页面信息中问题的列表              
+
+                int j = 1;
+                while(true)
+                {
+                    //医生列表循环
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    File.AppendAllText(log_file1, "当前页面有 " + dorlist.Count + " 个问题:");
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    for (int k = 0; k < dorlist.Count; k++)
+                    {
+                        doc_num = k + 1;
+                        get_wenti(dorlist, dordetail, dorducoment, k);
+                    }
+
+                    string cur_html_doc =  departmenturl + "all/" + (j + 1).ToString("D");
+                    dptstring = dpt.DownloadString(cur_html_doc);//加载科室所有医生页面信息
+                    deptducoment.LoadHtml(dptstring);
+                    dptroot = deptducoment.DocumentNode;
+                    dorlist = dptroot.SelectNodes("//a[@class='q-quename']");//获得页面信息中问题的列表    
+
+
+                    //页码循环，只要有最后一页，就可以继续访问
+                    HtmlNode hn_tmp = dptroot.SelectSingleNode("//div[@class='clears h-page']");
+                    if (!hn_tmp.InnerHtml.Contains("最后一页"))
+                    {
+                        break;
+                    }
+                }
+
+            }
+            File.AppendAllText(log_file1, Environment.NewLine);
+            File.AppendAllText(log_file1, "总共抓了有效问题个数：" + doc_total.ToString());
+            File.AppendAllText(log_file1, Environment.NewLine);
+
+            MessageBox.Show("capture data finish!");
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             string M_str_sqlcon = "server=localhost;user id=root;password=cb;database=tipask;Charset=utf8"; //根据自己的设置10  
             myCon = new MySqlConnection(M_str_sqlcon);
-            if (myCon == null)
             {
+            if (myCon == null)
                 MessageBox.Show("数据库连接失败");
             }
             myCon.Open();
-            test_pc();
+
+            //test_pc(); //抓微医网的医生
+
+            test_120ask();
             myCon.Close();
             myCon.Dispose();
 
