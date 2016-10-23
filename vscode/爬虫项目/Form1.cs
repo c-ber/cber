@@ -11,6 +11,7 @@ using System.Net;
 using HtmlAgilityPack;
 using System.Threading;
 using MySql.Data.MySqlClient;
+using System.Collections;
 
 namespace 爬虫项目
 {
@@ -18,6 +19,10 @@ namespace 爬虫项目
     {
         static string log_file = "log.txt";
         static string log_file1 = "spider.log";
+
+        public static DataTable cat_dt = null;
+
+        SortedList<string, bool> questiong_List = new SortedList<string, bool>();
 
         MySqlConnection myCon = null;
         public Form1()
@@ -30,20 +35,22 @@ namespace 爬虫项目
         /// <param name="M_str_sqlstr">SQL语句</param>20     
         public void sql_exec(string sql)
         {
+            MySqlCommand mysqlcom = null;
             try
             {
 
-                MySqlCommand mysqlcom = new MySqlCommand(sql, myCon);
+                mysqlcom = new MySqlCommand(sql, myCon);
                 mysqlcom.ExecuteNonQuery();
                 mysqlcom.Dispose();
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show("数据库执行sql失败" , sql);
+                MessageBox.Show("数据库执行sql失败", ex.ToString() + sql);
             }
             finally
             {
-
+                if (mysqlcom != null)
+                    mysqlcom.Dispose();
             }
         }
 
@@ -61,7 +68,7 @@ namespace 爬虫项目
             }
             catch (System.Exception ex)
             {
-                //MessageBox.Show("数据库执行sql失败" , sql);
+                MessageBox.Show("数据库执行sql失败", ex.ToString() + sql);
             }
             finally
             {
@@ -69,6 +76,51 @@ namespace 爬虫项目
                     mysqlcom.Dispose();
             }
             return dt;
+        }
+
+        bool get_category(string name, ref int cid, ref int cid1, ref int cid2, ref int cid3)
+        {
+            int grade;
+            int i = 0;
+            cid = 0;
+            cid1 = 0;
+            cid2 = 0;
+            cid3 = 0;
+            int poff = 18;
+            for (i = 0; i < cat_dt.Rows.Count; i++)
+            {
+                if (name.Trim().Equals(cat_dt.Rows[i]["name"].ToString().Trim()))
+                {
+                    //找到里层类别
+                    grade = int.Parse(cat_dt.Rows[i]["grade"].ToString());
+
+                    if (grade < 1 || grade > 3)
+                    {
+                        MessageBox.Show("错误提示", "错误的分类级别" + grade.ToString());
+                        return false;
+                    }
+
+                    if (grade == 3)
+                    {
+                        cid = cid3 = int.Parse(cat_dt.Rows[i]["id"].ToString());
+                        cid2 = int.Parse(cat_dt.Rows[cid3 - poff]["pid"].ToString());
+                        cid1 = int.Parse(cat_dt.Rows[cid2 - poff]["pid"].ToString());
+                    }
+
+                    if (grade == 2)
+                    {
+                        cid = cid2 = int.Parse(cat_dt.Rows[i]["id"].ToString());
+                        cid1 = int.Parse(cat_dt.Rows[cid2 - poff]["pid"].ToString());
+                    }
+
+                    if (grade == 1)
+                    {
+                        cid = cid1 = int.Parse(cat_dt.Rows[i]["id"].ToString());
+                    }
+                    return true;
+                }
+            }
+            return false;
         }
 
         void get_link(object sender)
@@ -330,15 +382,15 @@ namespace 爬虫项目
                 //          "简介:" + word.PadRight(20) +
                 //          "图片地址:" + img.PadRight(2);
                 String sql = "INSERT INTO ask_user set "
-                             + "username='" + utf8_chg(name) + "'"
+                             + "username='" +  (name) + "'"
                              + ",password='f9f16d97c90d8c6f2cab37bb6d1f1992'"   //doctor
                              + ",email='test@163.com'"
                              + ",expert=1"
-                             + ",hospital='" + utf8_chg(hos) + "'"
-                             + ",dept='" + utf8_chg(dept) + "'"
-                             + ",introduction='" + utf8_chg(skill) + "'"
+                             + ",hospital='" +  (hos) + "'"
+                             + ",dept='" +  (dept) + "'"
+                             + ",introduction='" +  (skill) + "'"
                              + ",img='" + img + "'"
-                             + ",zhicheng='" + utf8_chg(zhicheng) + "'"
+                             + ",zhicheng='" +  (zhicheng) + "'"
                              + ";commit;\n";
                 sql_exec(sql);
                 //File.AppendAllText(log_file1, str_txt);
@@ -456,6 +508,179 @@ namespace 爬虫项目
             MessageBox.Show("capture data finish!");
         }
 
+
+        private bool select_a_doc(string dept, ref string anthor, ref string anthor_id)
+        {
+            Random rd = new Random();
+            int rd_num = 0;
+            DataTable dt = null;
+            dt = sql_select("ask_user", "SELECT uid,username from ask_user where dept_id=(SELECT id FROM ask_category WHERE NAME = '" + dept + "')\n");
+
+            if (dt == null)
+            {
+                return false;
+            }
+            else
+            {
+
+                if (dt.Rows.Count == 0)
+                {
+                    return false;
+                }
+                else
+                {
+                    rd_num = rd.Next(0, dt.Rows.Count - 1);
+                    anthor_id = dt.Rows[rd_num]["uid"].ToString();
+                    anthor = dt.Rows[rd_num]["username"].ToString();
+                    return true;
+                }
+            }
+        }
+
+        private bool test_category_exist(string dept)
+        {
+            DataTable dt = null;
+            dt = sql_select("ask_category", "SELECT id FROM ask_category WHERE NAME = '" + dept + "';\n");
+
+            if (dt == null)
+            {
+                return false;
+            }
+            else
+            {
+
+                if (dt.Rows.Count == 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        //从网页获取问题的子分类
+        public static string g_dept = "";
+        private bool get_questiong_category(HtmlNode question_page,ref string dept, bool have)
+        {
+            HtmlNode ht1 = null;
+            HtmlNodeCollection ht2 = null;
+            HtmlNode ht3 = null;
+
+            if (have)
+            {
+                dept = g_dept;
+                return true;
+            }
+            ht1 = question_page.SelectSingleNode("//div[@class='b_route']");
+            if (ht1 != null)
+            {
+                ht2 = ht1.SelectNodes("/html/body/div/div/div/a[@target='_blank']");
+
+
+                if (ht2.Count > 4)//相当于是3级分类，只处理第三级和第二级
+                {
+                    g_dept = dept = ht2[3].InnerText.Trim();
+                    if (test_category_exist(dept))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        g_dept = dept = ht2[2].InnerText.Trim();
+                        if (test_category_exist(dept))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (ht2.Count == 4)//相当于是3级分类，只处理第3和2级
+                {
+                    ht3 = ht1.SelectSingleNode("//span[@itemprop='name']");
+                    g_dept = dept = ht3.InnerText.Trim();
+                    if (test_category_exist(dept))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        g_dept = dept = ht2[2].InnerText.Trim();
+                        if (test_category_exist(dept))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (ht2.Count == 3)//相当于是2级分类
+                {
+                    ht3 = ht1.SelectSingleNode("//span[@itemprop='name']");
+                    g_dept = dept = ht3.InnerText.Trim();
+                    if (test_category_exist(dept))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        g_dept = dept = ht2[1].InnerText.Trim();
+                        if (test_category_exist(dept))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (ht2.Count == 2)//相当于是1级分类
+                {
+                    ht3 = ht1.SelectSingleNode("//span[@itemprop='name']");
+                    g_dept = dept = ht3.InnerText.Trim();
+                    if (test_category_exist(dept))
+                    {
+                        return true;
+                    }
+                }
+            }
+            MessageBox.Show("获取了没有的分类，这个没有太不科学", dept);
+            return false;
+        }
+
+
+        private void get_answer_user(HtmlNode question_page, ref string anthor, ref string anthor_id)
+        {
+            string dept = "";
+            String sql = "";
+
+            if (get_questiong_category(question_page, ref dept, true))
+            {
+                //必须要保证当前分类级别，一定要有一个医生，否则插入一个默认医生
+                if (select_a_doc(dept, ref anthor, ref anthor_id))
+                {
+                    return;
+                }
+                else
+                {
+                    int cid = 0, cid1 = 0, cid2 = 0, cid3 = 0;
+                    get_category(dept, ref cid, ref cid1, ref cid2, ref cid3);
+                    //插入一个默认医生
+                    sql = "INSERT INTO ask_user set "
+                        + "username='" + dept + "门诊医生'"
+                        + ",password='f9f16d97c90d8c6f2cab37bb6d1f1992'"   //doctor
+                        + ",email='test@163.com'"
+                        + ",expert=1"
+                        + ",hospital='人民医院'"
+                        + ",dept='" + dept + "'"
+                        + ",dept_id='" + cid.ToString() + "'"
+                        + ",introduction='" + (dept) + "'"
+                        + ",img='/img/doc/doc-unknow-l.png'"
+                        + ",zhicheng='医师'"
+                        + ";commit;\n";
+                    sql_exec(sql);
+                    anthor = dept + "医生";
+
+                    DataTable dt = sql_select("ask_user", "SELECT max(uid) FROM ask_user;\n");
+                    anthor_id = dt.Rows[0][0].ToString();
+                }
+            }
+        }
+
         private void get_wenti(HtmlNodeCollection dorlist, WebClient dordetail,
                      HtmlAgilityPack.HtmlDocument dorducoment, int k)
         {
@@ -474,6 +699,15 @@ namespace 爬虫项目
                 string dordetailurl = dorlist[k].Attributes["href"].Value;//医生详细页面URL
                 string dordetailstring = "";
 
+                string wenti_bianhao = dordetailurl.Substring(31).Split('.')[0];
+                
+                bool exist = false;
+                questiong_List.TryGetValue(wenti_bianhao, out exist);
+                if (exist)
+                {
+                    return;
+                }
+                questiong_List.Add(wenti_bianhao, true);//已经处理过的就加进去
 
                 int trynum = 0;
                 while (trynum <= 5)
@@ -512,28 +746,38 @@ namespace 爬虫项目
                     return;
                 }
                 ht2 = ht1.SelectSingleNode("h1");
-                wenti = ht2.InnerText.Trim();
+                wenti = ht2.InnerText.Trim().Replace("‘", " ").Replace("'", " ");
 
 
                 ht1 = question_page.SelectSingleNode("//div[@class='b_askcont']");
                 if (ht1 != null)
                 {
                     ht2 = ht1.SelectNodes("//p[@class='crazy_new']")[0];
-                    desc = ht2.InnerText.Trim();
+                    desc = ht2.InnerText.Trim().Replace("‘", " ").Replace("'", " ");
                 }
 
-                //获取回答
-                HtmlNodeCollection ht_collect = question_page.SelectNodes("//div[@class='b_answerli']");
-
+                //获取回答的网页
+                HtmlNodeCollection ht_collect = question_page.SelectNodes("//div[@class='crazy_new']");
                 Random rd = new Random();
+
+                //获取问题分类并将问题加入数据库
+                int cid = 0, cid1 = 0, cid2 = 0, cid3 = 0;
+                string dept = "";
+                if (get_questiong_category(question_page, ref dept, false))
+                {
+                    get_category(dept, ref cid, ref cid1, ref cid2, ref cid3);
+                }
+
                 sql = "INSERT INTO ask_question set "
-                    + "cid='" + "1" + "'"
-                    + ",cid1='" + "1" + "'"
+                    + "cid='" + cid + "'"  
+                    + ",cid1='" + cid1 + "'" 
+                    + ",cid2='" + cid2 + "'" 
+                    + ",cid3='"  + cid3 + "'"
                     + ",author='游客'"
                     + ",authorid=433"
                     + ",answers='" + ht_collect.Count.ToString() + "'"
-                    + ",title='" + utf8_chg(wenti) + "'"
-                    + ",description='" + utf8_chg(desc) + "'"
+                    + ",title='" +  (wenti) + "'"
+                    + ",description='" +  (desc) + "'"
                     + ",views='" + rd.Next(1000,10000000).ToString("D") + "'"
                     + ",supply='" + "0" + "'"
                     + ";commit;\n";
@@ -545,17 +789,27 @@ namespace 爬虫项目
                 //获取回答内容并插入
                 for (int n = 0; n < ht_collect.Count; n++ )
                 {
-                    HtmlNode tmp_hn = ht_collect[n].SelectSingleNode("//div[@class='crazy_new']");
-                    string ans_txt = tmp_hn.SelectSingleNode("p").InnerText.Trim();
+                    HtmlNode tmp_hn = ht_collect[n];
+                    string ans_txt = tmp_hn.SelectSingleNode("p").InnerText.Trim().Replace("‘", " ").Replace("'", " ");
                     string[] ans_tmp = ans_txt.Replace("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", "*").Split('*');
+                    string anthor = "";
+                    string anthor_id = "";
+                    get_answer_user(question_page, ref anthor, ref anthor_id);
+
+                    if (anthor.Length <= 1)
+                    {
+                        MessageBox.Show("严重错误发生了");
+                        return;
+                    }
+
                     ans_txt = "<p>" + ans_tmp[1] + "<br>" + ans_tmp[2] + "</p>"
                         + "<p>" + ans_tmp[3] + "<br>" + ans_tmp[4] + "</p>";
                     sql = "INSERT INTO ask_answer set "
                         + "qid='" + dt.Rows[0][0].ToString() + "'"  //问题ID
-                        + ",title='" + utf8_chg(wenti) + "'"
-                        + ",author='游客'"
-                        + ",authorid=433"
-                        + ",content='" + utf8_chg(ans_txt) + "'"
+                        + ",title='" +  (wenti) + "'"
+                        + ",author='"+ anthor+"'"
+                        + ",authorid=" + anthor_id
+                        + ",content='" +  ans_txt + "'"
                         + ",status='" + "1" + "'"
                         + ",comments='" + "0" + "'"
                         + ";commit;\n";
@@ -637,9 +891,6 @@ namespace 爬虫项目
                 while(true)
                 {
                     //医生列表循环
-                    File.AppendAllText(log_file1, Environment.NewLine);
-                    File.AppendAllText(log_file1, "当前页面有 " + dorlist.Count + " 个问题:");
-                    File.AppendAllText(log_file1, Environment.NewLine);
                     for (int k = 0; k < dorlist.Count; k++)
                     {
                         doc_num = k + 1;
@@ -647,11 +898,12 @@ namespace 爬虫项目
                     }
 
                     string cur_html_doc =  departmenturl + "all/" + (j + 1).ToString("D");
+                    j++;
                     dptstring = dpt.DownloadString(cur_html_doc);//加载科室所有医生页面信息
                     deptducoment.LoadHtml(dptstring);
+
                     dptroot = deptducoment.DocumentNode;
                     dorlist = dptroot.SelectNodes("//a[@class='q-quename']");//获得页面信息中问题的列表    
-
 
                     //页码循环，只要有最后一页，就可以继续访问
                     HtmlNode hn_tmp = dptroot.SelectSingleNode("//div[@class='clears h-page']");
@@ -677,6 +929,7 @@ namespace 爬虫项目
                 MessageBox.Show("数据库连接失败");
             }
             myCon.Open();
+            cat_dt = sql_select("ask_category", "select id,name,pid,grade from ask_category  ORDER BY id ASC;\n");
 
             //test_pc(); //抓微医网的医生
 
@@ -691,7 +944,7 @@ namespace 爬虫项目
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+           
         }
     }
 }
