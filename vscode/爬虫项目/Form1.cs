@@ -20,9 +20,11 @@ namespace 爬虫项目
         static string log_file = "log.txt";
         static string log_file1 = "spider.log";
 
+        int http_timeout = 5000;
         public static DataTable cat_dt = null;
 
         SortedList<string, bool> questiong_List = new SortedList<string, bool>();
+        SortedList<string, bool> cat_List = new SortedList<string, bool>();
 
         MySqlConnection myCon = null;
         public Form1()
@@ -536,7 +538,29 @@ namespace 爬虫项目
                 }
             }
         }
+        private bool test_user_exist(string name, ref string uid)
+        {
+            DataTable dt = null;
+            dt = sql_select("ask_user", "select uid from ask_user where username ='" + name.Trim() + "';\n");
 
+            if (dt == null)
+            {
+                return false;
+            }
+            else
+            {
+
+                if (dt.Rows.Count == 1)
+                {
+                    uid = dt.Rows[0]["uid"].ToString();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
         private bool test_category_exist(string dept)
         {
             DataTable dt = null;
@@ -658,31 +682,109 @@ namespace 爬虫项目
                 else
                 {
                     int cid = 0, cid1 = 0, cid2 = 0, cid3 = 0;
-                    get_category(dept, ref cid, ref cid1, ref cid2, ref cid3);
-                    //插入一个默认医生
-                    sql = "INSERT INTO ask_user set "
-                        + "username='" + dept + "门诊医生'"
-                        + ",password='f9f16d97c90d8c6f2cab37bb6d1f1992'"   //doctor
-                        + ",email='test@163.com'"
-                        + ",expert=1"
-                        + ",hospital='人民医院'"
-                        + ",dept='" + dept + "'"
-                        + ",dept_id='" + cid.ToString() + "'"
-                        + ",introduction='" + (dept) + "'"
-                        + ",img='/img/doc/doc-unknow-l.png'"
-                        + ",zhicheng='医师'"
-                        + ";commit;\n";
-                    sql_exec(sql);
-                    anthor = dept + "医生";
+                    if (get_category(dept, ref cid, ref cid1, ref cid2, ref cid3))//如果该分类没有医生，那必须加入。没找到分类就要停下来定位
+                    {
+                        anthor = dept + "门诊医生";
+                        //先查询有没有这个医生，有就插入，并获取医生的id
+                        if (!test_user_exist(anthor, ref anthor_id))
+                        {
+                            //插入一个默认医生
+                            sql = "INSERT INTO ask_user set "
+                                + "username='" + anthor + "'"
+                                + ",password='f9f16d97c90d8c6f2cab37bb6d1f1992'"   //doctor
+                                + ",email='test@163.com'"
+                                + ",expert=1"
+                                + ",hospital='人民医院'"
+                                + ",dept='" + dept + "'"
+                                + ",dept_id='" + cid.ToString() + "'"
+                                + ",introduction='" + (dept) + "'"
+                                + ",img='/img/doc/doc-unknow-l.png'"
+                                + ",zhicheng='医师'"
+                                + ";commit;\n";
+                            sql_exec(sql);
 
-                    DataTable dt = sql_select("ask_user", "SELECT max(uid) FROM ask_user;\n");
-                    anthor_id = dt.Rows[0][0].ToString();
+
+                            DataTable dt = sql_select("ask_user", "SELECT max(uid) FROM ask_user;\n");
+                            anthor_id = dt.Rows[0][0].ToString();
+                        }
+                    }
                 }
             }
         }
 
-        private void get_wenti(HtmlNodeCollection dorlist, WebClient dordetail,
-                     HtmlAgilityPack.HtmlDocument dorducoment, int k)
+        public static string CreateGetHttpResponse(string url, int timeout, string userAgent, CookieCollection cookies)
+        {
+            string rlt = "";
+            string DefaultUserAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)"; 
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException("url");
+            }
+            System.GC.Collect();
+
+            HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+            request.Method = "GET";
+            request.KeepAlive = false;
+            request.UserAgent = DefaultUserAgent;
+            if (!string.IsNullOrEmpty(userAgent))
+            {
+                request.UserAgent = userAgent;
+            }
+
+            request.Timeout = 1000*60;
+
+            if (cookies != null)
+            {
+                request.CookieContainer = new CookieContainer();
+                request.CookieContainer.Add(cookies);
+            }
+
+            StreamReader reader = null;
+            HttpWebResponse response = null;
+            int i = 0;
+            while (i < 6)
+            {
+                try
+                {
+                    response = request.GetResponse() as HttpWebResponse;
+
+                    reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+
+                    rlt = reader.ReadToEnd();
+                }
+                catch (System.Exception ex)
+                {
+
+                }
+
+                i++;
+                if (rlt.Length > 99)
+                {
+                    break;
+                }
+            }
+
+            if (reader != null)
+            {
+                reader.Close();
+                reader = null;
+            }
+            if (response != null)
+            {
+                response.Close();
+                reader = null;
+            }
+            if (request != null)
+            {
+                request.Abort();
+                request = null;
+            }
+            System.GC.Collect();
+
+            return rlt;
+        }  
+
+        private void get_wenti(HtmlNodeCollection dorlist, HtmlAgilityPack.HtmlDocument dorducoment, int k)
         {
             HtmlNode question_page;
             HtmlNode ht1 = null;
@@ -707,7 +809,8 @@ namespace 爬虫项目
                 {
                     return;
                 }
-                questiong_List.Add(wenti_bianhao, true);//已经处理过的就加进去
+
+
 
                 int trynum = 0;
                 while (trynum <= 5)
@@ -715,7 +818,8 @@ namespace 爬虫项目
                     trynum++;
                     try
                     {
-                        dordetailstring = dordetail.DownloadString(dordetailurl);
+                        dordetailstring = CreateGetHttpResponse(dordetailurl, http_timeout, null, null);
+                        //dordetailstring = dordetail.DownloadString(dordetailurl);
                     }
                     catch (System.Exception ex)
                     {
@@ -782,6 +886,21 @@ namespace 爬虫项目
                     + ",supply='" + "0" + "'"
                     + ";commit;\n";
                 sql_exec(sql);
+
+
+                questiong_List.TryGetValue(wenti_bianhao, out exist);
+                if (!exist)
+                {
+                    questiong_List.Add(wenti_bianhao, true);//已经处理过的就加进去
+                    if (File.Exists("question_list.log"))
+                    {
+                        File.AppendAllText("question_list.log", "," + wenti_bianhao);
+                    }
+                    else
+                    {
+                        File.AppendAllText("question_list.log", wenti_bianhao);
+                    }
+                }
 
                 //获取问题ID
                 DataTable dt = sql_select("ask_question", "SELECT max(id) FROM ask_question a;\n");
@@ -850,15 +969,13 @@ namespace 爬虫项目
 
 
             string departmenturl = null;
-            WebClient dpt = new WebClient();
-            dpt.Encoding = Encoding.UTF8;
             string dptstring = string.Empty;
             HtmlNodeCollection dorlist;
             HtmlAgilityPack.HtmlDocument deptducoment = new HtmlAgilityPack.HtmlDocument();
             ///////////dpt
 
-            WebClient dordetail = new WebClient();
-            dordetail.Encoding = Encoding.UTF8;
+            //WebClient dordetail = new WebClient();
+            //dordetail.Encoding = Encoding.UTF8;
             string dordetailstring = string.Empty;
 
             HtmlAgilityPack.HtmlDocument dorducoment = new HtmlAgilityPack.HtmlDocument();
@@ -870,9 +987,21 @@ namespace 爬虫项目
                 node = list[i].SelectSingleNode("h3").SelectSingleNode("a");
                 departmenturl = node.Attributes["href"].Value;
 
+                bool exist = false;
+                questiong_List.TryGetValue(departmenturl, out exist);
+                if (exist)
+                {
+                    continue;
+                }
+
+                if (departmenturl.Trim().Contains("lxjk"))
+                {
+                    continue;
+                }
+
                 try
                 {
-                    dptstring = dpt.DownloadString(departmenturl);//加载科室所有问题
+                    dptstring = CreateGetHttpResponse(departmenturl, 100000, null, null);
                 }
                 catch (System.Exception ex)
                 {
@@ -894,12 +1023,14 @@ namespace 爬虫项目
                     for (int k = 0; k < dorlist.Count; k++)
                     {
                         doc_num = k + 1;
-                        get_wenti(dorlist, dordetail, dorducoment, k);
+                        get_wenti(dorlist, dorducoment, k);
                     }
 
                     string cur_html_doc =  departmenturl + "all/" + (j + 1).ToString("D");
                     j++;
-                    dptstring = dpt.DownloadString(cur_html_doc);//加载科室所有医生页面信息
+
+                    dptstring = CreateGetHttpResponse(cur_html_doc, 10000, null, null);//加载科室所有医生页面信息
+
                     deptducoment.LoadHtml(dptstring);
 
                     dptroot = deptducoment.DocumentNode;
@@ -913,6 +1044,20 @@ namespace 爬虫项目
                     }
                 }
 
+                cat_List.TryGetValue(departmenturl, out exist);
+                if (!exist)
+                {
+                    cat_List.Add(departmenturl, true);//已经处理过的就加进去
+                    if (File.Exists("cat_list.log"))
+                    {
+                        File.AppendAllText("cat_list.log", "," + departmenturl);
+                    }
+                    else
+                    {
+                        File.AppendAllText("cat_list.log", departmenturl);
+                    }
+                }
+
             }
             File.AppendAllText(log_file1, Environment.NewLine);
             File.AppendAllText(log_file1, "总共抓了有效问题个数：" + doc_total.ToString());
@@ -922,6 +1067,29 @@ namespace 爬虫项目
         }
         private void button1_Click(object sender, EventArgs e)
         {
+            //获取已经抓取的问题单
+            string file = "";
+            if (File.Exists("question_list.log"))
+            {
+                file = File.ReadAllText("question_list.log");
+
+                foreach (string tmp in file.Split(','))
+                {
+                    questiong_List.Add(tmp, true);//已经处理过的就加进去
+                }
+            }
+
+            if (File.Exists("cat_list.log"))
+            {
+                file = File.ReadAllText("cat_list.log");
+
+                foreach (string tmp in file.Split(','))
+                {
+                    cat_List.Add(tmp, true);//已经处理过的就加进去
+                }
+            }
+
+        
             string M_str_sqlcon = "server=localhost;user id=root;password=cb;database=tipask;Charset=utf8"; //根据自己的设置10  
             myCon = new MySqlConnection(M_str_sqlcon);
             {
@@ -944,7 +1112,7 @@ namespace 爬虫项目
 
         private void Form1_Load(object sender, EventArgs e)
         {
-           
+            System.Net.ServicePointManager.DefaultConnectionLimit = 200;
         }
     }
 }
