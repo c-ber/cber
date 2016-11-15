@@ -1289,7 +1289,7 @@ namespace 爬虫项目
         }
         private void button1_Click(object sender, EventArgs e)
         {
-
+            return;
             //img_start_id = int.Parse(textBox1.Text);
         
             string M_str_sqlcon = "server=localhost;user id=root;password=cb;database=tipask;Charset=utf8"; //根据自己的设置10  
@@ -1385,6 +1385,117 @@ namespace 爬虫项目
             {
                 File.Delete("hos_list.log");
             }
+        }
+
+
+        private int deal_dept(string dept, DataTable cat_tb)
+        {
+            int dept_id  = -1;
+            for (int i = cat_tb.Rows.Count - 1; i >= 0; i--)
+            {
+                if (dept.Equals(cat_tb.Rows[i]["name"].ToString()))
+                {
+                    dept_id = int.Parse(cat_tb.Rows[i]["id"].ToString());
+                    break;
+                }
+            }
+            return dept_id;
+        }
+        private bool db_optimization(DataTable cat_tb)
+        {
+            int succ_num = 0;
+            bool exit = true;
+            int get_num_max = 30;
+            DataTable dt = null;
+            int uid_base = 6986;
+            string sql = "";
+            try
+            {
+                while (exit)
+                {
+                    if (uid_base > 244527)
+                    {
+                        break;
+                    }
+
+                    sql = "select uid, dept, dept_id from ask_user " +
+                                   "where dept_id  = 0  and uid >= " + uid_base.ToString() +
+                                   " and uid < " + (uid_base + get_num_max).ToString();
+                    dt = sql_select("ask_user", sql);
+
+
+                    uid_base += get_num_max;
+                    if (dt == null)
+                    {
+                        continue;
+                    }
+
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        string dept = dt.Rows[i]["dept"].ToString().Replace("门诊", "");
+                        int tmp_id = int.Parse(dt.Rows[i]["uid"].ToString());
+                        int ret = deal_dept(dept, cat_tb);
+                        if (ret >= 0)
+                        {
+                            //插入数据并更新
+                            sql = "update ask_user set dept_id = " + ret.ToString() + " where uid = " + tmp_id.ToString() + " ; commit;";
+                            sql_exec(sql);
+                            succ_num++;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+            finally
+            {
+
+            }
+
+            MessageBox.Show("总共更新了" + succ_num.ToString() + "条数据");
+            return true;
+
+        }
+        private DataTable get_cat_table()
+        {         
+            DataTable dt = null;
+            try
+            {
+                dt = sql_select("ask_category", "select * from ask_category");
+            }
+            catch
+            {
+
+            }
+            finally
+            {
+
+            }
+            return dt;
+        }
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string M_str_sqlcon = "server=120.77.51.8;user id=root;password=123456cb;database=tipask;Charset=utf8"; //根据自己的设置10  
+            myCon = new MySqlConnection(M_str_sqlcon);
+            {
+                if (myCon == null)
+                    MessageBox.Show("数据库连接失败");
+            }
+            myCon.Open();
+
+            DataTable cat_tb = get_cat_table();
+            if (cat_tb == null)
+            {
+                MessageBox.Show("获取表失败");
+            }
+
+            db_optimization(cat_tb);
+
+
+            myCon.Close();
+            myCon.Dispose();
         }
     }
 }
