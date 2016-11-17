@@ -1388,20 +1388,246 @@ namespace 爬虫项目
         }
 
 
-        private int deal_dept(string dept, DataTable cat_tb)
+        private int deal_dept(string dept, DataTable cat_table)
         {
-            int dept_id  = -1;
-            for (int i = cat_tb.Rows.Count - 1; i >= 0; i--)
+            //特殊处理,都要放到常规匹配后面去，先临时放这里
+            if (dept.Equals("心内科") || dept.Contains("心血管") || dept.Contains("心身"))
             {
-                if (dept.Equals(cat_tb.Rows[i]["name"].ToString()))
+                return 49; //心血管内科
+            }
+
+            if (dept.Equals("急诊科") || dept.Contains("全科") || dept.Contains("重症")
+                || dept.Contains("急") || dept.Contains("icu") || dept.Contains("ICU")
+                || dept.Contains("疼痛"))
+            {
+                return 44;//其他科室
+            }
+
+            if (dept.Equals("放射科"))
+            {
+                return 34;//辅助检查科室
+            }
+
+            if (dept.Equals("胸外科"))
+            {
+                return 22;//心胸外科
+            }
+
+            if (dept.Equals("普通外科"))
+            {
+                return 19;//普外科
+            }
+
+            if (dept.Equals("消化科"))
+            {
+                return 47;//消化内科
+            }
+
+            if (dept.Equals("血液科"))
+            {
+                return 51;//血液内科
+            }
+
+            if (dept.Equals("呼吸科"))
+            {
+                return 46;//呼吸内科
+            }
+
+            if (dept.Equals("耳鼻咽喉科"))
+            {
+                return 88;//耳鼻喉科
+            }
+
+            if (dept.Equals("检验科"))
+            {
+                return 129;//实验室检查
+            }
+
+            if (dept.Equals("肿瘤内科"))
+            {
+                return 33;//肿瘤科
+            }
+
+
+            if (dept.Contains("康复科"))
+            {
+                return 41;//康复医学科
+            }
+
+            if (dept.Equals("全科"))
+            {
+                return 19;//其他科室
+            }
+
+            if (dept.Equals("针灸科"))
+            {
+                return 86;//针灸按摩科
+            }
+
+            if (dept.Equals("骨外科"))
+            {
+                return 20;//骨科
+            }
+
+            if (dept.Equals("病理科"))
+            {
+                return 131;//病理及活检
+            }
+
+            if (dept.Equals("感染科"))
+            {
+                return 30;//传染科
+            }
+
+            if (dept.Equals("放疗科"))
+            {
+                return 116;//肿瘤放疗
+            }
+
+
+            return intelligent_fuzzy_matching_algorithm(dept, cat_table); 
+
+
+            int dept_id  = -1;
+            for (int i = cat_table.Rows.Count - 1; i >= 0; i--)
+            {
+                if (dept.Equals(cat_table.Rows[i]["name"].ToString()))
                 {
-                    dept_id = int.Parse(cat_tb.Rows[i]["id"].ToString());
+                    dept_id = int.Parse(cat_table.Rows[i]["id"].ToString());
                     break;
                 }
             }
+
+            //如果没匹配到，继续做智能模糊匹配
+            if (dept_id == -1)
+            {
+                dept_id = intelligent_fuzzy_matching_algorithm(dept, cat_table);
+            }
             return dept_id;
         }
-        private bool db_optimization(DataTable cat_tb)
+
+        private int intelligent_fuzzy_matching_algorithm(string dept, DataTable cat_table)
+        {
+            //先做部分匹配
+            if (dept.Contains("骨"))
+            {
+                return 20;//骨科
+            }
+
+            if (dept.Contains("肝病"))
+            {
+                return 91;//肝病
+            }
+
+            if (dept.Contains("肝胆"))
+            {
+                return 171;//肝胆外科
+            }
+
+            if (dept.Contains("癌") || dept.Contains("瘤"))
+            {
+                return 33;//肿瘤科
+            }
+
+            if (dept.Contains("消化"))
+            {
+                return 47;//消化内科
+            }
+
+            if (dept.Contains("脊"))
+            {
+                return 180;//脊柱
+            }
+
+            if (dept.Contains("血液"))
+            {
+                return 51;//血液内科
+            }
+
+            if (dept.Contains("呼吸"))
+            {
+                return 46;//呼吸内科
+            }
+
+            if (dept.Contains("耳") || dept.Contains("鼻") || dept.Contains("喉"))
+            {
+                return 88;//耳鼻喉科
+            }
+
+            if (dept.Contains("神经内"))
+            {
+                return 48;//神经内科
+            }
+
+            if (dept.Contains("神经"))
+            {
+                return 21;//神经外科
+            }
+
+            if (dept.Contains("妇科"))
+            {
+                return 57;//妇科
+            }
+
+            if (dept.Contains("产"))
+            {
+                return 58;//产科
+            }
+
+            if (dept.Contains("精神") || dept.Contains("心理"))
+            {
+                return 31;//心理健康科
+            }
+
+            if (dept.Contains("肾"))
+            {
+                return 50;//肾内科
+            }
+
+            if (dept.Contains("乳"))
+            {
+                return 62;//乳腺疾病
+            }
+
+            if (dept.Contains("超声"))
+            {
+                return 128;//超声检查
+            }
+
+            if (dept.Contains("白内障"))
+            {
+                return 326;//白内障
+            }
+
+            if (dept.Contains("保健"))
+            {
+                return 36;//保健养生
+            }
+
+            if (dept.Contains("影像"))
+            {
+                return 130;//影像学检查
+            }
+
+            if (dept.Contains("不孕") || dept.Contains("不育") || dept.Contains("生殖"))
+            {
+                return 60;//不孕不育
+            }
+
+            for (int i = cat_table.Rows.Count - 1; i >= 0; i--)
+            {
+                if (dept.Contains(cat_table.Rows[i]["name"].ToString().Replace("科", "")))
+                {
+                    return int.Parse(cat_table.Rows[i]["id"].ToString());
+                }
+            }
+
+
+            return -1;
+        }
+
+
+        private bool db_optimization(DataTable cat_table)
         {
             int succ_num = 0;
             bool exit = true;
@@ -1418,9 +1644,17 @@ namespace 爬虫项目
                         break;
                     }
 
+                    //处理全部的
+                    //sql = "select uid, dept, dept_id from ask_user " +
+                    //               "where  uid >= " + uid_base.ToString() +
+                    //               " and uid < " + (uid_base + get_num_max).ToString();
+
+                    //处理未处理的
                     sql = "select uid, dept, dept_id from ask_user " +
-                                   "where dept_id  = 0  and uid >= " + uid_base.ToString() +
-                                   " and uid < " + (uid_base + get_num_max).ToString();
+                           "where  dept_id =  0 and uid >= " + uid_base.ToString() +
+                           " and uid < " + (uid_base + get_num_max).ToString();
+
+
                     dt = sql_select("ask_user", sql);
 
 
@@ -1434,20 +1668,24 @@ namespace 爬虫项目
                     {
                         string dept = dt.Rows[i]["dept"].ToString().Replace("门诊", "");
                         int tmp_id = int.Parse(dt.Rows[i]["uid"].ToString());
-                        int ret = deal_dept(dept, cat_tb);
-                        if (ret >= 0)
+                        int ret = deal_dept(dept, cat_table);
+                        if (ret >= 18)
                         {
                             //插入数据并更新
                             sql = "update ask_user set dept_id = " + ret.ToString() + " where uid = " + tmp_id.ToString() + " ; commit;";
                             sql_exec(sql);
                             succ_num++;
                         }
+                        else if (ret > -1)
+                        {
+                            MessageBox.Show("错误的范围");
+                        }
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
-
+                MessageBox.Show("error");
             }
             finally
             {
@@ -1485,13 +1723,13 @@ namespace 爬虫项目
             }
             myCon.Open();
 
-            DataTable cat_tb = get_cat_table();
-            if (cat_tb == null)
+            DataTable cat_table = get_cat_table();
+            if (cat_table == null)
             {
                 MessageBox.Show("获取表失败");
             }
 
-            db_optimization(cat_tb);
+            db_optimization(cat_table);
 
 
             myCon.Close();
