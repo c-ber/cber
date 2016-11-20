@@ -1614,6 +1614,88 @@ namespace 爬虫项目
                 return 60;//不孕不育
             }
 
+            if (dept.Contains("胆") || dept.Contains("胃")
+                || dept.Contains("脾") || dept.Contains("肠"))
+            {
+                return 19;//普外科
+            }
+
+            if (dept.Contains("牙"))
+            {
+                return 90;//口腔科
+            }
+
+            if (dept.Contains("营养"))
+            {
+                return 42;//营养保健科
+            }
+
+            if (dept.Contains("名医") || dept.Contains("专家"))
+            {
+                return 28;//中医科
+            }
+
+            if (dept.Contains("脑病"))
+            {
+                return 48;//神经内科
+            }
+
+            if (dept.Contains("脑血管"))
+            {
+                return 221;//脑血管疾病
+            }
+
+            if (dept.Contains("颈"))
+            {
+                return 179;//头颈外科
+            }
+
+            if (dept.Contains("康复"))
+            {
+                return 41;//康复医学科
+            }
+
+            if (dept.Contains("甲"))
+            {
+                return 261;//甲状腺疾病
+            }
+
+            if (dept.Contains("泌尿") || dept.Contains("男"))
+            {
+                return 23;//泌尿外科
+            }
+
+            if (dept.Contains("老年"))
+            {
+                return 166;//老年痴呆
+            }
+
+            if (dept.Contains("药"))
+            {
+                return 40;//药品
+            }
+
+            if (dept.Contains("针灸") || dept.Contains("按摩") || dept.Contains("推拿"))
+            {
+                return 86;//针灸按摩科
+            }
+
+            if (dept.Contains("放射"))
+            {
+                return 34;//辅助检查科
+            }
+
+            if (dept.Contains("介入"))
+            {
+                return 121;//肿瘤介入
+            }
+
+            if (dept.Contains("放疗"))
+            {
+                return 116;//肿瘤放疗
+            }
+
+
             for (int i = cat_table.Rows.Count - 1; i >= 0; i--)
             {
                 if (dept.Contains(cat_table.Rows[i]["name"].ToString().Replace("科", "")))
