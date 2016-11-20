@@ -598,231 +598,271 @@ namespace 爬虫项目
         public static int hos_jx_tmp = 0;
         private void get_hospital_info(string hospital_id)
         {
-            int pagecount = 0;
-
-            HtmlNode rootnode = null;
-            HtmlNode node = null;
-
-            HtmlNodeCollection dorlist = null;
-            HtmlNodeCollection list = null;
-
-            string departmenturl = "";
-            string dptstring = "";
-            string hos_jx = "";
-
-
-            WebClient rootpage = new WebClient();
-            rootpage.Encoding = Encoding.UTF8;
-            rootpage.BaseAddress = "http://www.guahao.com/hospital/";
-
-            //string url = "05ba2f6c-ec92-4a58-a6d0-31befb5474ed000";//中山大学附属第三医院天河医院
-
-            string html = string.Empty;
-            html = rootpage.DownloadString(hospital_id);//读取网页信息
-
-            HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
-            document.LoadHtml(html);//加载对象
-
-            rootnode = document.DocumentNode;
-
-            //获取医院简写，取域名中间内容
-            node = rootnode.SelectSingleNode("/html/body/div/div/div/div/section/div/div/div[@class='website']");
-            hos_jx = hos_img_name + hos_jx_tmp.ToString("D3");
-            hos_jx_tmp++;
-
-
-            list = rootnode.SelectNodes("//span[@data-exp='1']");//搜索data-exp=1的span标签 科室页面
-            if (list == null)
+            try
             {
-                return;
-            }
 
-            HtmlAgilityPack.HtmlDocument deptducoment = new HtmlAgilityPack.HtmlDocument();
-            HtmlAgilityPack.HtmlDocument dorducoment = new HtmlAgilityPack.HtmlDocument();
+                int pagecount = 0;
+
+                HtmlNode rootnode = null;
+                HtmlNode node = null;
+
+                HtmlNodeCollection dorlist = null;
+                HtmlNodeCollection list = null;
+
+                string departmenturl = "";
+                string dptstring = "";
+                string hos_jx = "";
 
 
-            File.WriteAllText(log_file1, "========== spider ===============" + Environment.NewLine);
-            for (int i = 0; i < list.Count; i++)//遍历科室 
-            {
-                node = list[i].SelectSingleNode("a");
-                departmenturl = node.Attributes["href"].Value;
-                departmenturl = departmenturl.Replace("department", "department/shiftcase");//科室连接
+                WebClient rootpage = new WebClient();
+                rootpage.Encoding = Encoding.UTF8;
+                rootpage.BaseAddress = "http://www.guahao.com/hospital/";
 
-                //http://www.guahao.com/department/shiftcase/bf068e51-b24f-414b-aed0-9dc32e38fc45000?isStd=
-                string keshi_key = departmenturl.Substring(43);
-                bool exist = false;
-                doc_list.TryGetValue(keshi_key, out exist);
-                if (exist)
+                //string url = "05ba2f6c-ec92-4a58-a6d0-31befb5474ed000";//中山大学附属第三医院天河医院
+
+                string html = string.Empty;
+                html = rootpage.DownloadString(hospital_id);//读取网页信息
+
+                HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
+                document.LoadHtml(html);//加载对象
+
+                rootnode = document.DocumentNode;
+
+                //获取医院简写，取域名中间内容
+                node = rootnode.SelectSingleNode("/html/body/div/div/div/div/section/div/div/div[@class='website']");
+                hos_jx = hos_img_name + hos_jx_tmp.ToString("D3");
+                hos_jx_tmp++;
+
+
+                list = rootnode.SelectNodes("//span[@data-exp='1']");//搜索data-exp=1的span标签 科室页面
+                if (list == null)
                 {
-                    continue;
+                    return;
                 }
 
-                try
+                HtmlAgilityPack.HtmlDocument deptducoment = new HtmlAgilityPack.HtmlDocument();
+                HtmlAgilityPack.HtmlDocument dorducoment = new HtmlAgilityPack.HtmlDocument();
+
+
+                File.WriteAllText(log_file1, "========== spider ===============" + Environment.NewLine);
+                for (int i = 0; i < list.Count; i++)//遍历科室 
                 {
-                    //加载科室所有医生页面信息
-                    dptstring = CreateGetHttpResponse(departmenturl, 10000, null, null);
-                }
-                catch (System.Exception ex)
-                {
+                    node = list[i].SelectSingleNode("a");
+                    departmenturl = node.Attributes["href"].Value;
+                    departmenturl = departmenturl.Replace("department", "department/shiftcase");//科室连接
 
-                }
-                if (dptstring.Length < 1)
-                {
-                    continue;
-                }
-                deptducoment.LoadHtml(dptstring);
-
-                HtmlNode dptroot = deptducoment.DocumentNode;
-
-
-                dorlist = dptroot.SelectNodes("//div[@class='g-doctor-item2 g-clear to-margin']");//获得页面信息中医生的列表 new
-                //dorlist = dptroot.SelectNodes("//div[@class='doc-info']");//获得页面信息中医生的列表
-
-                HtmlNode info_page = dptroot.SelectSingleNode("//div[@class='other-info']");
-                if (info_page == null)
-                {
-                    pagecount = 1;
-                }
-                else
-                {
-                    pagecount = int.Parse(info_page.SelectNodes("span")[0].SelectSingleNode("label").InnerHtml);//网页的总页数
-                }
-
-
-                //页码循环
-                for (int j = 1; j <= pagecount; j++)
-                {
-                    //医生列表循环
-                    for (int k = 0; k < dorlist.Count; k++)
-                    {
-                        doc_num = k + 1;
-                        get_doc(dorlist, dorducoment, k, hos_jx);
-                    }
-                    if (j == pagecount)
-                    {
-                        break;
-                    }
-                    string cur_html_doc = departmenturl.Replace("?isStd=", "?pageNo=") + (j + 1).ToString("D");
-
-                    dptstring = CreateGetHttpResponse(cur_html_doc, 10000, null, null);//加载科室所有医生页面信息
-                    deptducoment.LoadHtml(dptstring);
-                    dptroot = deptducoment.DocumentNode;
-                    dorlist = dptroot.SelectNodes("//div[@class='g-doctor-item2 g-clear to-margin']");//获得页面信息中医生的列表
-                }
-
-                keshi_list.TryGetValue(keshi_key, out exist);
-                if (!exist)
-                {
-                    keshi_list.Add(keshi_key, true);//已经处理过的就加进去
-                    if (File.Exists("keshi_list.log"))
-                    {
-                        File.AppendAllText("keshi_list.log", "," + keshi_key);
-                    }
-                    else
-                    {
-                        File.AppendAllText("keshi_list.log", keshi_key);
-                    }
-                }
-
-            }
-
-
-        }
-        private void test_pc()
-        {
-            HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
-
-            HtmlNode hos_list_page = null;
-            HtmlNode hn1 = null;
-            HtmlNodeCollection hn2 = null;
-
-            string hospital_id = "";
-            string html_text = "";
-
-
-            //这两个值必须要同步修改，否则会覆盖
-
-            //广东的
-            //string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=29&p=%E5%B9%BF%E4%B8%9C&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
-            //hos_img_name = "gd";
-
-            //上海的
-            string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?pi=2&p=%E4%B8%8A%E6%B5%B7";
-            hos_img_name = "sh";
-            
-            html_text = CreateGetHttpResponse(gz_hospitals_url, 10000, null, null);
-            document.LoadHtml(html_text);
-            hos_list_page = document.DocumentNode;
-
-
-            int page_size = 0;
-            hn1 = hos_list_page.SelectSingleNode("//span[@class='pd']");
-            page_size = int.Parse(hn1.SelectSingleNode("label").InnerText);
-
-            for (int n = 1; n < page_size; n++)
-            {
-                if (n >= 2)
-                {
-                    string url = gz_hospitals_url + "&pageNo=" + n.ToString();
-                    html_text = CreateGetHttpResponse(url, 10000, null, null);
-
-                    if (html_text.Length < 100)
-                    {
-                        return;
-                    }
-                    document.LoadHtml(html_text);
-                    hos_list_page = document.DocumentNode;
-                }
-
-                hn2 = hos_list_page.SelectNodes("//li[@class='g-hospital-item J_hospitalItem']");
-                if (hn2 == null)
-                {
-                    //MessageBox.Show("没采集到数据!", "失败了");
-                }
-
-
-                for (int i = 0; i < hn2.Count; i++)
-                {
-                    img_start_id = 0;
-
-                    hospital_id = hn2[i].SelectSingleNode("a").Attributes["monitor-hosp-id"].Value;
-
+                    //http://www.guahao.com/department/shiftcase/bf068e51-b24f-414b-aed0-9dc32e38fc45000?isStd=
+                    string keshi_key = departmenturl.Substring(43);
                     bool exist = false;
-                    hos_list.TryGetValue(hospital_id, out exist);
+                    doc_list.TryGetValue(keshi_key, out exist);
                     if (exist)
                     {
                         continue;
                     }
 
+                    try
+                    {
+                        //加载科室所有医生页面信息
+                        dptstring = CreateGetHttpResponse(departmenturl, 10000, null, null);
+                    }
+                    catch (System.Exception ex)
+                    {
 
-                    get_hospital_info(hospital_id);
+                    }
+                    if (dptstring.Length < 1)
+                    {
+                        continue;
+                    }
+                    deptducoment.LoadHtml(dptstring);
+
+                    HtmlNode dptroot = deptducoment.DocumentNode;
 
 
-                    hos_list.TryGetValue(hospital_id, out exist);
+                    dorlist = dptroot.SelectNodes("//div[@class='g-doctor-item2 g-clear to-margin']");//获得页面信息中医生的列表 new
+                    //dorlist = dptroot.SelectNodes("//div[@class='doc-info']");//获得页面信息中医生的列表
+
+                    HtmlNode info_page = dptroot.SelectSingleNode("//div[@class='other-info']");
+                    if (info_page == null)
+                    {
+                        pagecount = 1;
+                    }
+                    else
+                    {
+                        pagecount = int.Parse(info_page.SelectNodes("span")[0].SelectSingleNode("label").InnerHtml);//网页的总页数
+                    }
+                    if (dorlist == null)
+                    {
+                        continue;
+                    }
+
+                    //页码循环
+                    for (int j = 1; j <= pagecount; j++)
+                    {
+                        //医生列表循环
+                        for (int k = 0; k < dorlist.Count; k++)
+                        {
+                            doc_num = k + 1;
+                            get_doc(dorlist, dorducoment, k, hos_jx);
+                        }
+                        if (j == pagecount)
+                        {
+                            break;
+                        }
+                        string cur_html_doc = departmenturl.Replace("?isStd=", "?pageNo=") + (j + 1).ToString("D");
+
+                        dptstring = CreateGetHttpResponse(cur_html_doc, 10000, null, null);//加载科室所有医生页面信息
+                        deptducoment.LoadHtml(dptstring);
+                        dptroot = deptducoment.DocumentNode;
+                        dorlist = dptroot.SelectNodes("//div[@class='g-doctor-item2 g-clear to-margin']");//获得页面信息中医生的列表
+                    }
+
+                    keshi_list.TryGetValue(keshi_key, out exist);
                     if (!exist)
                     {
-                        try
+                        keshi_list.Add(keshi_key, true);//已经处理过的就加进去
+                        if (File.Exists("keshi_list.log"))
                         {
-                            cat_list.Add(hospital_id, true);//已经处理过的就加进去
-                            if (File.Exists("hos_list.log"))
-                            {
-                                File.AppendAllText("hos_list.log", "," + hospital_id);
-                            }
-                            else
-                            {
-                                File.AppendAllText("hos_list.log", hospital_id);
-                            }
+                            File.AppendAllText("keshi_list.log", "," + keshi_key);
                         }
-                        catch (System.Exception ex)
+                        else
                         {
-                        	
+                            File.AppendAllText("keshi_list.log", keshi_key);
+                        }
+                    }
+
+                }
+            }
+            catch (System.Exception ex)
+            {
+
+            }
+            finally
+            {
+            }
+
+        }
+        private void test_pc(string gz_hospitals_url)
+        {
+            try
+            {
+
+                HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
+
+                HtmlNode hos_list_page = null;
+                HtmlNode hn1 = null;
+                HtmlNodeCollection hn2 = null;
+
+                string hospital_id = "";
+                string html_text = "";
+
+
+                //这两个值必须要同步修改，否则会覆盖
+
+                //广东的
+                //string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=29&p=%E5%B9%BF%E4%B8%9C&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+                //hos_img_name = "gd";
+
+                //上海的
+                //string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?pi=2&p=%E4%B8%8A%E6%B5%B7";
+                //hos_img_name = "sh";
+
+                //北京
+                //string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=1&p=%E5%8C%97%E4%BA%AC&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+                //hos_img_name = "bj";
+
+                //浙江
+                //string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=24&p=%E6%B5%99%E6%B1%9F&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+                //hos_img_name = "zj";
+
+
+                //湖南
+                //string gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=30&p=%E6%B9%96%E5%8D%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+                //hos_img_name = "hn";
+
+
+                html_text = CreateGetHttpResponse(gz_hospitals_url, 10000, null, null);
+                document.LoadHtml(html_text);
+                hos_list_page = document.DocumentNode;
+
+
+                int page_size = 0;
+                hn1 = hos_list_page.SelectSingleNode("//span[@class='pd']");
+                page_size = int.Parse(hn1.SelectSingleNode("label").InnerText);
+
+                for (int n = 1; n < page_size; n++)
+                {
+                    if (n >= 2)
+                    {
+                        string url = gz_hospitals_url + "&pageNo=" + n.ToString();
+                        html_text = CreateGetHttpResponse(url, 10000, null, null);
+
+                        if (html_text.Length < 100)
+                        {
+                            return;
+                        }
+                        document.LoadHtml(html_text);
+                        hos_list_page = document.DocumentNode;
+                    }
+
+                    hn2 = hos_list_page.SelectNodes("//li[@class='g-hospital-item J_hospitalItem']");
+                    if (hn2 == null)
+                    {
+                        //MessageBox.Show("没采集到数据!", "失败了");
+                    }
+
+
+                    for (int i = 0; i < hn2.Count; i++)
+                    {
+                        img_start_id = 0;
+
+                        hospital_id = hn2[i].SelectSingleNode("a").Attributes["monitor-hosp-id"].Value;
+
+                        bool exist = false;
+                        hos_list.TryGetValue(hospital_id, out exist);
+                        if (exist)
+                        {
+                            continue;
                         }
 
+
+                        get_hospital_info(hospital_id);
+
+
+                        hos_list.TryGetValue(hospital_id, out exist);
+                        if (!exist)
+                        {
+                            try
+                            {
+                                cat_list.Add(hospital_id, true);//已经处理过的就加进去
+                                if (File.Exists("hos_list.log"))
+                                {
+                                    File.AppendAllText("hos_list.log", "," + hospital_id);
+                                }
+                                else
+                                {
+                                    File.AppendAllText("hos_list.log", hospital_id);
+                                }
+                            }
+                            catch (System.Exception ex)
+                            {
+
+                            }
+
+                        }
                     }
                 }
             }
-            MessageBox.Show("capture data finish!");
+            catch (System.Exception ex)
+            {
+
+            }
+            finally
+            {
+                //MessageBox.Show("capture data finish!");
+            }
+
         }
+
 
 
         private bool select_a_doc(string dept, ref string anthor, ref string anthor_id)
@@ -1287,21 +1327,183 @@ namespace 爬虫项目
 
             MessageBox.Show("capture data finish!");
         }
+
+
+
+        //已经导了北上广深,浙江湖南
+        private void test_guahao()
+        {
+            string gz_hospitals_url = "";
+
+            //江苏
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=22&p=%E6%B1%9F%E8%8B%8F&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "js";
+            test_pc(gz_hospitals_url);
+
+
+            //山西
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=8&p=%E5%B1%B1%E8%A5%BF&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "sxa";
+            test_pc(gz_hospitals_url);
+
+
+            //山东
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=21&p=%E5%B1%B1%E4%B8%9C&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "sd";
+            test_pc(gz_hospitals_url);
+
+
+            //湖北
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=19&p=%E6%B9%96%E5%8C%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "hb";
+            test_pc(gz_hospitals_url);
+
+
+            //天津
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=3&p=%E5%A4%A9%E6%B4%A5&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "tj";
+            test_pc(gz_hospitals_url);
+
+
+            //陕西
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=9&p=%E9%99%95%E8%A5%BF&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "sxb";
+            test_pc(gz_hospitals_url);
+
+            //安徽
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=23&p=%E5%AE%89%E5%BE%BD&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "ah";
+            test_pc(gz_hospitals_url);
+
+            //河南
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=20&p=%E6%B2%B3%E5%8D%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=all&ht=all&hk=&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "hna";
+            test_pc(gz_hospitals_url);
+
+            //四川
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=15&p=%E5%9B%9B%E5%B7%9D&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "sc";
+            test_pc(gz_hospitals_url);
+
+            //青海
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=12&p=%E9%9D%92%E6%B5%B7&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "qh";
+            test_pc(gz_hospitals_url);
+
+
+            //辽宁
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=5&p=%E8%BE%BD%E5%AE%81&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "ln";
+            test_pc(gz_hospitals_url);
+
+
+            //内蒙古
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=33&p=%E5%86%85%E8%92%99%E5%8F%A4&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "nmg";
+            test_pc(gz_hospitals_url);
+
+
+            //江西
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=25&p=%E6%B1%9F%E8%A5%BF&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "jx";
+            test_pc(gz_hospitals_url);
+
+
+            //黑龙江
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=7&p=%E9%BB%91%E9%BE%99%E6%B1%9F&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "hlj";
+            test_pc(gz_hospitals_url);
+
+
+            //河北
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=16&p=%E6%B2%B3%E5%8C%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "hba";
+            test_pc(gz_hospitals_url);
+
+
+            //云南
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=17&p=%E4%BA%91%E5%8D%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "yn";
+            test_pc(gz_hospitals_url);
+
+
+            //吉林
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=6&p=%E5%90%89%E6%9E%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "jl";
+            test_pc(gz_hospitals_url);
+
+
+            //贵州
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=18&p=%E8%B4%B5%E5%B7%9E&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "gz";
+            test_pc(gz_hospitals_url);
+
+
+            //广西
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=31&p=%E5%B9%BF%E8%A5%BF&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "gx";
+            test_pc(gz_hospitals_url);
+
+
+            //重庆
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=4&p=%E9%87%8D%E5%BA%86&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "cq";
+            test_pc(gz_hospitals_url);
+
+            
+            //宁夏
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=10&p=%E5%AE%81%E5%A4%8F&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "nx";
+            test_pc(gz_hospitals_url);
+
+
+            //甘肃
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=11&p=%E7%94%98%E8%82%83&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "gs";
+            test_pc(gz_hospitals_url);
+
+
+            //福建
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=27&p=%E7%A6%8F%E5%BB%BA&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "fj";
+            test_pc(gz_hospitals_url);
+
+
+            //海南
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=32&p=%E6%B5%B7%E5%8D%97&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "hnb";
+            test_pc(gz_hospitals_url);
+
+
+            //新疆
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=13&p=%E6%96%B0%E7%96%86&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "xj";
+            test_pc(gz_hospitals_url);
+
+
+            //西藏
+            gz_hospitals_url = "http://www.guahao.com/hospital/areahospitals?q=&pi=14&p=%E8%A5%BF%E8%97%8F&ci=all&c=%E4%B8%8D%E9%99%90&o=all&hl=33&ht=all&hk=all&fg=0&ipIsShanghai=false&sort=region_sort";
+            hos_img_name = "xz";
+            test_pc(gz_hospitals_url);
+
+
+            MessageBox.Show("capture data finish!");
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-            return;
             //img_start_id = int.Parse(textBox1.Text);
-        
+
             string M_str_sqlcon = "server=localhost;user id=root;password=cb;database=tipask;Charset=utf8"; //根据自己的设置10  
             myCon = new MySqlConnection(M_str_sqlcon);
             {
-            if (myCon == null)
-                MessageBox.Show("数据库连接失败");
+                if (myCon == null)
+                    MessageBox.Show("数据库连接失败");
             }
             myCon.Open();
             cat_dt = sql_select("ask_category", "select id,name,pid,grade from ask_category  ORDER BY id ASC;\n");
 
-            test_pc(); //抓微医网的医生
+            test_guahao(); //抓微医网的医生
 
             //test_120ask();
             myCon.Close();
@@ -1311,6 +1513,7 @@ namespace 爬虫项目
             //webBrowser1.Navigate("http://yyk.39.net/doctor/101000.html");
             //webBrowser1.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(web_DocumentCompleted);
         }
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
