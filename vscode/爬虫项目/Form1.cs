@@ -33,7 +33,7 @@ namespace 爬虫项目
         SortedList<string, bool> keshi_list = new SortedList<string, bool>();
         SortedList<string, bool> hos_list = new SortedList<string, bool>();
 
-        
+        int question_deal = 0;
 
         MySqlConnection myCon = null;
         public Form1()
@@ -1569,6 +1569,12 @@ namespace 爬虫项目
                 }
             }
 
+            if (File.Exists("ans_list.log"))
+            {
+                file = File.ReadAllText("ans_list.log");
+                question_deal = int.Parse(file);
+            }
+
             System.Net.ServicePointManager.DefaultConnectionLimit = 200;
         }
 
@@ -2016,6 +2022,226 @@ namespace 爬虫项目
 
             db_optimization(cat_table);
 
+
+            myCon.Close();
+            myCon.Dispose();
+        }
+
+        void get_doc_dept_list(int dept_id)
+        {
+            string sql = "";
+
+            //获取医生数
+            sql = "select count(*) from ask_user where dept_id = " + dept_id.ToString();
+            DataTable dt_doc_num = sql_select("ask_question", sql);
+            if (dt_doc_num == null)
+            {
+
+            }
+        }
+
+        //最多只处理21个数据,大于3倍时候处理21个，否则只处理5个
+        ArrayList get_randon_data(int doc_num, int ans_num)
+        {
+            int deal_num = 0;
+            ArrayList arr_list = new ArrayList();
+            Random rd = new Random();
+            int itmp = 0;
+            int count = 0;
+
+            if (ans_num == 0)//没有回答就不用处理
+            {
+                return arr_list;
+            }
+
+            if (doc_num / ans_num > 2)
+            {
+                deal_num = ans_num > 21 ? 21 : ans_num;
+            }
+            else
+            {
+                deal_num = ans_num > 5 ? 5 : ans_num;
+            }
+
+            while (count < deal_num) 
+            {
+                itmp = rd.Next(1, doc_num);
+                if(!arr_list.Contains(itmp))
+                {
+                    arr_list.Add(itmp);
+                    count++;
+                }
+            }
+
+            int dz = 1; //递增值
+            while (arr_list.Count < ans_num)
+            {
+                if (arr_list.Contains(dz))
+                {
+                    dz++;
+                }
+                else
+                {
+                    arr_list.Add(dz);
+                }
+            }
+
+            return arr_list;
+        }
+
+        void update_ans(ArrayList arr, int answers, int qid, string tj_str)
+        {
+            string sql = "";
+            //获取全部信息，从随机数组中取序号
+            sql = "select uid, username, dept_id from ask_user where " + tj_str + " ORDER BY uid asc";
+            DataTable dt_user_info = sql_select("ask_user", sql);
+            if (dt_user_info == null)
+            {
+                MessageBox.Show("error");
+            }
+
+            for (int n = 0; n < arr.Count; n++)
+            {
+                sql = "select id from ask_answer where qid = " + qid.ToString();
+                DataTable dt_ans_total = sql_select("ask_answer", sql);
+                if (dt_ans_total == null || dt_ans_total.Rows.Count != answers)
+                {
+                    MessageBox.Show("error");
+                }
+                int tmp_1 = int.Parse(arr[n].ToString());
+                sql = "update ask_answer set  author = '" + dt_user_info.Rows[tmp_1]["username"].ToString() +
+                    "', authorid = " + dt_user_info.Rows[tmp_1]["uid"].ToString() +
+                    " where id = " + dt_ans_total.Rows[n]["id"].ToString() + "; commit;";
+                sql_exec(sql);
+            }
+        }
+
+
+        void ans_deal()
+        {
+            string sql = "";
+            DataTable dt = null;
+            int base_qid = 0;
+            int max_qid = 0;
+
+            string tj_str = "";
+            try
+            {
+                //查询最小的问题数对应的id，以此基准循环
+                sql = "select MIN(id), max(id) from ask_question where id > " + question_deal.ToString();
+                dt = sql_select("ask_question", sql);
+
+                base_qid = int.Parse(dt.Rows[0][0].ToString());
+                max_qid = int.Parse(dt.Rows[0][1].ToString());
+
+                for (int i = base_qid; i < max_qid; i++)
+                {
+                    sql = "select id, cid, cid1, cid2, cid3, answers from ask_question where id = " + i.ToString();
+                    DataTable dt_qst = sql_select("ask_question", sql);
+                    if (dt_qst == null)
+                    {
+                        continue;//id不存在
+                    }
+
+                    //获取该问题的科室类别级数
+                    int qid   = int.Parse(dt_qst.Rows[0]["id"].ToString());
+                    int cid  = int.Parse(dt_qst.Rows[0]["cid"].ToString());
+                    int cid1 = int.Parse(dt_qst.Rows[0]["cid1"].ToString());
+                    int cid2 = int.Parse(dt_qst.Rows[0]["cid2"].ToString());
+                    int cid3 = int.Parse(dt_qst.Rows[0]["cid3"].ToString());
+                    int answers = int.Parse(dt_qst.Rows[0]["answers"].ToString());
+
+                    int doc_count = 0;
+                    DataTable dt_doc_num = null; //存储医生总数
+
+                    tj_str = " dept_id = " + cid.ToString();
+                    if (cid == cid3)//三级分类
+                    {
+                        sql = "select count(*) from ask_user where  " + tj_str;
+                        dt_doc_num = sql_select("ask_question", sql);
+                        doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+                        if (doc_count < answers)
+                        {
+                            //只能把2级的也拉过来,必须要够
+                            tj_str += " or dept_id = " + cid2.ToString();
+                            sql += tj_str;
+
+                            dt_doc_num = sql_select("ask_question", sql);
+                            doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+
+                            if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
+                            {
+                                //只能把1级的也拉过来,必须要够
+                                tj_str += " or dept_id = " + cid1.ToString();
+                                sql += tj_str;
+
+                                dt_doc_num = sql_select("ask_question", sql);
+                                doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+                                if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
+                                {
+                                    MessageBox.Show("error");
+                                }
+                            }
+                        }
+                    }
+                    else if (cid == cid2)//二级分类
+                    {
+                        sql = "select count(*) from ask_user where  " + tj_str;
+                        dt_doc_num = sql_select("ask_question", sql);
+                        doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+                        if (doc_count < answers)
+                        {
+                            //只能把1级的也拉过来,必须要够
+                            tj_str += " or dept_id = " + cid1.ToString();
+                            sql += tj_str;
+
+                            dt_doc_num = sql_select("ask_question", sql);
+                            doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+
+                            if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
+                            {
+                                MessageBox.Show("error");
+                            }
+                        }
+                    }
+                    else//一级分类
+                    {
+                        sql = "select count(*) from ask_user where  " + tj_str;
+                        dt_doc_num = sql_select("ask_question", sql);
+                        doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+                        if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
+                        {
+                            MessageBox.Show("error");
+                        }
+                    }
+
+                    ArrayList arr = get_randon_data(doc_count, answers);
+                    update_ans(arr, answers, qid, tj_str);
+
+                    question_deal = i;
+                    File.WriteAllText("ans_list.log", question_deal.ToString());
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "error");
+            }
+            finally
+            {
+            }
+        }
+        private void button4_Click(object sender, EventArgs e)
+        {
+            string M_str_sqlcon = "server=120.77.51.8;user id=root;password=123456cb;database=tipask;Charset=utf8"; //根据自己的设置10  
+            myCon = new MySqlConnection(M_str_sqlcon);
+            {
+                if (myCon == null)
+                    MessageBox.Show("数据库连接失败");
+            }
+            myCon.Open();
+
+            ans_deal();
 
             myCon.Close();
             myCon.Dispose();
