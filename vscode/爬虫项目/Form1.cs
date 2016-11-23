@@ -2065,7 +2065,7 @@ namespace 爬虫项目
 
             while (count < deal_num) 
             {
-                itmp = rd.Next(1, doc_num);
+                itmp = rd.Next(1, doc_num+1);
                 if(!arr_list.Contains(itmp))
                 {
                     arr_list.Add(itmp);
@@ -2092,27 +2092,50 @@ namespace 爬虫项目
         void update_ans(ArrayList arr, int answers, int qid, string tj_str)
         {
             string sql = "";
-            //获取全部信息，从随机数组中取序号
-            sql = "select uid, username, dept_id from ask_user where " + tj_str + " ORDER BY uid asc";
-            DataTable dt_user_info = sql_select("ask_user", sql);
-            if (dt_user_info == null)
+            DataTable dt_user_info = null;
+            DataTable dt_ans_total = null;
+            try
             {
-                MessageBox.Show("error");
-            }
 
-            for (int n = 0; n < arr.Count; n++)
-            {
-                sql = "select id from ask_answer where qid = " + qid.ToString();
-                DataTable dt_ans_total = sql_select("ask_answer", sql);
-                if (dt_ans_total == null || dt_ans_total.Rows.Count != answers)
+                //获取全部信息，从随机数组中取序号
+                sql = "select uid, username, dept_id from ask_user where " + tj_str + " ORDER BY uid asc";
+                dt_user_info = sql_select("ask_user", sql);
+                if (dt_user_info == null)
                 {
                     MessageBox.Show("error");
                 }
-                int tmp_1 = int.Parse(arr[n].ToString());
-                sql = "update ask_answer set  author = '" + dt_user_info.Rows[tmp_1]["username"].ToString() +
-                    "', authorid = " + dt_user_info.Rows[tmp_1]["uid"].ToString() +
-                    " where id = " + dt_ans_total.Rows[n]["id"].ToString() + "; commit;";
-                sql_exec(sql);
+
+                sql = "select id from ask_answer where qid = " + qid.ToString();
+                dt_ans_total = sql_select("ask_answer", sql);
+                if (dt_ans_total == null)
+                {
+                    MessageBox.Show("error");
+                }
+                if (dt_ans_total.Rows.Count != answers)
+                {
+                    answers = dt_ans_total.Rows.Count;
+                }
+
+                for (int n = 0; n < answers; n++)
+                {
+
+                    int tmp_1 = int.Parse(arr[n].ToString()) -1;
+                    try
+                    {
+                        sql = "update ask_answer set  author = '" + dt_user_info.Rows[tmp_1]["username"].ToString() +
+                            "', authorid = " + dt_user_info.Rows[tmp_1]["uid"].ToString() +
+                            " where id = " + dt_ans_total.Rows[n]["id"].ToString() + "; commit;";
+                        sql_exec(sql);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
 
@@ -2157,14 +2180,15 @@ namespace 爬虫项目
                     tj_str = " dept_id = " + cid.ToString();
                     if (cid == cid3)//三级分类
                     {
-                        sql = "select count(*) from ask_user where  " + tj_str;
+                        string pri_str = "select count(*) from ask_user where  ";
+                        sql = pri_str + tj_str;
                         dt_doc_num = sql_select("ask_question", sql);
                         doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
                         if (doc_count < answers)
                         {
                             //只能把2级的也拉过来,必须要够
                             tj_str += " or dept_id = " + cid2.ToString();
-                            sql += tj_str;
+                            sql = pri_str + tj_str;
 
                             dt_doc_num = sql_select("ask_question", sql);
                             doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
@@ -2173,7 +2197,7 @@ namespace 爬虫项目
                             {
                                 //只能把1级的也拉过来,必须要够
                                 tj_str += " or dept_id = " + cid1.ToString();
-                                sql += tj_str;
+                                sql = pri_str + tj_str;
 
                                 dt_doc_num = sql_select("ask_question", sql);
                                 doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
@@ -2186,14 +2210,15 @@ namespace 爬虫项目
                     }
                     else if (cid == cid2)//二级分类
                     {
-                        sql = "select count(*) from ask_user where  " + tj_str;
+                        string pri_str = "select count(*) from ask_user where  ";
+                        sql = pri_str + tj_str;
                         dt_doc_num = sql_select("ask_question", sql);
                         doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
                         if (doc_count < answers)
                         {
                             //只能把1级的也拉过来,必须要够
                             tj_str += " or dept_id = " + cid1.ToString();
-                            sql += tj_str;
+                            sql = pri_str + tj_str;
 
                             dt_doc_num = sql_select("ask_question", sql);
                             doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
@@ -2206,7 +2231,8 @@ namespace 爬虫项目
                     }
                     else//一级分类
                     {
-                        sql = "select count(*) from ask_user where  " + tj_str;
+                        string pri_str = "select count(*) from ask_user where  ";
+                        sql = pri_str + tj_str;
                         dt_doc_num = sql_select("ask_question", sql);
                         doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
                         if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
