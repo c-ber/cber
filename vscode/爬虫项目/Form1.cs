@@ -2058,6 +2058,10 @@ namespace 爬虫项目
             {
                 deal_num = ans_num > 21 ? 21 : ans_num;
             }
+            else if(doc_num < ans_num * 2 && doc_num - ans_num < 5)
+            {
+                deal_num = 1;
+            }
             else
             {
                 deal_num = ans_num > 5 ? 5 : ans_num;
@@ -2139,7 +2143,12 @@ namespace 爬虫项目
             }
         }
 
+        int use_other_doc(ref string tj_str)
+        {
+            tj_str = " dept_id = 44 ";
 
+            return 44;//其他科室
+        }
         void ans_deal()
         {
             string sql = "";
@@ -2184,6 +2193,12 @@ namespace 爬虫项目
                         sql = pri_str + tj_str;
                         dt_doc_num = sql_select("ask_question", sql);
                         doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+
+                        if (doc_count == 1)
+                        {
+                            continue;
+                        }
+
                         if (doc_count < answers)
                         {
                             //只能把2级的也拉过来,必须要够
@@ -2203,7 +2218,7 @@ namespace 爬虫项目
                                 doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
                                 if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
                                 {
-                                    MessageBox.Show("error");
+                                    doc_count = use_other_doc(ref tj_str);
                                 }
                             }
                         }
@@ -2214,6 +2229,12 @@ namespace 爬虫项目
                         sql = pri_str + tj_str;
                         dt_doc_num = sql_select("ask_question", sql);
                         doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+
+                        if (doc_count == 1)
+                        {
+                            continue;
+                        }
+
                         if (doc_count < answers)
                         {
                             //只能把1级的也拉过来,必须要够
@@ -2225,7 +2246,7 @@ namespace 爬虫项目
 
                             if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
                             {
-                                MessageBox.Show("error");
+                                doc_count = use_other_doc(ref tj_str);
                             }
                         }
                     }
@@ -2235,9 +2256,15 @@ namespace 爬虫项目
                         sql = pri_str + tj_str;
                         dt_doc_num = sql_select("ask_question", sql);
                         doc_count = int.Parse(dt_doc_num.Rows[0][0].ToString());
+
+                        if (doc_count == 1)
+                        {
+                            continue;
+                        }
+
                         if (doc_count < answers)//医生如果不够用，必须要增加医生来处理该特殊情况
                         {
-                            MessageBox.Show("error");
+                            doc_count = use_other_doc(ref tj_str);
                         }
                     }
 
@@ -2259,7 +2286,7 @@ namespace 爬虫项目
         }
         private void button4_Click(object sender, EventArgs e)
         {
-            string M_str_sqlcon = "server=120.77.51.8;user id=root;password=123456cb;database=tipask;Charset=utf8"; //根据自己的设置10  
+            string M_str_sqlcon = "server=127.0.0.1;user id=root;password=123456cb;database=tipask;Charset=utf8"; //根据自己的设置10  
             myCon = new MySqlConnection(M_str_sqlcon);
             {
                 if (myCon == null)
