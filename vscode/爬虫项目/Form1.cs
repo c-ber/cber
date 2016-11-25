@@ -2283,6 +2283,7 @@ namespace 爬虫项目
             finally
             {
             }
+            MessageBox.Show( "数据优化完成");
         }
         private void button4_Click(object sender, EventArgs e)
         {
