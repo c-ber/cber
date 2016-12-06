@@ -17,6 +17,7 @@ namespace 爬虫项目
 {
     public partial class Form1 : Form
     {
+        static string HTML_ERROR = "404";
         static string log_file = "log.txt";
         static string log_file1 = "spider.log";
 
@@ -25,7 +26,7 @@ namespace 爬虫项目
         int http_timeout = 5000;
         public static DataTable cat_dt = null;
 
-        SortedList<string, bool> questiong_list = new SortedList<string, bool>();
+        SortedList<string, bool> question_list = new SortedList<string, bool>();
         SortedList<string, bool> cat_list = new SortedList<string, bool>();
 
 
@@ -41,7 +42,87 @@ namespace 爬虫项目
             InitializeComponent();
         }
 
+        public static string CreateGetHttpResponse(string url, int timeout, string userAgent, CookieCollection cookies, Encoding encode)
+        {
+            string rlt = "";
+            string DefaultUserAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)";
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException("url");
+            }
+            System.GC.Collect();
 
+            HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+            request.Method = "GET";
+            request.KeepAlive = false;
+            request.UserAgent = DefaultUserAgent;
+            if (!string.IsNullOrEmpty(userAgent))
+            {
+                request.UserAgent = userAgent;
+            }
+
+            request.Timeout = 1000 * 60;
+
+            if (cookies != null)
+            {
+                request.CookieContainer = new CookieContainer();
+                request.CookieContainer.Add(cookies);
+            }
+
+            StreamReader reader = null;
+            HttpWebResponse response = null;
+            int i = 0;
+            while (i < 6)
+            {
+                try
+                {
+                    response = request.GetResponse() as HttpWebResponse;
+
+                    reader = new StreamReader(response.GetResponseStream(), encode);
+
+                    rlt = reader.ReadToEnd();
+                }
+                catch (System.Exception ex)
+                {
+                    if (ex.Message.Equals("远程服务器返回错误: (404) 未找到。"))
+                    {
+                        return HTML_ERROR;
+                    }
+                }
+
+
+                if (rlt.Length > 99)
+                {
+                    break;
+                }
+
+                i++;
+            }
+
+            if (reader != null)
+            {
+                reader.Close();
+                reader = null;
+            }
+            if (response != null)
+            {
+                response.Close();
+                reader = null;
+            }
+            if (request != null)
+            {
+                request.Abort();
+                request = null;
+            }
+            System.GC.Collect();
+
+            if (rlt.Length < 2)
+            {
+                //MessageBox.Show("没找到网页");
+            }
+
+            return rlt;
+        }  
         public static string CreateGetHttpResponse(string url, int timeout, string userAgent, CookieCollection cookies)
         {
             string rlt = "";
@@ -1066,7 +1147,7 @@ namespace 爬虫项目
                 string wenti_bianhao = dordetailurl.Substring(31).Split('.')[0];
                 
                 bool exist = false;
-                questiong_list.TryGetValue(wenti_bianhao, out exist);
+                question_list.TryGetValue(wenti_bianhao, out exist);
                 if (exist)
                 {
                     return;
@@ -1150,10 +1231,10 @@ namespace 爬虫项目
                 sql_exec(sql);
 
 
-                questiong_list.TryGetValue(wenti_bianhao, out exist);
+                question_list.TryGetValue(wenti_bianhao, out exist);
                 if (!exist)
                 {
-                    questiong_list.Add(wenti_bianhao, true);//已经处理过的就加进去
+                    question_list.Add(wenti_bianhao, true);//已经处理过的就加进去
                     if (File.Exists("question_list.log"))
                     {
                         File.AppendAllText("question_list.log", "," + wenti_bianhao);
@@ -1250,7 +1331,7 @@ namespace 爬虫项目
                 departmenturl = node.Attributes["href"].Value;
 
                 bool exist = false;
-                questiong_list.TryGetValue(departmenturl, out exist);
+                question_list.TryGetValue(departmenturl, out exist);
                 if (exist)
                 {
                     continue;
@@ -1515,65 +1596,454 @@ namespace 爬虫项目
         }
 
 
-        private void Form1_Load(object sender, EventArgs e)
+
+
+        private bool get_questiong_category_39jk(HtmlNode question_page, ref string dept, bool have)
         {
-            //获取已经抓取的问题单
-            string file = "";
-            //if (File.Exists("question_list.log"))
-            //{
-            //    file = File.ReadAllText("question_list.log");
+            HtmlNodeCollection ht2 = null;
 
-            //    foreach (string tmp in file.Split(','))
-            //    {
-            //        questiong_List.Add(tmp, true);//已经处理过的就加进去
-            //    }
-            //}
-
-            //if (File.Exists("cat_list.log"))
-            //{
-            //    file = File.ReadAllText("cat_list.log");
-
-            //    foreach (string tmp in file.Split(','))
-            //    {
-            //        cat_List.Add(tmp, true);//已经处理过的就加进去
-            //    }
-            //}
-
-            if (File.Exists("doc_list.log"))
+            if (have)
             {
-                file = File.ReadAllText("doc_list.log");
-
-                foreach (string tmp in file.Split(','))
-                {
-                    doc_list.Add(tmp, true);//已经处理过的就加进去
-                }
+                dept = g_dept;
+                return true;
             }
 
+            ht2 = question_page.SelectNodes("/html/body/div/div/div/div/span[@class='sub_here']");
+
+
+            if (ht2.Count >= 2)//相当于是2级分类
+            {
+                g_dept = dept = ht2[1].SelectSingleNode("a").InnerText.Trim();
+                if (test_category_exist(dept))
+                {
+                    return true;
+                }
+                else
+                {
+                    g_dept = dept = ht2[0].SelectSingleNode("a").InnerText.Trim();
+                    if (test_category_exist(dept))
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if (ht2.Count == 1)//相当于是1级分类
+            {
+                g_dept = dept = ht2[0].SelectSingleNode("a").InnerText.Trim();
+                if (test_category_exist(dept))
+                {
+                    return true;
+                }
+            }
+            
+            //MessageBox.Show("获取了没有的分类，这个没有太不科学", dept);
+            return false;
+        }
+
+
+
+
+        long DateTimeToUnixTimestamp(DateTime dateTime)
+        {
+            var start = new DateTime(1970, 1, 1, 0, 0, 0, dateTime.Kind);
+            return Convert.ToInt64((dateTime - start).TotalSeconds);
+        }
+
+        long get_question_time()
+        {
+            DateTime time = new DateTime(2016, 1, 1, 0, 0, 0);
+            Random rd = new Random();
+            time = time.AddMonths(rd.Next(0, 12));
+            time = time.AddDays(rd.Next(0, 31));
+            time = time.AddHours(rd.Next(8,23));
+            time = time.AddMinutes(rd.Next(3, 61));
+            return DateTimeToUnixTimestamp(time);
+        }
+
+        long get_answer_time(long init_time)
+        {
+            Random rd = new Random();
+            long rlt_time = init_time + rd.Next(1, 60)*60;
+            return rlt_time;
+        }
+
+        void get_wenti_39(string wenti_bianhao, string default_dept)
+        {
+            HtmlNode question_page;
+            HtmlNode ht1 = null;
+            HtmlNode ht2 = null;
+            HtmlNode ht3 = null;
+
+            String sql = "";
+
+            string question_html = "";
+            string question_url = "";
+
+            Random rd = new Random();
+
+            long time = get_question_time();
+            long ans_time = time;
+            try
+            {
+                bool exist = false;
+                question_list.TryGetValue(wenti_bianhao, out exist);
+                if (exist)
+                {
+                    return;
+                }
+
+                int trynum = 0;
+                while (trynum <= 5)
+                {
+                    trynum++;
+                    try
+                    {
+                        question_url = "http://ask.39.net/question/" + wenti_bianhao + ".html";
+                        question_html = CreateGetHttpResponse(question_url, http_timeout, null, null, Encoding.GetEncoding("GB2312"));
+                        if (question_html.Equals(HTML_ERROR))
+                        {
+                            return;
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                    }
+                    if (question_html.Length > 99)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(trynum * 1000);
+                }
+
+
+
+                if (question_html.Length < 100)
+                {
+                    File.AppendAllText(log_file1, "[ID = " + doc_num.ToString("D2") + "] "
+                                        + "访问到该问题的网址无效:" + question_url);
+                    File.AppendAllText(log_file1, Environment.NewLine);
+                    return;
+                }
+
+                HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
+                document.LoadHtml(question_html);
+                question_page = document.DocumentNode;
+
+                //获取问题和描述
+                string wenti = "";
+                string desc = "";
+
+                ht1 = question_page.SelectSingleNode("//p[@class='user_p']");
+                if (ht1 == null)
+                {
+                    return;
+                }
+                wenti = ht1.InnerText.Trim().Replace("‘", " ").Replace("'", " ");
+                wenti = wenti.Replace("病情描述及疑问：", "");
+
+
+                bool is_old_htm = false;
+                ht1 = question_page.SelectSingleNode("//ul[@class='user_msg']");
+                if (ht1 != null)
+                {
+                    HtmlNodeCollection hc_tmp = ht1.ChildNodes;
+                    if (hc_tmp == null)
+                    {
+                        return;
+                    }
+                    for (int m = 0; m < hc_tmp.Count; m++)
+                    {
+                        desc = desc + hc_tmp[m].InnerText.Trim().Replace("‘", " ").Replace("'", " ") + Environment.NewLine;
+                    }
+                }
+                else
+                {
+                    desc = "";
+                    is_old_htm = true;
+                }
+
+                //获取回答的网页
+                HtmlNodeCollection ht_collect = question_page.SelectNodes("/html/body/div/div/div/div/div/div[@class='t_con']");
+
+                int answer_num = 0;
+                if (ht_collect != null)
+                {
+                    //则没有回答
+                    answer_num = ht_collect.Count;
+                }
+
+                //获取问题分类并将问题加入数据库
+                int cid = 0, cid1 = 0, cid2 = 0, cid3 = 0;
+                string dept = "";
+                bool cat_result_find = get_questiong_category_39jk(question_page, ref dept, false);
+                if (!cat_result_find)
+                {
+                    return;
+                }
+                if (is_old_htm)
+                {
+                    dept = default_dept;
+                    cat_result_find = get_category(dept, ref cid, ref cid1, ref cid2, ref cid3);
+                }
+                else
+                {
+                    get_category(dept, ref cid, ref cid1, ref cid2, ref cid3);
+                }
+
+
+                sql = "INSERT INTO ask_question set "
+                    + "cid='" + cid + "'"
+                    + ",cid1='" + cid1 + "'"
+                    + ",cid2='" + cid2 + "'"
+                    + ",cid3='" + cid3 + "'"
+                    + ",author='游客'"
+                    + ",authorid=433"
+                    + ",answers='" + answer_num.ToString() + "'"
+                    + ",title='" + (wenti) + "'"
+                    + ",description='" + (desc) + "'"
+                    + ",views='" + rd.Next(1000, 100000).ToString("D") + "'"
+                    + ",supply='" + "0" + "'"
+                    + ",web_name=120 "
+                    + ",web_qid ='" + wenti_bianhao + "'"
+                    + ",time = " + time.ToString()
+                    + ";commit;\n";
+                sql_exec(sql);
+
+
+                question_list.TryGetValue(wenti_bianhao, out exist);
+                if (!exist)
+                {
+                    question_list.Add(wenti_bianhao, true);//已经处理过的就加进去
+                    if (File.Exists("question_list.log"))
+                    {
+                        File.AppendAllText("question_list.log", "," + wenti_bianhao);
+                    }
+                    else
+                    {
+                        File.AppendAllText("question_list.log", wenti_bianhao);
+                    }
+                }
+
+                if (answer_num == 0)
+                {
+                    return;
+                }
+
+                //获取问题ID
+                DataTable dt = sql_select("ask_question", "SELECT max(id) FROM ask_question a;\n");
+
+                //获取回答内容并插入
+                for (int n = 0; n < ht_collect.Count; n++)
+                {
+                    HtmlNode tmp_hn = ht_collect[n];
+                    ht1 = tmp_hn.SelectSingleNode("//div/p/span");
+                    if (ht1 == null)
+                    {
+                        continue;
+                    }
+                    string ans_txt = ht1.InnerText.Trim().Replace("‘", " ").Replace("'", " ");
+                    string anthor = "";
+                    string anthor_id = "";
+                    get_answer_user(question_page, ref anthor, ref anthor_id);
+
+                    if (anthor.Length <= 1)
+                    {
+                        MessageBox.Show("严重错误发生了");
+                        return;
+                    }
+                    ans_time = get_answer_time(ans_time);
+                    sql = "INSERT INTO ask_answer set "
+                        + "qid='" + dt.Rows[0][0].ToString() + "'"  //问题ID
+                        + ",title='" + (wenti) + "'"
+                        + ",author='" + anthor + "'"
+                        + ",authorid=" + anthor_id
+                        + ",content='" + ans_txt + "'"
+                        + ",status='" + "1" + "'"
+                        + ",comments='" + "0" + "'"
+                        + ",time = " + ans_time.ToString()
+                        + ";commit;\n";
+                    sql_exec(sql);
+
+                }
+
+            }
+            catch (System.Exception ex)
+            {
+
+            }
+            finally
+            {
+            }
+        }
+        void test_39(string ks_url_pre, string default_dept)//只取当前页面url前面固定一截+页码+.html
+        {
+            WebClient rootpage = new WebClient();
+            rootpage.Encoding = Encoding.GetEncoding("GB2312");
+
+
+
+            //遍历所有的页码
+            int j = 1;
+            string page_url_cur = ks_url_pre + "-" + j.ToString("D") + ".html";//拼接url字符串
+
+            while (true)
+            {
+                bool exist = false;
+                question_list.TryGetValue(page_url_cur, out exist);
+                if (exist)
+                {
+                    continue;
+                }
+
+                string html = CreateGetHttpResponse(page_url_cur, 10000, null, null, Encoding.GetEncoding("GB2312"));//加载科室所有医生页面信息
+
+                HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
+                document.LoadHtml(html);//加载对象
+
+
+
+                //获取当前页面的问题列表
+                HtmlNode rootnode = document.DocumentNode;
+                HtmlNodeCollection qt_lists = rootnode.SelectNodes("/html/body/div/div/div/ul[@class='list_ask list_ask2']/li");
+
+                if (qt_lists == null)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < qt_lists.Count; i++)//遍历当前页面的所有问题
+                {
+                    //href内容为：/question/46745054.html
+                    HtmlNode node = qt_lists[i].SelectSingleNode("span").SelectSingleNode("p").SelectSingleNode("a");
+                    string qt_url = node.Attributes["href"].Value;//使用时候要补上http://ask.39.net/
+                    string qt_id = qt_url.Substring(10).Split('.')[0];
+
+                    get_wenti_39(qt_id, default_dept);
+                }
+
+                page_url_cur = ks_url_pre + "-" + j.ToString("D") + ".html";//拼接url字符串
+                j++;
+
+                //页码循环，只要有最后一页，就可以继续访问
+                HtmlNodeCollection hn_tmp = rootnode.SelectNodes("/html/body/div/div/span/span/a[@target='_self']");
+                if (!hn_tmp[hn_tmp.Count - 1].InnerHtml.Contains("尾页"))
+                {
+                    break;//可以结束抓取了
+                }
+
+                cat_list.TryGetValue(page_url_cur, out exist);
+                if (!exist)
+                {
+                    cat_list.Add(page_url_cur, true);//已经处理过的就加进去
+                    if (File.Exists("cat_list.log"))
+                    {
+                        File.AppendAllText("cat_list.log", "," + page_url_cur);
+                    }
+                    else
+                    {
+                        File.AppendAllText("cat_list.log", page_url_cur);
+                    }
+                }
+
+            }
+
+            
+        }
+        //抓39健康的回答，每个问题要设置一个标号，和39的对应起来，在数据库中存储一个字段即可
+        private void button5_Click(object sender, EventArgs e)
+        {
+            string M_str_sqlcon = "server=localhost;user id=root;password=123456cb;database=tipask;Charset=utf8"; //根据自己的设置10  
+            myCon = new MySqlConnection(M_str_sqlcon);
+            {
+                if (myCon == null)
+                    MessageBox.Show("数据库连接失败");
+            }
+            myCon.Open();
+            cat_dt = sql_select("ask_category", "select id,name,pid,grade from ask_category  ORDER BY id ASC;\n");
+
+            test_39("http://ask.39.net/news/313", "内科");
+
+
+            MessageBox.Show("capture data finish!");
+            myCon.Close();
+            myCon.Dispose();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            string file = "";
+            //先是科室分类
             if (File.Exists("keshi_list.log"))
             {
                 file = File.ReadAllText("keshi_list.log");
 
                 foreach (string tmp in file.Split(','))
                 {
-                    keshi_list.Add(tmp, true);
+                    cat_list.Add(tmp, true);
                 }
             }
 
-            if (File.Exists("hos_list.log"))
+            //再是当前页面
+            if (File.Exists("cat_list.log"))
             {
-                file = File.ReadAllText("hos_list.log");
+                file = File.ReadAllText("cat_list.log");
 
                 foreach (string tmp in file.Split(','))
                 {
-                    hos_list.Add(tmp, true);
+                    cat_list.Add(tmp, true);//已经处理过的就加进去
                 }
             }
 
-            if (File.Exists("ans_list.log"))
+            //单个问题单ID
+            if (File.Exists("question_list.log"))
             {
-                file = File.ReadAllText("ans_list.log");
-                question_deal = int.Parse(file);
+                file = File.ReadAllText("question_list.log");
+
+                foreach (string tmp in file.Split(','))
+                {
+                    question_list.Add(tmp, true);//已经处理过的就加进去
+                }
             }
+
+
+
+
+
+            //if (File.Exists("doc_list.log"))
+            //{
+            //    file = File.ReadAllText("doc_list.log");
+
+            //    foreach (string tmp in file.Split(','))
+            //    {
+            //        doc_list.Add(tmp, true);//已经处理过的就加进去
+            //    }
+            //}
+
+            //if (File.Exists("keshi_list.log"))
+            //{
+            //    file = File.ReadAllText("keshi_list.log");
+
+            //    foreach (string tmp in file.Split(','))
+            //    {
+            //        keshi_list.Add(tmp, true);
+            //    }
+            //}
+
+            //if (File.Exists("hos_list.log"))
+            //{
+            //    file = File.ReadAllText("hos_list.log");
+
+            //    foreach (string tmp in file.Split(','))
+            //    {
+            //        hos_list.Add(tmp, true);
+            //    }
+            //}
+
+            //if (File.Exists("ans_list.log"))
+            //{
+            //    file = File.ReadAllText("ans_list.log");
+            //    question_deal = int.Parse(file);
+            //}
 
             System.Net.ServicePointManager.DefaultConnectionLimit = 200;
         }
@@ -1593,6 +2063,16 @@ namespace 爬虫项目
             if (File.Exists("hos_list.log"))
             {
                 File.Delete("hos_list.log");
+            }
+
+            if (File.Exists("question_list.log"))
+            {
+                File.Delete("question_list.log");
+            }
+
+            if (File.Exists("cat_list.log"))
+            {
+                File.Delete("cat_list.log");
             }
         }
 
@@ -2300,5 +2780,7 @@ namespace 爬虫项目
             myCon.Close();
             myCon.Dispose();
         }
+
+
     }
 }
