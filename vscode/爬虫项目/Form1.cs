@@ -1766,9 +1766,13 @@ namespace 爬虫项目
                 HtmlNodeCollection ht_collect = question_page.SelectNodes("/html/body/div/div/div/div/div/div[@class='t_con']");
 
                 int answer_num = 0;
-                if (ht_collect != null)
+                if (ht_collect == null)
                 {
                     //则没有回答
+                    answer_num = ht_collect.Count;
+                }
+                else
+                {
                     answer_num = ht_collect.Count;
                 }
 
