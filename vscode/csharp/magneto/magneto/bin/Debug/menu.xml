@@ -1,0 +1,11 @@
+<cber>
+
+<menu id="1" name="网络">
+    <menu2 name="FTP客户端" image="null" type="pe">C:\Program Files\FileZilla FTP Client\filezilla.exe</menu2>
+</menu>
+
+<menu id="2" name="常用目录">
+    <menu2 name="C盘" image="c:\windows\explorer.exe" type="dir">C:\</menu2>
+</menu>
+
+</cber>
