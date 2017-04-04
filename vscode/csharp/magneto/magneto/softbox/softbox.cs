@@ -41,7 +41,7 @@ namespace magneto.softbox
             ToolStripMenuItem menu = (ToolStripMenuItem)(sender);
             foreach (MenuItem mi in mi_list)
             {
-                if (menu.Name == "MenuItem" + mi.fir_name)
+                if (menu.Text == mi.name)
                 {
                     if (mi.item_type.Equals("pe"))
                     {
@@ -99,6 +99,11 @@ namespace magneto.softbox
                     mi_list[act_mi_num] = new MenuItem(name, c2xn.Attributes["name"].Value.Trim(),
                         c2xn.Attributes["image"].Value.Trim(), 
                         c2xn.InnerText.Trim(), c2xn.Attributes["type"].Value.Trim());
+
+                    if (c2xn.Attributes["image"].Value.Trim() != "null" && c2xn.Attributes["type"].Value.Trim() == "pe")
+                    {
+                        sec_menu.Image = Image.FromFile(c2xn.Attributes["image"].Value.Trim());
+                    }
 
                     sec_menu.Click += new System.EventHandler(this.menu_Click);
                     fir_menu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { sec_menu });

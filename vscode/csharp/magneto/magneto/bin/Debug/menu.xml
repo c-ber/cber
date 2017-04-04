@@ -1,7 +1,8 @@
 <cber>
 
 <menu id="1" name="网络">
-    <menu2 name="FTP客户端" image="null" type="pe">C:\Program Files\FileZilla FTP Client\filezilla.exe</menu2>
+    <menu2 name="FTP客户端" image="image\1.ico" type="pe">C:\Program Files\FileZilla FTP Client\filezilla.exe</menu2>
+	<menu2 name="VPN" image="null" type="pe">C:\Program Files\ShrewSoft\VPN Client\ipseca.exe</menu2>
 </menu>
 
 <menu id="2" name="常用目录">
