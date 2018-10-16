@@ -1,0 +1,26 @@
+#pragma once
+
+
+#ifdef _MSC_VER
+	#pragma pack(push, 1)
+#endif
+
+namespace PUBGSDK {
+
+struct alignas(1) FVectorSpringState // Size: 0x18
+{
+public:
+    uint8_t UnknownData0[0x18];
+};
+#ifdef VALIDATE_SDK
+namespace Validation{
+
+    auto constexpr sizeofFVectorSpringState = sizeof(FVectorSpringState); // 24
+    static_assert(sizeof(FVectorSpringState) == 0x18, "Size of FVectorSpringState is not correct.");
+}
+#endif
+}
+
+#ifdef _MSC_VER
+	#pragma pack(pop)
+#endif
