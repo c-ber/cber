@@ -1,21 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Data.OleDb;
-using Oracle.ManagedDataAccess.Client;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using MySql.Data.MySqlClient;
+
 
 namespace cotool
 {
-    class MyDbHelper
+    class Mysql
     {
-        public static string connectstring_cardqs = "Provider=MSDAORA.1;Password=cardqs;User ID=cardqs;Data Source=CARDQS_159.1.1.9;Persist Security Info=True";
-        public static string connectstring = "Data Source=sss_uat;User Id=SSS_UAT;Password=123456";
+        public static string connectstring = "server=localhost;user id=root;password=cb;database=cb";
         #region private
         private bool m_AlreadyDispose = false;
         private int m_CommandTimeout = 0;
         private string m_ConnStr;
 
-        private OracleConnection m_Connection;
-        private OracleCommand m_Command;
+        private MySqlConnection m_Connection;
+        private MySqlCommand m_Command;
         #endregion
 
         #region 属性
@@ -37,9 +40,9 @@ namespace cotool
         }
         #endregion
 
-        #region MyDbHelper
+        #region Mysql
         /*
-        public MyDbHelper()
+        public Mysql()
         {
             //
             // TODO: 在此处添加构造函数逻辑
@@ -49,7 +52,7 @@ namespace cotool
         /// 构造函数
         /// </summary>
         /// <param name="connStr">数据库连接字符串</param>
-        public MyDbHelper(string connStr)
+        public Mysql(string connStr)
         {
             m_ConnStr = connStr;
             Initialization();
@@ -59,7 +62,7 @@ namespace cotool
         /// </summary>
         /// <param name="connStr">数据库连接字符串</param>
         /// <param name="commandTimeout">执行时间</param>
-        public MyDbHelper(string connStr, int commandTimeout)
+        public Mysql(string connStr, int commandTimeout)
         {
             m_ConnStr = connStr;
             m_CommandTimeout = commandTimeout;
@@ -72,10 +75,10 @@ namespace cotool
         {
             try
             {
-                m_Connection = new OracleConnection(m_ConnStr);
+                m_Connection = new MySqlConnection(m_ConnStr);
                 if (m_Connection.State == ConnectionState.Closed)
                     m_Connection.Open();
-                m_Command = new OracleCommand();
+                m_Command = new MySqlCommand();
             }
             catch (Exception ex)
             {
@@ -87,7 +90,7 @@ namespace cotool
         /// <summary>
         /// 析构函数
         /// </summary>
-        ~MyDbHelper()
+        ~Mysql()
         {
             Dispose();
         }
@@ -120,7 +123,7 @@ namespace cotool
                             m_Connection.Close();
                         m_Connection.Dispose();
                     }
-                    catch (Exception )
+                    catch (Exception)
                     {
                         //throw new Exception(ex.ToString());
                     }
@@ -142,13 +145,13 @@ namespace cotool
         }
         #endregion
         #region
-    #endregion
+        #endregion
         #region ExecuteNonQuery
         public int ExecuteNonQuery(string cmdText)
         {
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 int iRet = m_Command.ExecuteNonQuery();
                 return iRet;
@@ -164,7 +167,7 @@ namespace cotool
                     m_Command.Dispose();
             }
         }
-        public int ExecuteNonQuery(string cmdText, OleDbParameter[] para)
+        public int ExecuteNonQuery(string cmdText, MySqlParameter[] para)
         {
             if (para == null)
             {
@@ -172,14 +175,15 @@ namespace cotool
             }
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 for (int i = 0; i < para.Length; i++)
                     m_Command.Parameters.Add(para[i]);
                 int iRet = m_Command.ExecuteNonQuery();
                 for (int i = 0; i < para.Length; i++)
-                    if (m_Command.Parameters[i].Direction == ParameterDirection.Output) {
-                        para[i].Value = m_Command.Parameters[i].Value ;
+                    if (m_Command.Parameters[i].Direction == ParameterDirection.Output)
+                    {
+                        para[i].Value = m_Command.Parameters[i].Value;
                     }
                 return iRet;
             }
@@ -195,11 +199,11 @@ namespace cotool
                 m_Command.Parameters.Clear();
             }
         }
-        public OracleCommand GetCommander(string cmdText, OleDbParameter[] para)
+        public MySqlCommand GetCommander(string cmdText, MySqlParameter[] para)
         {
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 for (int i = 0; i < para.Length; i++)
                     m_Command.Parameters.Add(para[i]);
@@ -212,7 +216,7 @@ namespace cotool
             }
             return null;
         }
-        public int ExecuteNonQuery(string cmdText, OleDbParameter[] para, bool isStoreProdure)
+        public int ExecuteNonQuery(string cmdText, MySqlParameter[] para, bool isStoreProdure)
         {
             if (!isStoreProdure)
             {
@@ -220,7 +224,7 @@ namespace cotool
             }
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 m_Command.CommandType = CommandType.StoredProcedure;
                 if (para != null)
@@ -254,11 +258,11 @@ namespace cotool
         #endregion
         #region ExecuteTransaction
         public bool ExecuteTransaction(string[] cmdText)
-        {                
-            OracleTransaction trans = m_Connection.BeginTransaction();
+        {
+            MySqlTransaction trans = m_Connection.BeginTransaction();
             try
             {
-                m_Command = new OracleCommand();
+                m_Command = new MySqlCommand();
                 m_Command.Connection = m_Connection;
                 m_Command.CommandTimeout = m_CommandTimeout;
                 m_Command.Transaction = trans;
@@ -285,14 +289,14 @@ namespace cotool
                 trans.Dispose();
             }
         }
-        public bool ExecuteTransaction(string[] cmdText, OleDbParameter[] para)
+        public bool ExecuteTransaction(string[] cmdText, MySqlParameter[] para)
         {
             if (para == null)
                 return ExecuteTransaction(cmdText);
-            OracleTransaction trans = m_Connection.BeginTransaction();
+            MySqlTransaction trans = m_Connection.BeginTransaction();
             try
             {
-                m_Command = new OracleCommand();
+                m_Command = new MySqlCommand();
                 m_Command.Connection = m_Connection;
                 m_Command.CommandTimeout = m_CommandTimeout;
                 m_Command.Transaction = trans;
@@ -327,7 +331,7 @@ namespace cotool
         {
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 object obj = m_Command.ExecuteScalar();
                 if (object.Equals(obj, null) || object.Equals(obj, DBNull.Value))
@@ -346,13 +350,13 @@ namespace cotool
                     m_Command.Dispose();
             }
         }
-        public object ExecuteScalar(string cmdText, OleDbParameter[] para)
+        public object ExecuteScalar(string cmdText, MySqlParameter[] para)
         {
             if (para == null)
                 return ExecuteScalar(cmdText);
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 for (int i = 0; i < para.Length; i++)
                     m_Command.Parameters.Add(para[i]);
@@ -372,13 +376,13 @@ namespace cotool
                 m_Command.Parameters.Clear();
             }
         }
-        public object ExecuteScalar(string cmdText, OleDbParameter[] para, bool isStoreProdure)
+        public object ExecuteScalar(string cmdText, MySqlParameter[] para, bool isStoreProdure)
         {
             if (!isStoreProdure)
                 return ExecuteScalar(cmdText, para);
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 m_Command.CommandType = CommandType.StoredProcedure;
                 if (para != null)
@@ -409,9 +413,9 @@ namespace cotool
             try
             {
                 DataTable myTable = new DataTable(tableName);
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
-                OracleDataAdapter da = new OracleDataAdapter(m_Command); 
+                MySqlDataAdapter da = new MySqlDataAdapter(m_Command);
                 da.Fill(myTable);
                 da.Dispose();
                 return myTable;
@@ -426,18 +430,18 @@ namespace cotool
                     m_Command.Dispose();
             }
         }
-        public DataTable ExecuteDataTable(string tableName, string cmdText, OleDbParameter[] para)
+        public DataTable ExecuteDataTable(string tableName, string cmdText, MySqlParameter[] para)
         {
             if (para == null)
                 return ExecuteDataTable(tableName, cmdText);
             try
             {
                 DataTable myTable = new DataTable(tableName);
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 for (int i = 0; i < para.Length; i++)
                     m_Command.Parameters.Add(para[i]);
-                OracleDataAdapter da = new OracleDataAdapter(m_Command);
+                MySqlDataAdapter da = new MySqlDataAdapter(m_Command);
                 da.Fill(myTable);
                 da.Dispose();
                 return myTable;
@@ -454,7 +458,7 @@ namespace cotool
                 m_Command.Parameters.Clear();
             }
         }
-        public DataTable ExecuteDataTable(string tableName, string cmdText, OleDbParameter[] para, bool isStoreProdure)
+        public DataTable ExecuteDataTable(string tableName, string cmdText, MySqlParameter[] para, bool isStoreProdure)
         {
             if (!isStoreProdure)
             {
@@ -463,13 +467,13 @@ namespace cotool
             try
             {
                 DataTable myTable = new DataTable(tableName);
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 m_Command.CommandType = CommandType.StoredProcedure;
                 if (para != null)
                     for (int i = 0; i < para.Length; i++)
                         m_Command.Parameters.Add(para[i]);
-                OracleDataAdapter da = new OracleDataAdapter(m_Command);
+                MySqlDataAdapter da = new MySqlDataAdapter(m_Command);
                 da.Fill(myTable);
                 da.Dispose();
                 return myTable;
@@ -488,13 +492,13 @@ namespace cotool
         }
         #endregion
         #region ExecuteDataReader
-        public OracleDataReader ExecuteDataReader(string cmdText)
+        public MySqlDataReader ExecuteDataReader(string cmdText)
         {
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
-                OracleDataReader reader = m_Command.ExecuteReader();
+                MySqlDataReader reader = m_Command.ExecuteReader();
                 return reader;
             }
             catch (Exception ex)
@@ -507,7 +511,7 @@ namespace cotool
                     m_Command.Dispose();
             }
         }
-        public OracleDataReader ExecuteDataReader(string cmdText, OleDbParameter[] para)
+        public MySqlDataReader ExecuteDataReader(string cmdText, MySqlParameter[] para)
         {
             if (para == null)
             {
@@ -515,11 +519,11 @@ namespace cotool
             }
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 for (int i = 0; i < para.Length; i++)
                     m_Command.Parameters.Add(para[i]);
-                OracleDataReader reader = m_Command.ExecuteReader();
+                MySqlDataReader reader = m_Command.ExecuteReader();
                 return reader;
             }
             catch (Exception ex)
@@ -533,7 +537,7 @@ namespace cotool
                 m_Command.Parameters.Clear();
             }
         }
-        public OracleDataReader ExecuteDataReader(string cmdText, OleDbParameter[] para, bool isStoreProdure)
+        public MySqlDataReader ExecuteDataReader(string cmdText, MySqlParameter[] para, bool isStoreProdure)
         {
             if (!isStoreProdure)
             {
@@ -541,13 +545,13 @@ namespace cotool
             }
             try
             {
-                m_Command = new OracleCommand(cmdText, m_Connection);
+                m_Command = new MySqlCommand(cmdText, m_Connection);
                 m_Command.CommandTimeout = m_CommandTimeout;
                 m_Command.CommandType = CommandType.StoredProcedure;
                 if (para != null)
                     for (int i = 0; i < para.Length; i++)
                         m_Command.Parameters.Add(para[i]);
-                OracleDataReader reader = m_Command.ExecuteReader();
+                MySqlDataReader reader = m_Command.ExecuteReader();
                 return reader;
             }
             catch (Exception ex)
@@ -563,9 +567,9 @@ namespace cotool
         }
         #endregion
         #region　Static
-        public static OleDbParameter MakeInParam(string paraName, OleDbType paraType, object value)
+        public static MySqlParameter MakeInParam(string paraName, MySqlDbType paraType, object value)
         {
-            OleDbParameter para = new OleDbParameter(paraName, paraType);
+            MySqlParameter para = new MySqlParameter(paraName, paraType);
             if (Object.Equals(value, null) || Object.Equals(value, DBNull.Value) || value.ToString().Trim() == string.Empty)
                 para.Value = DBNull.Value;
             else
@@ -573,9 +577,9 @@ namespace cotool
             para.Direction = ParameterDirection.Input;
             return para;
         }
-        public static OleDbParameter MakeInParam(string paraName, OleDbType paraType, int len, object value)
+        public static MySqlParameter MakeInParam(string paraName, MySqlDbType paraType, int len, object value)
         {
-            OleDbParameter para = new OleDbParameter(paraName, paraType, len);
+            MySqlParameter para = new MySqlParameter(paraName, paraType, len);
             if (Object.Equals(value, null) || Object.Equals(value, DBNull.Value) || value.ToString().Trim() == string.Empty)
                 para.Value = DBNull.Value;
             else
@@ -583,9 +587,9 @@ namespace cotool
             para.Direction = ParameterDirection.Input;
             return para;
         }
-        public static OleDbParameter MakeInParam(string paraName, OleDbType paraType, int len, object value, byte precision,byte scale)
+        public static MySqlParameter MakeInParam(string paraName, MySqlDbType paraType, int len, object value, byte precision, byte scale)
         {
-            OleDbParameter para = new OleDbParameter(paraName, paraType, len);
+            MySqlParameter para = new MySqlParameter(paraName, paraType, len);
             if (Object.Equals(value, null) || Object.Equals(value, DBNull.Value) || value.ToString().Trim() == string.Empty)
                 para.Value = DBNull.Value;
             else
@@ -595,19 +599,19 @@ namespace cotool
             para.Scale = scale;
             return para;
         }
-        public static OleDbParameter MakeOutParam(string paraName, OleDbType paraType, object value)
+        public static MySqlParameter MakeOutParam(string paraName, MySqlDbType paraType, object value)
         {
-            OleDbParameter para = new OleDbParameter(paraName, paraType);
+            MySqlParameter para = new MySqlParameter(paraName, paraType);
             if (Object.Equals(value, null) || Object.Equals(value, DBNull.Value) || value.ToString().Trim() == string.Empty)
                 para.Value = DBNull.Value;
             else
                 para.Value = value;
-            para.Direction = ParameterDirection.Output ;
+            para.Direction = ParameterDirection.Output;
             return para;
         }
-        public static OleDbParameter MakeOutParam(string paraName, OleDbType paraType, int len, object value)
+        public static MySqlParameter MakeOutParam(string paraName, MySqlDbType paraType, int len, object value)
         {
-            OleDbParameter para = new OleDbParameter(paraName, paraType, len);
+            MySqlParameter para = new MySqlParameter(paraName, paraType, len);
             if (Object.Equals(value, null) || Object.Equals(value, DBNull.Value) || value.ToString().Trim() == string.Empty)
                 para.Value = DBNull.Value;
             else
