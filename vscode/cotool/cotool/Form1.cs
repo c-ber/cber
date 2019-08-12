@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using cotool.sysset;
 
 namespace cotool
 {
@@ -21,6 +22,14 @@ namespace cotool
         {
             this.panel1.Controls.Clear();
             Form_dbtj form = new Form_dbtj();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
+
+        private void iE代理开关ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_ie form = new Form_ie();
             this.panel1.Controls.Add(form);
             form.Show();
         }
