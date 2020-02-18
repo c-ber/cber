@@ -35,6 +35,7 @@
             this.系统设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iE设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.游戏外挂ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.真三玩家ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -86,18 +87,31 @@
             // 
             // 游戏外挂ToolStripMenuItem
             // 
+            this.游戏外挂ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.真三玩家ToolStripMenuItem});
             this.游戏外挂ToolStripMenuItem.Name = "游戏外挂ToolStripMenuItem";
             this.游戏外挂ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
             this.游戏外挂ToolStripMenuItem.Text = "游戏世界";
             // 
+            // 真三玩家ToolStripMenuItem
+            // 
+            this.真三玩家ToolStripMenuItem.Name = "真三玩家ToolStripMenuItem";
+            this.真三玩家ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.真三玩家ToolStripMenuItem.Text = "真三玩家";
+            this.真三玩家ToolStripMenuItem.Click += new System.EventHandler(this.真三玩家ToolStripMenuItem_Click);
+            // 
             // panel1
             // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.SystemColors.Window;
             this.panel1.Location = new System.Drawing.Point(0, 25);
             this.panel1.Margin = new System.Windows.Forms.Padding(2);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(796, 416);
             this.panel1.TabIndex = 1;
+            this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
             // 
             // Form1
             // 
@@ -129,6 +143,7 @@
         private System.Windows.Forms.ToolStripMenuItem 系统设置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iE设置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 游戏外挂ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 真三玩家ToolStripMenuItem;
     }
 }
 

@@ -11,7 +11,7 @@ namespace cotool
 {
     class Mysql
     {
-        public static string connectstring = "server=localhost;user id=root;password=cb;database=cb";
+        public static string connectstring = "server=localhost;user id=root;password=123456cb;database=spboot";
         #region private
         private bool m_AlreadyDispose = false;
         private int m_CommandTimeout = 0;

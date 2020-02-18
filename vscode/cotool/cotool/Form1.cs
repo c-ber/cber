@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using cotool.sysset;
+using cotool.game;
+using System.IO;
 
 namespace cotool
 {
@@ -83,6 +85,20 @@ namespace cotool
             {
                 this.Text +=  "  "+ ip;
             }
+        }
+
+        private void 真三玩家ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_zs form = new Form_zs();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
+
+
+        private void panel1_SizeChanged(object sender, EventArgs e)
+        {
+            this.panel1.Controls[0].Size = this.panel1.Size;
         }
     }
 }

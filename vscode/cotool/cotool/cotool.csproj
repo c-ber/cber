@@ -90,6 +90,12 @@
     <Compile Include="Form_dbtj.Designer.cs">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
     </Compile>
+    <Compile Include="game\Form_zs.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="game\Form_zs.Designer.cs">
+      <DependentUpon>Form_zs.cs</DependentUpon>
+    </Compile>
     <Compile Include="Lexical.cs" />
     <Compile Include="MyDbHelper.cs" />
     <Compile Include="MyLog.cs" />
@@ -107,6 +113,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form_dbtj.resx">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="game\Form_zs.resx">
+      <DependentUpon>Form_zs.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
