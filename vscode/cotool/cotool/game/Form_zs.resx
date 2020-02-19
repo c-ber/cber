@@ -126,6 +126,9 @@
   <metadata name="ID.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="desc.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <metadata name="tubi.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -138,14 +141,11 @@
   <metadata name="game_id.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <metadata name="desc.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btn_search.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHZSURBVDhPhVPNKwVRFB8fJd9ZITy8NzOvLPwBKP+AnaJk
+        YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAHZSURBVDhPhVPNKwVRFB8fJd9ZITy8NzOvLPwBKP+AnaJk
         IQuJhWyw87f4mDtmkuTjCQvZKR8LCwsWUopESJ53r8x1zr1znnkjuXWbueee8/v9zsc1jOial8Wmy4cs
         xjfh+2i5QsL/g8l4xnb5oAH3Bf7RQ9rLpS0mTlXQHxtAj9uWs62/QFLeh4lMmlFcAeOo5b03Gb4sSbnZ
         FpOJcbDfaGB+j7YfEJAFF2d4abpirXMxqIwymJmgLMX4QNKXtRC8p/34kSFlkfJTOWvJl81eUB4NRhXo

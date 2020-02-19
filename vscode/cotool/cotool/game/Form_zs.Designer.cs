@@ -40,11 +40,11 @@
             this.tb_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.main_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ID = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.desc = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tubi = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.level = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.score = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.game_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.desc = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_yaoyao)).BeginInit();
             this.SuspendLayout();
             // 
@@ -69,11 +69,11 @@
             this.tb_id,
             this.main_id,
             this.ID,
+            this.desc,
             this.tubi,
             this.level,
             this.score,
-            this.game_id,
-            this.desc});
+            this.game_id});
             this.dgv_yaoyao.Location = new System.Drawing.Point(139, 35);
             this.dgv_yaoyao.Name = "dgv_yaoyao";
             this.dgv_yaoyao.RowTemplate.Height = 30;
@@ -156,6 +156,11 @@
             this.ID.HeaderText = "账号";
             this.ID.Name = "ID";
             // 
+            // desc
+            // 
+            this.desc.HeaderText = "玩家情况";
+            this.desc.Name = "desc";
+            // 
             // tubi
             // 
             this.tubi.HeaderText = "挂B";
@@ -193,11 +198,6 @@
             this.game_id.Name = "game_id";
             this.game_id.Visible = false;
             // 
-            // desc
-            // 
-            this.desc.HeaderText = "玩家情况";
-            this.desc.Name = "desc";
-            // 
             // Form_zs
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -232,10 +232,10 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn tb_id;
         private System.Windows.Forms.DataGridViewTextBoxColumn main_id;
         private System.Windows.Forms.DataGridViewTextBoxColumn ID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn desc;
         private System.Windows.Forms.DataGridViewComboBoxColumn tubi;
         private System.Windows.Forms.DataGridViewComboBoxColumn level;
         private System.Windows.Forms.DataGridViewComboBoxColumn score;
         private System.Windows.Forms.DataGridViewTextBoxColumn game_id;
-        private System.Windows.Forms.DataGridViewTextBoxColumn desc;
     }
 }

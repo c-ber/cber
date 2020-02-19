@@ -45,11 +45,11 @@ namespace cotool.game
                 this.dgv_yaoyao.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             }
             //总长度为489
-            this.dgv_yaoyao.Columns[2].Width = 50;
-            this.dgv_yaoyao.Columns[3].Width = 30;
-            this.dgv_yaoyao.Columns[4].Width = 25;
-            this.dgv_yaoyao.Columns[5].Width = 25;
-            this.dgv_yaoyao.Columns[7].Width = 360;
+            this.dgv_yaoyao.Columns["ID"].Width = 50;
+            this.dgv_yaoyao.Columns["desc"].Width = 200;
+            this.dgv_yaoyao.Columns["tubi"].Width = 40;
+            this.dgv_yaoyao.Columns["level"].Width = 30;
+            this.dgv_yaoyao.Columns["score"].Width = 50;
         }
 
         void InsertData()
@@ -60,13 +60,14 @@ namespace cotool.game
                 
                 for (int i = 0; i < dgv_yaoyao.Rows.Count; i++)
                 {
-                    // "'2', '2', '十命换一飞', '是', 'B', null, '1', '和3号'";
+                    // "'2', '2', '十命换一飞', '和3号', '是', 'B', null, '1'";
                     string param = "'" + dgv_yaoyao.Rows[i].Cells[0].Value.ToString() + "'"; 
                     for (int j = 1; j < dgv_yaoyao.Columns.Count; j++)
                     {
                         param += ",'" + dgv_yaoyao.Rows[i].Cells[j].Value.ToString() + "'";
                     }
                     string sql = "INSERT INTO `"+ db_tablename + "` VALUES (" + param + ")";
+                    MyLog.Log("记录", sql);
                     mysql.ExecuteNonQuery(sql);
                 }
             }
@@ -165,7 +166,7 @@ namespace cotool.game
             }
             if(selectedRowIndex < 0)
             {
-                MessageBox.Show("提示", "先选中记录行");
+                MessageBox.Show("先选中记录行","提示");
                 return;
             }
             dgv_yaoyao.Rows[selectedRowIndex].Cells["desc"].Value = tb_desc.Text;
@@ -174,7 +175,7 @@ namespace cotool.game
         private void btn_save_Click(object sender, EventArgs e)
         {
             InsertData();
-            MessageBox.Show("提示", "数据库保存成功！");
+            MessageBox.Show("数据库保存成功！", "提示");
         }
 
         private void btn_search_Click(object sender, EventArgs e)
@@ -190,7 +191,7 @@ namespace cotool.game
                 if (db_table.Rows.Count <= 0)
                 {
                     db_table = null;
-                    MessageBox.Show("提示", "没有该玩家记录信息！");
+                    MessageBox.Show("没有该玩家记录信息！", "提示");
                     return;
                 }
                 for (int i = 0; i < db_table.Rows.Count; i++)
@@ -200,11 +201,12 @@ namespace cotool.game
                     dgv_yaoyao.Rows[i].Cells["tb_id"].Value = db_table.Rows[i][colms++].ToString().Trim();
                     dgv_yaoyao.Rows[i].Cells["main_id"].Value = db_table.Rows[i][colms++].ToString().Trim();
                     dgv_yaoyao.Rows[i].Cells["ID"].Value = db_table.Rows[i][colms++].ToString().Trim();
+                    dgv_yaoyao.Rows[i].Cells["desc"].Value = db_table.Rows[i][colms++].ToString().Trim();
                     dgv_yaoyao.Rows[i].Cells["tubi"].Value = db_table.Rows[i][colms++].ToString().Trim();
                     dgv_yaoyao.Rows[i].Cells["level"].Value = db_table.Rows[i][colms++].ToString().Trim();
                     dgv_yaoyao.Rows[i].Cells["score"].Value = db_table.Rows[i][colms++].ToString().Trim();
                     dgv_yaoyao.Rows[i].Cells["game_id"].Value = db_table.Rows[i][colms++].ToString().Trim();
-                    dgv_yaoyao.Rows[i].Cells["desc"].Value = db_table.Rows[i][colms++].ToString().Trim();
+                    
                 }
 
                 if (dgv_yaoyao.Rows.Count > db_table.Rows.Count)
