@@ -7,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace cotool.game
 {
     public partial class Form_zs : UserControl
     {
-        string db_tablename = "t_yaoyao_copy";
+        string db_tablename = "t_yaoyao";
         Mysql mysql = null; //数据库连接
         DataTable db_table = new DataTable();//建立个数据表
 
@@ -120,6 +121,9 @@ namespace cotool.game
             get_db_max_id(ref game_id, "game_id");
 
             List<string> list = new List<string>();
+            //删除多行文本中空格行
+            tb_playlist.Lines = tb_playlist.Text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
             list.AddRange(tb_playlist.Lines.ToList());
 
             for (int i = 0; i < list.Count; i++)
