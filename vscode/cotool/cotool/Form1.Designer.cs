@@ -37,6 +37,8 @@
             this.游戏外挂ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.真三玩家ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.网页功能ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.网页内容提取ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,7 +49,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.数据库统计ToolStripMenuItem,
             this.系统设置ToolStripMenuItem,
-            this.游戏外挂ToolStripMenuItem});
+            this.游戏外挂ToolStripMenuItem,
+            this.网页功能ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
@@ -113,6 +116,21 @@
             this.panel1.TabIndex = 1;
             this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
             // 
+            // 网页功能ToolStripMenuItem
+            // 
+            this.网页功能ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.网页内容提取ToolStripMenuItem});
+            this.网页功能ToolStripMenuItem.Name = "网页功能ToolStripMenuItem";
+            this.网页功能ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
+            this.网页功能ToolStripMenuItem.Text = "网页功能";
+            // 
+            // 网页内容提取ToolStripMenuItem
+            // 
+            this.网页内容提取ToolStripMenuItem.Name = "网页内容提取ToolStripMenuItem";
+            this.网页内容提取ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.网页内容提取ToolStripMenuItem.Text = "网页内容提取";
+            this.网页内容提取ToolStripMenuItem.Click += new System.EventHandler(this.网页内容提取ToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -144,6 +162,8 @@
         private System.Windows.Forms.ToolStripMenuItem iE设置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 游戏外挂ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 真三玩家ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 网页功能ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 网页内容提取ToolStripMenuItem;
     }
 }
 

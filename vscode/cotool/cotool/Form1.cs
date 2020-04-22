@@ -100,5 +100,13 @@ namespace cotool
         {
             this.panel1.Controls[0].Size = this.panel1.Size;
         }
+
+        private void 网页内容提取ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_web form = new Form_web();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
     }
 }

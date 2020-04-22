@@ -44,6 +44,9 @@
       <HintPath>..\packages\Google.Protobuf.3.6.1\lib\net45\Google.Protobuf.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>.\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Office.Interop.Excel.15.0.4795.1000\lib\net20\Microsoft.Office.Interop.Excel.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -90,6 +93,12 @@
     <Compile Include="Form_dbtj.Designer.cs">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
     </Compile>
+    <Compile Include="web\Form_web.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="web\Form_web.Designer.cs">
+      <DependentUpon>Form_web.cs</DependentUpon>
+    </Compile>
     <Compile Include="game\Form_zs.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -108,11 +117,15 @@
     <Compile Include="sysset\Form_ie.Designer.cs">
       <DependentUpon>Form_ie.cs</DependentUpon>
     </Compile>
+    <Compile Include="web\Spider.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form_dbtj.resx">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="web\Form_web.resx">
+      <DependentUpon>Form_web.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="game\Form_zs.resx">
       <DependentUpon>Form_zs.cs</DependentUpon>
