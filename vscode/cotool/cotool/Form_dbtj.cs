@@ -31,7 +31,7 @@ namespace cotool
             oracle = new MyDbHelper(MyDbHelper.connectstring);
             mysql = new Mysql(Mysql.connectstring);
 
-            string sql = "select * from test";
+            //string sql = "select * from test";
             try
             {
 

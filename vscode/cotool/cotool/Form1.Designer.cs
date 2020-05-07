@@ -36,9 +36,11 @@
             this.iE设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.游戏外挂ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.真三玩家ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.网页功能ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.网页内容提取ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.文件目录ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.批量改名ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -50,7 +52,8 @@
             this.数据库统计ToolStripMenuItem,
             this.系统设置ToolStripMenuItem,
             this.游戏外挂ToolStripMenuItem,
-            this.网页功能ToolStripMenuItem});
+            this.网页功能ToolStripMenuItem,
+            this.文件目录ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
@@ -103,6 +106,36 @@
             this.真三玩家ToolStripMenuItem.Text = "真三玩家";
             this.真三玩家ToolStripMenuItem.Click += new System.EventHandler(this.真三玩家ToolStripMenuItem_Click);
             // 
+            // 网页功能ToolStripMenuItem
+            // 
+            this.网页功能ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.网页内容提取ToolStripMenuItem});
+            this.网页功能ToolStripMenuItem.Name = "网页功能ToolStripMenuItem";
+            this.网页功能ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
+            this.网页功能ToolStripMenuItem.Text = "网页功能";
+            // 
+            // 网页内容提取ToolStripMenuItem
+            // 
+            this.网页内容提取ToolStripMenuItem.Name = "网页内容提取ToolStripMenuItem";
+            this.网页内容提取ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            this.网页内容提取ToolStripMenuItem.Text = "网页内容提取";
+            this.网页内容提取ToolStripMenuItem.Click += new System.EventHandler(this.网页内容提取ToolStripMenuItem_Click);
+            // 
+            // 文件目录ToolStripMenuItem
+            // 
+            this.文件目录ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.批量改名ToolStripMenuItem});
+            this.文件目录ToolStripMenuItem.Name = "文件目录ToolStripMenuItem";
+            this.文件目录ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
+            this.文件目录ToolStripMenuItem.Text = "文件目录";
+            // 
+            // 批量改名ToolStripMenuItem
+            // 
+            this.批量改名ToolStripMenuItem.Name = "批量改名ToolStripMenuItem";
+            this.批量改名ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.批量改名ToolStripMenuItem.Text = "批量改名";
+            this.批量改名ToolStripMenuItem.Click += new System.EventHandler(this.批量改名ToolStripMenuItem_Click);
+            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -115,21 +148,6 @@
             this.panel1.Size = new System.Drawing.Size(796, 416);
             this.panel1.TabIndex = 1;
             this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
-            // 
-            // 网页功能ToolStripMenuItem
-            // 
-            this.网页功能ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.网页内容提取ToolStripMenuItem});
-            this.网页功能ToolStripMenuItem.Name = "网页功能ToolStripMenuItem";
-            this.网页功能ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
-            this.网页功能ToolStripMenuItem.Text = "网页功能";
-            // 
-            // 网页内容提取ToolStripMenuItem
-            // 
-            this.网页内容提取ToolStripMenuItem.Name = "网页内容提取ToolStripMenuItem";
-            this.网页内容提取ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.网页内容提取ToolStripMenuItem.Text = "网页内容提取";
-            this.网页内容提取ToolStripMenuItem.Click += new System.EventHandler(this.网页内容提取ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -164,6 +182,8 @@
         private System.Windows.Forms.ToolStripMenuItem 真三玩家ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 网页功能ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 网页内容提取ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 文件目录ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 批量改名ToolStripMenuItem;
     }
 }
 

@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using cotool.sysset;
 using cotool.game;
 using System.IO;
+using cotool.DirFile;
 
 namespace cotool
 {
@@ -105,6 +106,14 @@ namespace cotool
         {
             this.panel1.Controls.Clear();
             Form_web form = new Form_web();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
+
+        private void 批量改名ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_file form = new Form_file();
             this.panel1.Controls.Add(form);
             form.Show();
         }

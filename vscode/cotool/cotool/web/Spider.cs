@@ -15,8 +15,6 @@ namespace cotool.web
     class Spider
     {
         string HTML_ERROR = "404";
-        string log_file = "log.txt";
-        string log_file1 = "spider.log";
 
         public Spider()
         {
@@ -143,7 +141,7 @@ namespace cotool.web
                 }
                 catch (System.Exception ex)
                 {
-
+                    MyLog.Log("1", "访问http请求失败：" + ex.Message);
                 }
 
 

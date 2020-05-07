@@ -7,7 +7,7 @@ namespace cotool
 {
     class MyLog
     {
-        public static string logfilepath = Application.StartupPath + "\\bf.log";
+        public static string logfilepath = Application.StartupPath + "\\cotool.log";
 
 
         public static void DbLog(string table, string erreason)
