@@ -37,6 +37,9 @@
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.label1 = new System.Windows.Forms.Label();
             this.btn_select = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tbox_delhead = new System.Windows.Forms.TextBox();
+            this.btn_delhead = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btn_verb
@@ -83,7 +86,7 @@
             this.tbox_path.Name = "tbox_path";
             this.tbox_path.Size = new System.Drawing.Size(622, 21);
             this.tbox_path.TabIndex = 4;
-            this.tbox_path.Text = "K:\\1--考研\\1-2、线性代数基础班-李永乐";
+            this.tbox_path.Text = "K:\\1--考研\\1-1、高数基础班\\张宇高数";
             // 
             // label2
             // 
@@ -113,10 +116,40 @@
             this.btn_select.UseVisualStyleBackColor = true;
             this.btn_select.Click += new System.EventHandler(this.btn_select_Click);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(3, 88);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(101, 12);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "删除字符前的内容";
+            // 
+            // tbox_delhead
+            // 
+            this.tbox_delhead.Location = new System.Drawing.Point(110, 85);
+            this.tbox_delhead.Name = "tbox_delhead";
+            this.tbox_delhead.Size = new System.Drawing.Size(188, 21);
+            this.tbox_delhead.TabIndex = 9;
+            this.tbox_delhead.Text = " - ";
+            // 
+            // btn_delhead
+            // 
+            this.btn_delhead.Location = new System.Drawing.Point(304, 83);
+            this.btn_delhead.Name = "btn_delhead";
+            this.btn_delhead.Size = new System.Drawing.Size(80, 23);
+            this.btn_delhead.TabIndex = 8;
+            this.btn_delhead.Text = "批量删";
+            this.btn_delhead.UseVisualStyleBackColor = true;
+            this.btn_delhead.Click += new System.EventHandler(this.btn_delhead_Click);
+            // 
             // Form_file
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.tbox_delhead);
+            this.Controls.Add(this.btn_delhead);
             this.Controls.Add(this.btn_select);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -143,5 +176,8 @@
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btn_select;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox tbox_delhead;
+        private System.Windows.Forms.Button btn_delhead;
     }
 }

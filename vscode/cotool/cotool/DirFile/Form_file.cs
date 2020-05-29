@@ -75,5 +75,23 @@ namespace cotool.DirFile
             }
             tbox_path.Text = defaultfilePath;
         }
+
+        private void btn_delhead_Click(object sender, EventArgs e)
+        {
+            string path = tbox_path.Text;
+            DirectoryInfo folder = new DirectoryInfo(path);
+            FileInfo[] files = folder.GetFiles("*", SearchOption.AllDirectories);
+            foreach (FileInfo fi in files)
+            {
+                string delstr = tbox_delhead.Text;//删除这个字符串及他前面的内容
+                if (fi.Name.Contains(delstr))
+                {
+                    string new_name = fi.Name.Substring(fi.Name.IndexOf(delstr) + delstr.Length);
+                    string newfile = fi.DirectoryName + "\\" + new_name.Trim();
+                    File.Move(fi.FullName, newfile);
+                }
+            }
+            MessageBox.Show("完成了", "提示");
+        }
     }
 }
