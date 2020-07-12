@@ -63,5 +63,10 @@ namespace cotool.sysset
             SetProxy(false);
             label1.Text = "代理已经关闭";
         }
+
+        private void btn_mul_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

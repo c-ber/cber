@@ -99,6 +99,7 @@
     <Compile Include="Form_dbtj.Designer.cs">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
     </Compile>
+    <Compile Include="sysset\mul.cs" />
     <Compile Include="web\Form_web.cs">
       <SubType>UserControl</SubType>
     </Compile>
