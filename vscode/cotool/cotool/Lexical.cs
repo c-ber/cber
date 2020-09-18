@@ -107,6 +107,34 @@ namespace cotool
             Match match = Regex.Match(va, @"^[a-zA-Z0-9_]+$");
             return match.Success;
         }
+        /// <summary>
+        /// 识别是否为英文单词
+        /// </summary>
+        /// <param name="va"></param>
+        /// <returns></returns>
+        public bool is_english_word(string va)
+        {
+            Match match = Regex.Match(va, @"^[a-zA-Z_-]*$");
+            return match.Success;
+        }
+        /// <summary>
+        /// 将中文字符转为英文字符
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public string convert_to_en(string text)
+        {
+            const string ch = "。；，？！、“”‘’（）—：";//中文字符
+            const string en = @".;,?!\""""''()-:";//英文字符
+            char[] c = text.ToCharArray();
+            for (int i = 0; i < c.Length; i++)
+            {
+                int n = ch.IndexOf(c[i]);
+                if (n != -1) c[i] = en[n];
+            }
+            return new string(c);
+        }
+
         public bool search_all_word_match(string word, string content)
         {
             if(!content.Contains(word))

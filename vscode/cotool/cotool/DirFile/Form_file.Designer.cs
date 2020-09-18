@@ -40,6 +40,10 @@
             this.label3 = new System.Windows.Forms.Label();
             this.tbox_delhead = new System.Windows.Forms.TextBox();
             this.btn_delhead = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btn_en = new System.Windows.Forms.Button();
+            this.cbox_year = new System.Windows.Forms.ComboBox();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_verb
@@ -143,10 +147,52 @@
             this.btn_delhead.UseVisualStyleBackColor = true;
             this.btn_delhead.Click += new System.EventHandler(this.btn_delhead_Click);
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.cbox_year);
+            this.groupBox1.Controls.Add(this.btn_en);
+            this.groupBox1.Location = new System.Drawing.Point(27, 273);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(200, 100);
+            this.groupBox1.TabIndex = 11;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "英语真题文本处理";
+            // 
+            // btn_en
+            // 
+            this.btn_en.Location = new System.Drawing.Point(121, 71);
+            this.btn_en.Name = "btn_en";
+            this.btn_en.Size = new System.Drawing.Size(73, 23);
+            this.btn_en.TabIndex = 0;
+            this.btn_en.Text = "开始处理";
+            this.btn_en.UseVisualStyleBackColor = true;
+            this.btn_en.Click += new System.EventHandler(this.btn_en_Click);
+            // 
+            // cbox_year
+            // 
+            this.cbox_year.FormattingEnabled = true;
+            this.cbox_year.Items.AddRange(new object[] {
+            "2020真题.txt",
+            "2019真题.txt",
+            "2018真题.txt",
+            "2017真题.txt",
+            "2016真题.txt",
+            "2015真题.txt",
+            "2014真题.txt",
+            "2013真题.txt",
+            "2012真题.txt",
+            "2011真题.txt",
+            "2010真题.txt"});
+            this.cbox_year.Location = new System.Drawing.Point(23, 26);
+            this.cbox_year.Name = "cbox_year";
+            this.cbox_year.Size = new System.Drawing.Size(156, 20);
+            this.cbox_year.TabIndex = 1;
+            // 
             // Form_file
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.tbox_delhead);
             this.Controls.Add(this.btn_delhead);
@@ -160,6 +206,7 @@
             this.Controls.Add(this.btn_verb);
             this.Name = "Form_file";
             this.Size = new System.Drawing.Size(796, 416);
+            this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -179,5 +226,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox tbox_delhead;
         private System.Windows.Forms.Button btn_delhead;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Button btn_en;
+        private System.Windows.Forms.ComboBox cbox_year;
     }
 }

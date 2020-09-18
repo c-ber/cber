@@ -1,12 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace cotool.DirFile
 {
     public partial class Form_file : UserControl
     {
+        DataDeal dd = new DataDeal();
+        Lexical lx = new Lexical();
+
         public Form_file()
         {
             InitializeComponent();
@@ -91,6 +97,48 @@ namespace cotool.DirFile
                     File.Move(fi.FullName, newfile);
                 }
             }
+            MessageBox.Show("完成了", "提示");
+        }
+       
+
+        private void btn_en_Click(object sender, EventArgs e)
+        {
+            string src_file = @"E:\考研里程\3、英语\真题文本\" +  cbox_year.Text.Trim();
+            string opfile = @"E:\share\bigdata\wordcount.txt";
+
+            ArrayList linelist = new ArrayList();
+            dd.get_file_content(src_file, linelist);
+
+            FileStream fs = new FileStream(opfile, FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs, Encoding.Default);
+            for (int i = 0; i < linelist.Count; i++)
+            {
+                string line = linelist[i].ToString();
+                line = lx.convert_to_en(line);
+                line = line.ToLower();
+                line = line.Replace("'", " ").Replace("\"", " ").Replace(",", " ");
+                line = line.Replace(":", " ").Replace(".", " ").Replace("?", " ");
+                line = line.Replace("[", " ").Replace("]", " ").Replace("’s"," ");
+                line = line.Replace("(", " ").Replace(")", " ");
+
+                string[] word = line.Split(' '); 
+                string newline = "";
+                foreach (string str in word)
+                {
+                    if (lx.is_english_word(str) && str.Length > 1) //如果是英文，字母就不要了
+                    {
+                        newline += str + " ";
+                    }
+                }
+
+               sw.WriteLine(newline);
+            }
+
+            sw.Flush();
+            sw.Close();
+            fs.Close();
+
+
             MessageBox.Show("完成了", "提示");
         }
     }
