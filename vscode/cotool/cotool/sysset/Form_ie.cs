@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace cotool.sysset
 {
@@ -67,6 +68,71 @@ namespace cotool.sysset
         private void btn_mul_Click(object sender, EventArgs e)
         {
 
+        }
+        /// <summary>
+        /// 杀掉FoxitReader进程
+        /// </summary>
+        /// <param name="strProcessesByName"></param>
+        public void KillProcess(string processName)
+        {
+            foreach (Process p in Process.GetProcesses())
+            {
+                if (p.ProcessName.Contains(processName))
+                {
+                    try
+                    {
+                        p.Kill();
+                        p.WaitForExit(); // possibly with a timeout
+                    }
+                    catch
+                    {
+                    }
+                }
+
+            }
+        }
+        /// <summary>
+        /// 判断是否存在进程  精确
+        /// </summary>
+        /// <param name="strProcName">精确进程名</param>
+        /// <returns>是否包含</returns>
+        public bool SearchProc(string strProcName)
+        {
+            try
+            {
+                //精确进程名  用GetProcessesByName
+                Process[] ps = Process.GetProcessesByName(strProcName);
+                if (ps.Length > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        private void btn_kill_Click(object sender, EventArgs e)
+        {
+            KillProcess("ThunderPlatform.exe");
+        }
+
+        private void Form_ie_Load(object sender, EventArgs e)
+        {
+            if(SearchProc("ThunderPlatform.exe"))
+            {
+                label_xl.Text = "迅雷进程在运行中";
+                label_xl.ForeColor = Color.Red;
+            }
+            else
+            {
+                label_xl.Text = "没有发现迅雷进程";
+                label_xl.ForeColor = Color.Green;
+            }
         }
     }
 }
