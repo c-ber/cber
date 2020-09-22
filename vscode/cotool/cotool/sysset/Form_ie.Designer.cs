@@ -42,8 +42,12 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label_xl = new System.Windows.Forms.Label();
+            this.btn_flash = new System.Windows.Forms.Button();
             this.btn_kill = new System.Windows.Forms.Button();
+            this.label_xl = new System.Windows.Forms.Label();
+            this.btn_aria = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.btn_restart = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -166,14 +170,38 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.btn_restart);
+            this.groupBox3.Controls.Add(this.label5);
+            this.groupBox3.Controls.Add(this.btn_aria);
+            this.groupBox3.Controls.Add(this.btn_flash);
             this.groupBox3.Controls.Add(this.btn_kill);
             this.groupBox3.Controls.Add(this.label_xl);
             this.groupBox3.Location = new System.Drawing.Point(437, 199);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(323, 100);
+            this.groupBox3.Size = new System.Drawing.Size(323, 106);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "迅雷进程情况";
+            // 
+            // btn_flash
+            // 
+            this.btn_flash.Location = new System.Drawing.Point(39, 48);
+            this.btn_flash.Name = "btn_flash";
+            this.btn_flash.Size = new System.Drawing.Size(75, 23);
+            this.btn_flash.TabIndex = 2;
+            this.btn_flash.Text = "刷新";
+            this.btn_flash.UseVisualStyleBackColor = true;
+            this.btn_flash.Click += new System.EventHandler(this.btn_flash_Click);
+            // 
+            // btn_kill
+            // 
+            this.btn_kill.Location = new System.Drawing.Point(39, 77);
+            this.btn_kill.Name = "btn_kill";
+            this.btn_kill.Size = new System.Drawing.Size(75, 23);
+            this.btn_kill.TabIndex = 1;
+            this.btn_kill.Text = "清理进程";
+            this.btn_kill.UseVisualStyleBackColor = true;
+            this.btn_kill.Click += new System.EventHandler(this.btn_kill_Click);
             // 
             // label_xl
             // 
@@ -185,15 +213,35 @@
             this.label_xl.TabIndex = 0;
             this.label_xl.Text = "迅雷未开启";
             // 
-            // btn_kill
+            // btn_aria
             // 
-            this.btn_kill.Location = new System.Drawing.Point(159, 22);
-            this.btn_kill.Name = "btn_kill";
-            this.btn_kill.Size = new System.Drawing.Size(75, 23);
-            this.btn_kill.TabIndex = 1;
-            this.btn_kill.Text = "清理进程";
-            this.btn_kill.UseVisualStyleBackColor = true;
-            this.btn_kill.Click += new System.EventHandler(this.btn_kill_Click);
+            this.btn_aria.Location = new System.Drawing.Point(225, 48);
+            this.btn_aria.Name = "btn_aria";
+            this.btn_aria.Size = new System.Drawing.Size(92, 23);
+            this.btn_aria.TabIndex = 3;
+            this.btn_aria.Text = "启动B站web";
+            this.btn_aria.UseVisualStyleBackColor = true;
+            this.btn_aria.Click += new System.EventHandler(this.btn_aria_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label5.Location = new System.Drawing.Point(223, 27);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(77, 12);
+            this.label5.TabIndex = 4;
+            this.label5.Text = "B站下载工具";
+            // 
+            // btn_restart
+            // 
+            this.btn_restart.Location = new System.Drawing.Point(225, 77);
+            this.btn_restart.Name = "btn_restart";
+            this.btn_restart.Size = new System.Drawing.Size(92, 23);
+            this.btn_restart.TabIndex = 5;
+            this.btn_restart.Text = "执行web脚本";
+            this.btn_restart.UseVisualStyleBackColor = true;
+            this.btn_restart.Click += new System.EventHandler(this.btn_restart_Click);
             // 
             // Form_ie
             // 
@@ -234,5 +282,9 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button btn_kill;
         private System.Windows.Forms.Label label_xl;
+        private System.Windows.Forms.Button btn_flash;
+        private System.Windows.Forms.Button btn_aria;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btn_restart;
     }
 }
