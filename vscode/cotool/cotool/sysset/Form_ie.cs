@@ -15,6 +15,8 @@ namespace cotool.sysset
 {
     public partial class Form_ie : UserControl
     {
+        DataDeal dd = new DataDeal();
+
         [DllImport(@"wininet",
         SetLastError = true,
         CharSet = CharSet.Auto,
@@ -116,14 +118,9 @@ namespace cotool.sysset
                 return false;
             }
         }
-        private void btn_kill_Click(object sender, EventArgs e)
+        void flash_process()
         {
-            KillProcess("ThunderPlatform.exe");
-        }
-
-        private void Form_ie_Load(object sender, EventArgs e)
-        {
-            if(SearchProc("ThunderPlatform.exe"))
+            if (SearchProc("ThunderPlatform.exe"))
             {
                 label_xl.Text = "迅雷进程在运行中";
                 label_xl.ForeColor = Color.Red;
@@ -133,6 +130,28 @@ namespace cotool.sysset
                 label_xl.Text = "没有发现迅雷进程";
                 label_xl.ForeColor = Color.Green;
             }
+        }    
+           
+        private void btn_kill_Click(object sender, EventArgs e)
+        {
+            KillProcess("ThunderPlatform.exe");
+        }
+
+        private void Form_ie_Load(object sender, EventArgs e)
+        {
+            flash_process();
+        }
+
+        private void btn_flash_Click(object sender, EventArgs e)
+        {
+            flash_process();
+        }
+
+        private void btn_aria_Click(object sender, EventArgs e)
+        {
+            dd.exec_cmd(@"D:\soft\aria\EasyWebSvr\EasyWebSvr.exe", 5);
+            dd.exec_cmd(@"call D:\soft\aria\aria2\Restart.bat", 5);
+            label5.Text = "已完成启动";
         }
     }
 }
