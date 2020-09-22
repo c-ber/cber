@@ -40,7 +40,7 @@ namespace cotool
                 {
                     if(process.Start())
                     {
-                        if(sec == 0)
+                        if (sec == 0)
                         {
                             process.WaitForExit();//无限等待进程结束
                         }
@@ -49,7 +49,7 @@ namespace cotool
                     {
                         process.WaitForExit(sec);//指定时间等待进程结束
                     }
-                    output = process.StandardOutput.ReadToEnd();//读取进程的输出
+                    //output = process.StandardOutput.ReadLine();
                 }
                 catch(Exception ex)
                 {
