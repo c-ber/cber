@@ -566,6 +566,38 @@ namespace cotool
             }
         }
         #endregion
+
+        #region 将DataTable中的数据批量插入数据库中
+        public void MySqlWriteDataTable(string TableName, DataTable dt)
+        {
+            try
+            {
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    string sql = "INSERT INTO "+ TableName + "  VALUES (";
+                    sql += "'" + dt.Rows[i][0].ToString() + "'";
+                    for (int j = 1; j < dt.Columns.Count; j++)
+                    {
+                        if (dt.Rows[i][j] == System.DBNull.Value || dt.Rows[i][j].ToString() == "")
+                        {
+                            sql += ",null";
+                        }
+                        else
+                        {
+                            sql += ",'" + dt.Rows[i][j].ToString() + "'";
+                        }
+                    }
+                    sql += "); ";
+                    ExecuteNonQuery(sql);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw (ex);
+            }
+        }
+        #endregion
+
         #region　Static
         public static MySqlParameter MakeInParam(string paraName, MySqlDbType paraType, object value)
         {

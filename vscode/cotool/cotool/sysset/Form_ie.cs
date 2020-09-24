@@ -103,20 +103,20 @@ namespace cotool.sysset
             try
             {
                 //精确进程名  用GetProcessesByName
-                Process[] ps = Process.GetProcessesByName(strProcName);
-                if (ps.Length > 0)
+                foreach (Process p in Process.GetProcesses())
                 {
-                    return true;
-                }
-                else
-                {
-                    return false;
+                    Console.Write(p.ProcessName);
+                    if (strProcName.Equals(p.ProcessName))
+                    {
+                        return true;
+                    }
                 }
             }
             catch
             {
                 return false;
             }
+            return false;
         }
         void flash_process()
         {
@@ -130,11 +130,11 @@ namespace cotool.sysset
                 label_xl.Text = "没有发现迅雷进程";
                 label_xl.ForeColor = Color.Green;
             }
-        }    
-           
+        }
+
         private void btn_kill_Click(object sender, EventArgs e)
         {
-            KillProcess("ThunderPlatform.exe");
+            dd.exec_cmd(@"taskkill / F / IM ThunderPlatform.exe", 5);
         }
 
         private void Form_ie_Load(object sender, EventArgs e)
@@ -158,6 +158,21 @@ namespace cotool.sysset
             dd.exec_cmd(@"Taskkill /F /IM aria2c.exe", 5);
             dd.exec_cmd(@"d:  & cd D:\soft\aria\aria2\ & start Start.vbs", 5);
             label5.Text = "已完成执行";
+        }
+
+        private void btn_start_mysql_Click(object sender, EventArgs e)
+        {
+            dd.exec_cmd("net start mysql", 5);
+        }
+
+        private void btn_close_mysql_Click(object sender, EventArgs e)
+        {
+            dd.exec_cmd("net stop mysql", 5);
+        }
+
+        private void btn_navi_Click(object sender, EventArgs e)
+        {
+            dd.exec_proc(@"C:\Program Files (x86)\PremiumSoft\Navicat Premium\navicat.exe");
         }
     }
 }

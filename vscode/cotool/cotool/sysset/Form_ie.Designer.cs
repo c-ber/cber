@@ -42,15 +42,21 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.btn_restart = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.btn_aria = new System.Windows.Forms.Button();
             this.btn_flash = new System.Windows.Forms.Button();
             this.btn_kill = new System.Windows.Forms.Button();
             this.label_xl = new System.Windows.Forms.Label();
-            this.btn_aria = new System.Windows.Forms.Button();
-            this.label5 = new System.Windows.Forms.Label();
-            this.btn_restart = new System.Windows.Forms.Button();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.btn_close_mysql = new System.Windows.Forms.Button();
+            this.btn_start_mysql = new System.Windows.Forms.Button();
+            this.btn_navi = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_open
@@ -183,6 +189,36 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "迅雷进程情况";
             // 
+            // btn_restart
+            // 
+            this.btn_restart.Location = new System.Drawing.Point(225, 77);
+            this.btn_restart.Name = "btn_restart";
+            this.btn_restart.Size = new System.Drawing.Size(92, 23);
+            this.btn_restart.TabIndex = 5;
+            this.btn_restart.Text = "执行web脚本";
+            this.btn_restart.UseVisualStyleBackColor = true;
+            this.btn_restart.Click += new System.EventHandler(this.btn_restart_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label5.Location = new System.Drawing.Point(223, 27);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(77, 12);
+            this.label5.TabIndex = 4;
+            this.label5.Text = "B站下载工具";
+            // 
+            // btn_aria
+            // 
+            this.btn_aria.Location = new System.Drawing.Point(225, 48);
+            this.btn_aria.Name = "btn_aria";
+            this.btn_aria.Size = new System.Drawing.Size(92, 23);
+            this.btn_aria.TabIndex = 3;
+            this.btn_aria.Text = "启动B站web";
+            this.btn_aria.UseVisualStyleBackColor = true;
+            this.btn_aria.Click += new System.EventHandler(this.btn_aria_Click);
+            // 
             // btn_flash
             // 
             this.btn_flash.Location = new System.Drawing.Point(39, 48);
@@ -213,40 +249,64 @@
             this.label_xl.TabIndex = 0;
             this.label_xl.Text = "迅雷未开启";
             // 
-            // btn_aria
+            // groupBox4
             // 
-            this.btn_aria.Location = new System.Drawing.Point(225, 48);
-            this.btn_aria.Name = "btn_aria";
-            this.btn_aria.Size = new System.Drawing.Size(92, 23);
-            this.btn_aria.TabIndex = 3;
-            this.btn_aria.Text = "启动B站web";
-            this.btn_aria.UseVisualStyleBackColor = true;
-            this.btn_aria.Click += new System.EventHandler(this.btn_aria_Click);
+            this.groupBox4.Controls.Add(this.btn_navi);
+            this.groupBox4.Controls.Add(this.label6);
+            this.groupBox4.Controls.Add(this.btn_close_mysql);
+            this.groupBox4.Controls.Add(this.btn_start_mysql);
+            this.groupBox4.Location = new System.Drawing.Point(40, 138);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(200, 100);
+            this.groupBox4.TabIndex = 3;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "mysql开关";
             // 
-            // label5
+            // label6
             // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.label5.Location = new System.Drawing.Point(223, 27);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(77, 12);
-            this.label5.TabIndex = 4;
-            this.label5.Text = "B站下载工具";
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.label6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
+            this.label6.Location = new System.Drawing.Point(61, 70);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(0, 20);
+            this.label6.TabIndex = 2;
             // 
-            // btn_restart
+            // btn_close_mysql
             // 
-            this.btn_restart.Location = new System.Drawing.Point(225, 77);
-            this.btn_restart.Name = "btn_restart";
-            this.btn_restart.Size = new System.Drawing.Size(92, 23);
-            this.btn_restart.TabIndex = 5;
-            this.btn_restart.Text = "执行web脚本";
-            this.btn_restart.UseVisualStyleBackColor = true;
-            this.btn_restart.Click += new System.EventHandler(this.btn_restart_Click);
+            this.btn_close_mysql.Location = new System.Drawing.Point(109, 32);
+            this.btn_close_mysql.Name = "btn_close_mysql";
+            this.btn_close_mysql.Size = new System.Drawing.Size(75, 23);
+            this.btn_close_mysql.TabIndex = 1;
+            this.btn_close_mysql.Text = "关闭服务";
+            this.btn_close_mysql.UseVisualStyleBackColor = true;
+            this.btn_close_mysql.Click += new System.EventHandler(this.btn_close_mysql_Click);
+            // 
+            // btn_start_mysql
+            // 
+            this.btn_start_mysql.Location = new System.Drawing.Point(9, 32);
+            this.btn_start_mysql.Name = "btn_start_mysql";
+            this.btn_start_mysql.Size = new System.Drawing.Size(75, 23);
+            this.btn_start_mysql.TabIndex = 0;
+            this.btn_start_mysql.Text = "启动服务";
+            this.btn_start_mysql.UseVisualStyleBackColor = true;
+            this.btn_start_mysql.Click += new System.EventHandler(this.btn_start_mysql_Click);
+            // 
+            // btn_navi
+            // 
+            this.btn_navi.Location = new System.Drawing.Point(9, 67);
+            this.btn_navi.Name = "btn_navi";
+            this.btn_navi.Size = new System.Drawing.Size(75, 23);
+            this.btn_navi.TabIndex = 3;
+            this.btn_navi.Text = "navicat";
+            this.btn_navi.UseVisualStyleBackColor = true;
+            this.btn_navi.Click += new System.EventHandler(this.btn_navi_Click);
             // 
             // Form_ie
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.btn_mul);
             this.Controls.Add(this.groupBox1);
@@ -260,6 +320,8 @@
             this.groupBox2.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -286,5 +348,10 @@
         private System.Windows.Forms.Button btn_aria;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btn_restart;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button btn_close_mysql;
+        private System.Windows.Forms.Button btn_start_mysql;
+        private System.Windows.Forms.Button btn_navi;
     }
 }

@@ -161,5 +161,97 @@ namespace cotool
             }
             return true;
         }
+
+        /// <summary>
+        /// 比较二个字符串，查找出相同字数和差异字符
+        /// </summary>
+        /// <param name="s1"></param>
+        /// <param name="s2"></param>
+        /// <returns></returns>
+        public int two_string_samelength(string s1, string s2)
+        {
+            int count = 0;/*相同字符个数*/
+            int n = s1.Length > s2.Length ? s2.Length : s1.Length;/*获得较短的字符串的长度*/
+            for (int i = 0; i < n; i++)
+            {
+                if (s1.Substring(i, 1) == s2.Substring(i, 1))
+                /*同位置字符是否相同*/
+                {
+                    count++;
+                }
+                else
+                {
+                    //MessageBox.Show("s1:" + s1.Substring(i, 1) + "| s2:" + s2.Substring(i, 1));
+                }
+            }
+            return count;
+        }
+
+        #region 替换字符串起始位置(开头)中指定的字符串
+        /// <summary>  
+        /// 替换字符串起始位置(开头)中指定的字符串  
+        /// </summary>  
+        /// <param name="s">源串</param>  
+        /// <param name="searchStr">查找的串</param>  
+        /// <param name="replaceStr">替换的目标串</param>  
+        /// <returns></returns>  
+        public string CutStarStr(string s, string searchStr, string replaceStr)
+        {
+            var result = s;
+            try
+            {
+                if (string.IsNullOrEmpty(result))
+                {
+                    return result;
+                }
+                if (s.Length < searchStr.Length)
+                {
+                    return result;
+                }
+                if (s.IndexOf(searchStr, 0, searchStr.Length, StringComparison.Ordinal) > -1)
+                {
+                    result = s.Substring(searchStr.Length);
+                }
+                return replaceStr + result;
+            }
+            catch
+            {
+                return result;
+            }
+        }
+        #endregion
+
+        #region 替换字符串末尾位置中指定的字符串
+        /// <summary>  
+        /// 替换字符串末尾位置中指定的字符串  
+        /// </summary>  
+        /// <param name="s">源串</param>  
+        /// <param name="searchStr">查找的串</param>  
+        /// <param name="replaceStr">替换的目标串</param>  
+        public string CutEndStr(string s, string searchStr, string replaceStr)
+        {
+            var result = s;
+            try
+            {
+                if (string.IsNullOrEmpty(result))
+                {
+                    return result;
+                }
+                if (s.Length < searchStr.Length)
+                {
+                    return result;
+                }
+                if (s.IndexOf(searchStr, s.Length - searchStr.Length, searchStr.Length, StringComparison.Ordinal) > -1)
+                {
+                    result = s.Substring(0, s.Length - searchStr.Length);
+                }
+                return result + replaceStr;
+            }
+            catch
+            {
+                return result;
+            }
+        }
+        #endregion
     }
 }

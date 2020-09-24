@@ -24,6 +24,65 @@ namespace cotool
             InitializeComponent();
         }
 
+        private static bool SaveBinaryFile(WebResponse response, string savePath)
+        {
+            bool value = false;
+            byte[] buffer = new byte[1024];
+            Stream outStream = null;
+            Stream inStream = null;
+            try
+            {
+                if (File.Exists(savePath)) File.Delete(savePath);
+                outStream = System.IO.File.Create(savePath);
+                inStream = response.GetResponseStream();
+                int l;
+                do
+                {
+                    l = inStream.Read(buffer, 0, buffer.Length);
+                    if (l > 0) outStream.Write(buffer, 0, l);
+                } while (l > 0);
+                value = true;
+            }
+            finally
+            {
+                if (outStream != null) outStream.Close();
+                if (inStream != null) inStream.Close();
+            }
+            return value;
+        }
+        /// <summary>
+        /// 下载图片
+        /// </summary>
+        /// <param name="picUrl">图片Http地址</param>
+        /// <param name="savePath">保存路径</param>
+        /// <param name="timeOut">Request最大请求时间，如果为-1则无限制</param>
+        /// <returns></returns>
+        public static bool DownloadPicture(string picUrl, string savePath, int timeOut)
+        {
+            bool value = false;
+            WebResponse response = null;
+            Stream stream = null;
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(picUrl);
+                if (timeOut != -1) request.Timeout = timeOut;
+                response = request.GetResponse();
+                stream = response.GetResponseStream();
+                if (!response.ContentType.ToLower().StartsWith("text/"))
+                    value = SaveBinaryFile(response, savePath);
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+                if (response != null) response.Close();
+            }
+            return value;
+        }
+
         private void btn_start_Click(object sender, EventArgs e)
         {
             string output_file = "web_find.log";
@@ -65,6 +124,19 @@ namespace cotool
                 }
                 File.AppendAllText(output_file, content.InnerHtml.ToString() + Environment.NewLine);
                 Thread.Sleep(2000);
+            }
+            MessageBox.Show("完成");
+        }
+
+        private void btn_downloud_Click(object sender, EventArgs e)
+        {
+            int startid = Int32.Parse(tbox_startid.Text);
+            int endid = Int32.Parse(tbox_endid.Text);
+            for (int i = startid; i <= endid; i++)
+            {
+                string tmp = tbox_main.Text.Trim() + i.ToString("D4") + tbox_tail.Text;
+                string img = @"E:\share\cber\vscode\cotool\cotool\download\" + i.ToString("D4")+ ".jpg";
+                DownloadPicture(tmp, img, -1);
             }
             MessageBox.Show("完成");
         }

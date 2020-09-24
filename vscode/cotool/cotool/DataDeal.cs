@@ -14,6 +14,10 @@ namespace cotool
     {
         Lexical lc = new Lexical();
 
+        public void exec_proc(string softname)
+        {
+            System.Diagnostics.Process.Start(softname);
+        }
 
         /// <summary>
         /// 执行dos命令，返回输出

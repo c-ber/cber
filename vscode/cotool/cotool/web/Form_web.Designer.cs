@@ -32,15 +32,25 @@
             this.tbox_pre_url = new System.Windows.Forms.TextBox();
             this.tbox_fid = new System.Windows.Forms.TextBox();
             this.groupbox_zhuye = new System.Windows.Forms.GroupBox();
-            this.label_url = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tbox_eid = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tbox_tail_url = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.tbox_node = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbox_tail_url = new System.Windows.Forms.TextBox();
+            this.tbox_eid = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label_url = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btn_downloud = new System.Windows.Forms.Button();
+            this.tbox_main = new System.Windows.Forms.TextBox();
+            this.tbox_tail = new System.Windows.Forms.TextBox();
+            this.tbox_startid = new System.Windows.Forms.TextBox();
+            this.tbox_endid = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.groupbox_zhuye.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_start
@@ -83,65 +93,12 @@
             this.groupbox_zhuye.Controls.Add(this.tbox_pre_url);
             this.groupbox_zhuye.Controls.Add(this.btn_start);
             this.groupbox_zhuye.Controls.Add(this.tbox_fid);
-            this.groupbox_zhuye.Location = new System.Drawing.Point(145, 116);
+            this.groupbox_zhuye.Location = new System.Drawing.Point(40, 13);
             this.groupbox_zhuye.Name = "groupbox_zhuye";
             this.groupbox_zhuye.Size = new System.Drawing.Size(443, 131);
             this.groupbox_zhuye.TabIndex = 3;
             this.groupbox_zhuye.TabStop = false;
             this.groupbox_zhuye.Text = "逐页";
-            // 
-            // label_url
-            // 
-            this.label_url.AutoSize = true;
-            this.label_url.Location = new System.Drawing.Point(14, 23);
-            this.label_url.Name = "label_url";
-            this.label_url.Size = new System.Drawing.Size(47, 12);
-            this.label_url.TabIndex = 3;
-            this.label_url.Text = "url前缀";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(103, 50);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(17, 12);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "To";
-            // 
-            // tbox_eid
-            // 
-            this.tbox_eid.Location = new System.Drawing.Point(126, 47);
-            this.tbox_eid.Name = "tbox_eid";
-            this.tbox_eid.Size = new System.Drawing.Size(46, 21);
-            this.tbox_eid.TabIndex = 5;
-            this.tbox_eid.Text = "1654";
-            this.tbox_eid.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(14, 77);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(47, 12);
-            this.label2.TabIndex = 7;
-            this.label2.Text = "url后缀";
-            // 
-            // tbox_tail_url
-            // 
-            this.tbox_tail_url.Location = new System.Drawing.Point(67, 74);
-            this.tbox_tail_url.Name = "tbox_tail_url";
-            this.tbox_tail_url.Size = new System.Drawing.Size(361, 21);
-            this.tbox_tail_url.TabIndex = 6;
-            this.tbox_tail_url.Text = ".shtm";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(14, 50);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(53, 12);
-            this.label3.TabIndex = 8;
-            this.label3.Text = "页面范围";
             // 
             // tbox_node
             // 
@@ -161,15 +118,159 @@
             this.label4.TabIndex = 9;
             this.label4.Text = "内容节点";
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(14, 50);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(53, 12);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "页面范围";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(14, 77);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(47, 12);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "url后缀";
+            // 
+            // tbox_tail_url
+            // 
+            this.tbox_tail_url.Location = new System.Drawing.Point(67, 74);
+            this.tbox_tail_url.Name = "tbox_tail_url";
+            this.tbox_tail_url.Size = new System.Drawing.Size(361, 21);
+            this.tbox_tail_url.TabIndex = 6;
+            this.tbox_tail_url.Text = ".shtm";
+            // 
+            // tbox_eid
+            // 
+            this.tbox_eid.Location = new System.Drawing.Point(126, 47);
+            this.tbox_eid.Name = "tbox_eid";
+            this.tbox_eid.Size = new System.Drawing.Size(46, 21);
+            this.tbox_eid.TabIndex = 5;
+            this.tbox_eid.Text = "1654";
+            this.tbox_eid.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(103, 50);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(17, 12);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "To";
+            // 
+            // label_url
+            // 
+            this.label_url.AutoSize = true;
+            this.label_url.Location = new System.Drawing.Point(14, 23);
+            this.label_url.Name = "label_url";
+            this.label_url.Size = new System.Drawing.Size(47, 12);
+            this.label_url.TabIndex = 3;
+            this.label_url.Text = "url前缀";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label7);
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.tbox_endid);
+            this.groupBox1.Controls.Add(this.tbox_startid);
+            this.groupBox1.Controls.Add(this.tbox_tail);
+            this.groupBox1.Controls.Add(this.tbox_main);
+            this.groupBox1.Controls.Add(this.btn_downloud);
+            this.groupBox1.Location = new System.Drawing.Point(3, 289);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(777, 100);
+            this.groupBox1.TabIndex = 4;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "groupBox1";
+            // 
+            // btn_downloud
+            // 
+            this.btn_downloud.Location = new System.Drawing.Point(555, 59);
+            this.btn_downloud.Name = "btn_downloud";
+            this.btn_downloud.Size = new System.Drawing.Size(99, 23);
+            this.btn_downloud.TabIndex = 0;
+            this.btn_downloud.Text = "批量下载文件";
+            this.btn_downloud.UseVisualStyleBackColor = true;
+            this.btn_downloud.Click += new System.EventHandler(this.btn_downloud_Click);
+            // 
+            // tbox_main
+            // 
+            this.tbox_main.Location = new System.Drawing.Point(6, 20);
+            this.tbox_main.Multiline = true;
+            this.tbox_main.Name = "tbox_main";
+            this.tbox_main.Size = new System.Drawing.Size(765, 33);
+            this.tbox_main.TabIndex = 1;
+            this.tbox_main.Text = "https://ailoli.fun/zyk/H%E5%B7%A5%E5%8F%A3%E5%B0%8F%E5%AD%A6%E7%94%9F%E8%B5%9B%E9" +
+    "%AB%98/%E8%B6%B3%E6%8E%A7100%E5%BC%A0/sjhs.pw_";
+            // 
+            // tbox_tail
+            // 
+            this.tbox_tail.Location = new System.Drawing.Point(380, 61);
+            this.tbox_tail.Name = "tbox_tail";
+            this.tbox_tail.Size = new System.Drawing.Size(100, 21);
+            this.tbox_tail.TabIndex = 2;
+            this.tbox_tail.Text = ".jpg";
+            // 
+            // tbox_startid
+            // 
+            this.tbox_startid.Location = new System.Drawing.Point(71, 59);
+            this.tbox_startid.Name = "tbox_startid";
+            this.tbox_startid.Size = new System.Drawing.Size(65, 21);
+            this.tbox_startid.TabIndex = 3;
+            this.tbox_startid.Text = "0001";
+            // 
+            // tbox_endid
+            // 
+            this.tbox_endid.Location = new System.Drawing.Point(163, 59);
+            this.tbox_endid.Name = "tbox_endid";
+            this.tbox_endid.Size = new System.Drawing.Size(65, 21);
+            this.tbox_endid.TabIndex = 4;
+            this.tbox_endid.Text = "0110";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(333, 64);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(29, 12);
+            this.label5.TabIndex = 5;
+            this.label5.Text = "后缀";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(48, 62);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(17, 12);
+            this.label6.TabIndex = 6;
+            this.label6.Text = "从";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(140, 64);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(17, 12);
+            this.label7.TabIndex = 7;
+            this.label7.Text = "到";
+            // 
             // Form_web
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupbox_zhuye);
             this.Name = "Form_web";
             this.Size = new System.Drawing.Size(796, 416);
             this.groupbox_zhuye.ResumeLayout(false);
             this.groupbox_zhuye.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -188,5 +289,14 @@
         private System.Windows.Forms.Label label_url;
         private System.Windows.Forms.TextBox tbox_node;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox tbox_main;
+        private System.Windows.Forms.Button btn_downloud;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbox_endid;
+        private System.Windows.Forms.TextBox tbox_startid;
+        private System.Windows.Forms.TextBox tbox_tail;
     }
 }

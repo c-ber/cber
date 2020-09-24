@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,10 @@ namespace cotool.DirFile
     {
         DataDeal dd = new DataDeal();
         Lexical lx = new Lexical();
+        ExcelDeal ed = new ExcelDeal();
+
+        Mysql mysql = null; //数据库连接
+        DataTable db_word = new DataTable();//建立个数据表
 
         public Form_file()
         {
@@ -139,6 +144,184 @@ namespace cotool.DirFile
             fs.Close();
 
 
+            MessageBox.Show("完成了", "提示");
+        }
+
+
+        void read_word_table()
+        {
+            string sql = "select * from " + src_table;
+            try
+            {
+                db_word = mysql.ExecuteDataTable(dst_table, sql);
+                if (db_word == null) return;
+                if (db_word.Rows.Count <= 0)
+                {
+                    db_word = null;
+                    MessageBox.Show("单词表读取为空", "提示");
+                    return;
+                }
+                //再清空目标表
+                mysql.ExecuteNonQuery("truncate table " + dst_table);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            return;
+        }
+        
+        /// <summary>
+        /// 设置主词，衍生词的要写到sub中去，且行内主词要替换
+        /// </summary>
+        void set_root_word(int mid, int subid)
+        {
+            //先将sub的前三项拷贝到后面去
+            db_word.Rows[subid]["v_word"] = db_word.Rows[subid]["word"];
+            db_word.Rows[subid]["v_total"] = db_word.Rows[subid]["total"];
+            db_word.Rows[subid]["v_year_num"] = db_word.Rows[subid]["year_num"];
+
+            //将word替换为词根的，两外两个填空
+            db_word.Rows[subid]["word"] = db_word.Rows[mid]["word"];
+            db_word.Rows[subid]["total"] = System.DBNull.Value;
+            db_word.Rows[subid]["year_num"] = System.DBNull.Value;
+        }
+
+        /// <summary>
+        /// 还原单词形式
+        /// </summary>
+        /// <param name="word"></param>
+        /// <param name="filter"></param>
+        /// <param name="ori"></param>
+        bool word_reduction(ref string word, string filter, string ori)
+        {
+            if (word.EndsWith(filter))// 判断字符串是否以指定的字符串结尾
+            {
+                word = lx.CutEndStr(word, filter, ori);
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        ///单词包含分析是否是同一个词
+        /// </summary>
+        /// <param name="rword_list"></param>
+        /// <param name="wd"></param>
+        /// <returns></returns>
+        bool sub_analysis(ArrayList wdlist,int wid)
+        {
+            try
+            {
+                string wd = db_word.Rows[wid]["word"].ToString().Trim();
+                for (int i = 0; i < wdlist.Count; i++)
+                {
+                    int listid = Int32.Parse(wdlist[i].ToString());
+                    string listword = db_word.Rows[listid]["word"].ToString().Trim();
+
+                    bool isReplace = false;
+                    //1.1、如果某个词以ing结尾,则尝试两个去e加ing
+                    isReplace = word_reduction(ref wd, "ing", "eing");
+                    if (!isReplace)
+                        isReplace = word_reduction(ref listword, "ing", "eing");
+
+                    //1.2、如果某个词以ying结尾,则还原为ieing
+                    if (!isReplace)
+                        isReplace = word_reduction(ref wd, "ying", "ieing");
+                    if (!isReplace)
+                        isReplace = word_reduction(ref listword, "ying", "ieing");
+
+                    //2、复数，如果某个词以ies结尾,则还原为yes
+                    if (!isReplace)
+                        isReplace = word_reduction(ref wd, "ies", "yes");
+                    if (!isReplace)
+                        isReplace = word_reduction(ref listword, "ies", "yes");
+
+                    //3、过去分词，如果某个词以ied结尾,则还原为yed
+                    if (!isReplace)
+                        isReplace = word_reduction(ref wd, "ied", "yed");
+                    if (!isReplace)
+                        isReplace = word_reduction(ref listword, "ied", "yed");
+
+                    //4、主义者，如果某个词以ist结尾,则还原为eist
+                    if (!isReplace)
+                        isReplace = word_reduction(ref wd, "ist", "eist");
+                    if (!isReplace)
+                        isReplace = word_reduction(ref listword, "ist", "eist");
+
+                    //前缀不算一个词，要排除
+                    if (!wd.Substring(0, 2).Equals(listword.Substring(0, 2)))
+                    {
+                        continue;
+                    }
+                    //简单判断是否为子集,是则结束
+                    if (wd.Contains(listword))//list为根
+                    {
+                        set_root_word(listid, wid);
+                        return true;
+                    }
+                    if (listword.Contains(wd))//新词为根，需要替换list
+                    {
+                        set_root_word(wid, listid);
+                        wdlist.Remove(listid);
+                        wdlist.Add(wid);
+                        return true;
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            return false;
+        }
+
+        void main_word_deal()
+        {
+            //遍历一下词汇，一个一个判断，不管怎么样，单词的长度一定要大于4
+            ArrayList rword_list = new ArrayList();//存放那个词的id值吧
+            for (int i = 0; i < db_word.Rows.Count; i++)
+            {
+                string wd = db_word.Rows[i]["word"].ToString().Trim();
+
+                if(wd.Length < 4)
+                {
+                    rword_list.Add(i);
+                    continue;
+                }
+                //只能做包含分析，包含则确定该词
+                //没有则直接加入不处理，否则要进一步分析
+                if(!sub_analysis(rword_list, i))//false是代表非衍生单词，需要加入list
+                {
+                    rword_list.Add(i);
+                }
+            }
+        }
+
+        //public string src_table = "en_word_test";
+        public string src_table =  "en_word_bak";
+        public string dst_table = "en_word";
+        private void btn_root_Click(object sender, EventArgs e)
+        {
+            mysql = new Mysql(Mysql.connectstring);
+
+            try
+            {
+                //先把表导出来
+                read_word_table();
+                //读取每一行，加入到root词列表，如果有跟他一半像的
+                //并且符合一些特征，加ed，s，es，改y为ies，去e加ed类似
+                main_word_deal();
+                mysql.MySqlWriteDataTable("en_word", db_word);//批量块写入数据库
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                mysql.Dispose();
+            }
             MessageBox.Show("完成了", "提示");
         }
     }

@@ -41,8 +41,9 @@
             this.tbox_delhead = new System.Windows.Forms.TextBox();
             this.btn_delhead = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btn_en = new System.Windows.Forms.Button();
             this.cbox_year = new System.Windows.Forms.ComboBox();
+            this.btn_en = new System.Windows.Forms.Button();
+            this.btn_root = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -149,24 +150,15 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btn_root);
             this.groupBox1.Controls.Add(this.cbox_year);
             this.groupBox1.Controls.Add(this.btn_en);
-            this.groupBox1.Location = new System.Drawing.Point(27, 273);
+            this.groupBox1.Location = new System.Drawing.Point(5, 244);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(200, 100);
+            this.groupBox1.Size = new System.Drawing.Size(379, 169);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "英语真题文本处理";
-            // 
-            // btn_en
-            // 
-            this.btn_en.Location = new System.Drawing.Point(121, 71);
-            this.btn_en.Name = "btn_en";
-            this.btn_en.Size = new System.Drawing.Size(73, 23);
-            this.btn_en.TabIndex = 0;
-            this.btn_en.Text = "开始处理";
-            this.btn_en.UseVisualStyleBackColor = true;
-            this.btn_en.Click += new System.EventHandler(this.btn_en_Click);
             // 
             // cbox_year
             // 
@@ -187,6 +179,26 @@
             this.cbox_year.Name = "cbox_year";
             this.cbox_year.Size = new System.Drawing.Size(156, 20);
             this.cbox_year.TabIndex = 1;
+            // 
+            // btn_en
+            // 
+            this.btn_en.Location = new System.Drawing.Point(185, 23);
+            this.btn_en.Name = "btn_en";
+            this.btn_en.Size = new System.Drawing.Size(73, 23);
+            this.btn_en.TabIndex = 0;
+            this.btn_en.Text = "开始处理";
+            this.btn_en.UseVisualStyleBackColor = true;
+            this.btn_en.Click += new System.EventHandler(this.btn_en_Click);
+            // 
+            // btn_root
+            // 
+            this.btn_root.Location = new System.Drawing.Point(23, 68);
+            this.btn_root.Name = "btn_root";
+            this.btn_root.Size = new System.Drawing.Size(75, 23);
+            this.btn_root.TabIndex = 2;
+            this.btn_root.Text = "词汇总";
+            this.btn_root.UseVisualStyleBackColor = true;
+            this.btn_root.Click += new System.EventHandler(this.btn_root_Click);
             // 
             // Form_file
             // 
@@ -229,5 +241,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btn_en;
         private System.Windows.Forms.ComboBox cbox_year;
+        private System.Windows.Forms.Button btn_root;
     }
 }
