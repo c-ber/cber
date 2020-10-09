@@ -105,7 +105,6 @@ namespace cotool.sysset
                 //精确进程名  用GetProcessesByName
                 foreach (Process p in Process.GetProcesses())
                 {
-                    Console.Write(p.ProcessName);
                     if (strProcName.Equals(p.ProcessName))
                     {
                         return true;
@@ -120,7 +119,7 @@ namespace cotool.sysset
         }
         void flash_process()
         {
-            if (SearchProc("ThunderPlatform.exe"))
+            if (SearchProc("ThunderPlatform"))//不用加exe
             {
                 label_xl.Text = "迅雷进程在运行中";
                 label_xl.ForeColor = Color.Red;
@@ -134,7 +133,7 @@ namespace cotool.sysset
 
         private void btn_kill_Click(object sender, EventArgs e)
         {
-            dd.exec_cmd(@"taskkill / F / IM ThunderPlatform.exe", 5);
+            dd.exec_cmd(@"taskkill /F /IM ThunderPlatform.exe", 5);
         }
 
         private void Form_ie_Load(object sender, EventArgs e)

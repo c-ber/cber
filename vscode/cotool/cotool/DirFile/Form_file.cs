@@ -253,8 +253,9 @@ namespace cotool.DirFile
                     {
                         continue;
                     }
+
                     //简单判断是否为子集,是则结束
-                    if (wd.Contains(listword))//list为根
+                    if (wd.Contains(listword) && listword.Length >= 4)//list为根
                     {
                         set_root_word(listid, wid);
                         return true;
