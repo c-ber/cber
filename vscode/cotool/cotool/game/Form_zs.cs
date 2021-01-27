@@ -134,9 +134,10 @@ namespace cotool.game
                 dgv_yaoyao.Rows[i].Cells["main_id"].Value = tb_id + i +1;
                 dgv_yaoyao.Rows[i].Cells["game_id"].Value = game_id +1;
                 dgv_yaoyao.Rows[i].Cells["ID"].Value = list[i];
+                dgv_yaoyao.Rows[i].Cells["desc"].Value = "明图玩家，喷人，搞死他";
                 dgv_yaoyao.Rows[i].Cells["tubi"].Value = "是";
                 dgv_yaoyao.Rows[i].Cells["level"].Value = "B";
-                dgv_yaoyao.Rows[i].Cells["score"].Value = "800";
+                dgv_yaoyao.Rows[i].Cells["score"].Value = "100";
             }
             if(dgv_yaoyao.Rows.Count > 9)
             {
@@ -183,7 +184,7 @@ namespace cotool.game
             dgv_yaoyao.Rows.Clear();
             mysql = new Mysql(Mysql.connectstring);
 
-            string sql = "select * from "+ db_tablename + " where 11id like '%" + tbx_id.Text.Trim() + "%'";
+            string sql = "select * from "+ db_tablename + " where 11id like '%" + tbx_id.Text.Trim() + "%'  order by tb_id desc";
             try
             {
                 db_table = mysql.ExecuteDataTable(db_tablename, sql);

@@ -185,6 +185,7 @@
             // 
             this.score.HeaderText = "天梯分";
             this.score.Items.AddRange(new object[] {
+            "100",
             "700",
             "800",
             "900",
