@@ -13,6 +13,8 @@ using cotool.sysset;
 using cotool.game;
 using System.IO;
 using cotool.DirFile;
+using cotool.exam;
+using cotool.crack;
 
 namespace cotool
 {
@@ -114,6 +116,22 @@ namespace cotool
         {
             this.panel1.Controls.Clear();
             Form_file form = new Form_file();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
+
+        private void 政英数专ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_ks form = new Form_ks();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
+
+        private void 进程内存ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_crack form = new Form_crack();
             this.panel1.Controls.Add(form);
             form.Show();
         }
