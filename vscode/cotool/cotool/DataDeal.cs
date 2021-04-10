@@ -25,7 +25,7 @@ namespace cotool
         /// <param name="cmd"></param>
         /// <param name="sec"></param>
         /// <returns></returns>
-        public string exec_cmd(string cmd, int sec)
+        public string exec_cmd(string cmd, int sec, bool jiaohu = true)
         {
             string output = "";
             if(cmd != null && !cmd.Equals(""))
@@ -37,7 +37,7 @@ namespace cotool
                 startInfo.UseShellExecute = false;//不使用系统外壳程序启动
                 startInfo.RedirectStandardInput = false;
                 startInfo.RedirectStandardOutput = true;
-                startInfo.CreateNoWindow = true;
+                startInfo.CreateNoWindow = jiaohu;
                 process.StartInfo = startInfo;
 
                 try

@@ -36,11 +36,16 @@
             this.label2 = new System.Windows.Forms.Label();
             this.cbox_pro = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.btn_inject = new System.Windows.Forms.Button();
+            this.tbox_dll = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.btn_inject);
             this.groupBox1.Controls.Add(this.btn_getmem);
             this.groupBox1.Controls.Add(this.tbox_len);
             this.groupBox1.Controls.Add(this.label3);
@@ -48,9 +53,10 @@
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.cbox_pro);
             this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.tbox_dll);
             this.groupBox1.Location = new System.Drawing.Point(16, 16);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(314, 100);
+            this.groupBox1.Size = new System.Drawing.Size(768, 167);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "内存到文件";
@@ -118,6 +124,33 @@
             this.label1.TabIndex = 1;
             this.label1.Text = "进程：";
             // 
+            // btn_inject
+            // 
+            this.btn_inject.Location = new System.Drawing.Point(705, 134);
+            this.btn_inject.Name = "btn_inject";
+            this.btn_inject.Size = new System.Drawing.Size(57, 24);
+            this.btn_inject.TabIndex = 0;
+            this.btn_inject.Text = "Dll注入";
+            this.btn_inject.UseVisualStyleBackColor = true;
+            this.btn_inject.Click += new System.EventHandler(this.btn_inject_Click);
+            // 
+            // tbox_dll
+            // 
+            this.tbox_dll.Location = new System.Drawing.Point(70, 137);
+            this.tbox_dll.Name = "tbox_dll";
+            this.tbox_dll.Size = new System.Drawing.Size(692, 21);
+            this.tbox_dll.TabIndex = 7;
+            this.tbox_dll.Text = "M:\\code\\GetWeChatPic\\Debug\\GetWeChatPic.dll";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(16, 142);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(47, 12);
+            this.label4.TabIndex = 8;
+            this.label4.Text = "Dll路径";
+            // 
             // Form_crack
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -142,5 +175,8 @@
         private System.Windows.Forms.TextBox tbox_len;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btn_getmem;
+        private System.Windows.Forms.Button btn_inject;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox tbox_dll;
     }
 }

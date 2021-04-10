@@ -15,6 +15,7 @@ using System.IO;
 using cotool.DirFile;
 using cotool.exam;
 using cotool.crack;
+using System.Diagnostics;
 
 namespace cotool
 {
@@ -24,7 +25,7 @@ namespace cotool
         {
             InitializeComponent();
         }
-
+        DataDeal dd = new DataDeal();
         private void 安全统计ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.panel1.Controls.Clear();
@@ -134,6 +135,12 @@ namespace cotool
             Form_crack form = new Form_crack();
             this.panel1.Controls.Add(form);
             form.Show();
+        }
+
+        private void 子域名ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(@"python M:\svnb\cber\gitcode\python\forvscode\subdomain.py", "提示,在cmd执行：");
+            Clipboard.SetDataObject(@"python M:\svnb\cber\gitcode\python\forvscode\subdomain.py");
         }
     }
 }
