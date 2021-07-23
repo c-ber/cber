@@ -32,6 +32,8 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.nXToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.进程内存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.信息探测ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.子域名ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.系统设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iE设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.游戏外挂ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,8 +47,7 @@
             this.考试ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.政英数专ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.信息探测ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.子域名ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.蚁剑ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -73,7 +74,8 @@
             // 
             this.nXToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.进程内存ToolStripMenuItem,
-            this.信息探测ToolStripMenuItem});
+            this.信息探测ToolStripMenuItem,
+            this.蚁剑ToolStripMenuItem});
             this.nXToolStripMenuItem.Name = "nXToolStripMenuItem";
             this.nXToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
             this.nXToolStripMenuItem.Text = "逆向渗透";
@@ -84,6 +86,21 @@
             this.进程内存ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.进程内存ToolStripMenuItem.Text = "进程内存";
             this.进程内存ToolStripMenuItem.Click += new System.EventHandler(this.进程内存ToolStripMenuItem_Click);
+            // 
+            // 信息探测ToolStripMenuItem
+            // 
+            this.信息探测ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.子域名ToolStripMenuItem});
+            this.信息探测ToolStripMenuItem.Name = "信息探测ToolStripMenuItem";
+            this.信息探测ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.信息探测ToolStripMenuItem.Text = "信息探测";
+            // 
+            // 子域名ToolStripMenuItem
+            // 
+            this.子域名ToolStripMenuItem.Name = "子域名ToolStripMenuItem";
+            this.子域名ToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
+            this.子域名ToolStripMenuItem.Text = "子域名";
+            this.子域名ToolStripMenuItem.Click += new System.EventHandler(this.子域名ToolStripMenuItem_Click);
             // 
             // 系统设置ToolStripMenuItem
             // 
@@ -96,7 +113,7 @@
             // iE设置ToolStripMenuItem
             // 
             this.iE设置ToolStripMenuItem.Name = "iE设置ToolStripMenuItem";
-            this.iE设置ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.iE设置ToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
             this.iE设置ToolStripMenuItem.Text = "IE设置";
             this.iE设置ToolStripMenuItem.Click += new System.EventHandler(this.iE代理开关ToolStripMenuItem_Click);
             // 
@@ -188,20 +205,12 @@
             this.panel1.TabIndex = 1;
             this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
             // 
-            // 信息探测ToolStripMenuItem
+            // 蚁剑ToolStripMenuItem
             // 
-            this.信息探测ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.子域名ToolStripMenuItem});
-            this.信息探测ToolStripMenuItem.Name = "信息探测ToolStripMenuItem";
-            this.信息探测ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.信息探测ToolStripMenuItem.Text = "信息探测";
-            // 
-            // 子域名ToolStripMenuItem
-            // 
-            this.子域名ToolStripMenuItem.Name = "子域名ToolStripMenuItem";
-            this.子域名ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.子域名ToolStripMenuItem.Text = "子域名";
-            this.子域名ToolStripMenuItem.Click += new System.EventHandler(this.子域名ToolStripMenuItem_Click);
+            this.蚁剑ToolStripMenuItem.Name = "蚁剑ToolStripMenuItem";
+            this.蚁剑ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.蚁剑ToolStripMenuItem.Text = "蚁剑";
+            this.蚁剑ToolStripMenuItem.Click += new System.EventHandler(this.蚁剑ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -244,6 +253,7 @@
         private System.Windows.Forms.ToolStripMenuItem 进程内存ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 信息探测ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 子域名ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 蚁剑ToolStripMenuItem;
     }
 }
 

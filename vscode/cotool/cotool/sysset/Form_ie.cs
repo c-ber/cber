@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Collections;
+using System.IO;
 
 namespace cotool.sysset
 {
@@ -67,10 +69,29 @@ namespace cotool.sysset
             label1.Text = "代理已经关闭";
         }
 
-        private void btn_mul_Click(object sender, EventArgs e)
+        private void btn_readgw_Click(object sender, EventArgs e)
         {
-
+            ArrayList linelist = new ArrayList();
+            dd.get_file_content("cowg.log", linelist);
+            tbox_gw.Text = "";
+            for (int i = 0; i < linelist.Count; i++)
+            {
+                tbox_gw.Text += linelist[i];
+            }
         }
+
+        private void btn_savegw_Click(object sender, EventArgs e)
+        {
+            ArrayList linelist = new ArrayList();
+            linelist.Add(tbox_gw.Text);
+            dd.writefile_list("cowg.log", linelist);
+        }
+        private void btn_remove_Click(object sender, EventArgs e)
+        {
+            FileStream fs = new FileStream("cowg.log", FileMode.Truncate, FileAccess.ReadWrite);
+            fs.Close();
+        }
+
         /// <summary>
         /// 杀掉FoxitReader进程
         /// </summary>
@@ -173,5 +194,7 @@ namespace cotool.sysset
         {
             dd.exec_proc(@"C:\Program Files (x86)\PremiumSoft\Navicat Premium\navicat.exe");
         }
+
+
     }
 }

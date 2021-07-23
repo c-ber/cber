@@ -142,5 +142,10 @@ namespace cotool
             MessageBox.Show(@"python M:\svnb\cber\gitcode\python\forvscode\subdomain.py", "提示,在cmd执行：");
             Clipboard.SetDataObject(@"python M:\svnb\cber\gitcode\python\forvscode\subdomain.py");
         }
+
+        private void 蚁剑ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            dd.exec_proc(@"O:\web安全软件\AntSword-Loader-v4.0.3-win32-x64\AntSword-Loader-v4.0.3-win32-x64\AntSword.exe");
+        }
     }
 }
