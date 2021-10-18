@@ -46,10 +46,14 @@
             this.btn_kill = new System.Windows.Forms.Button();
             this.label_xl = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.btn_redis = new System.Windows.Forms.Button();
+            this.btn_rabbitmq = new System.Windows.Forms.Button();
             this.btn_navi = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.btn_close_mysql = new System.Windows.Forms.Button();
             this.btn_start_mysql = new System.Windows.Forms.Button();
+            this.btn_auto = new System.Windows.Forms.Button();
+            this.btn_del_auto = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -68,6 +72,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btn_del_auto);
+            this.groupBox1.Controls.Add(this.btn_auto);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.btn_close);
             this.groupBox1.Controls.Add(this.btn_open);
@@ -145,7 +151,7 @@
             this.btn_remove.Name = "btn_remove";
             this.btn_remove.Size = new System.Drawing.Size(52, 23);
             this.btn_remove.TabIndex = 3;
-            this.btn_remove.Text = "清除";
+            this.btn_remove.Text = "重置";
             this.btn_remove.UseVisualStyleBackColor = true;
             this.btn_remove.Click += new System.EventHandler(this.btn_remove_Click);
             // 
@@ -226,20 +232,42 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.btn_redis);
+            this.groupBox4.Controls.Add(this.btn_rabbitmq);
             this.groupBox4.Controls.Add(this.btn_navi);
             this.groupBox4.Controls.Add(this.label6);
             this.groupBox4.Controls.Add(this.btn_close_mysql);
             this.groupBox4.Controls.Add(this.btn_start_mysql);
-            this.groupBox4.Location = new System.Drawing.Point(40, 138);
+            this.groupBox4.Location = new System.Drawing.Point(40, 122);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(200, 100);
+            this.groupBox4.Size = new System.Drawing.Size(200, 133);
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "mysql开关";
             // 
+            // btn_redis
+            // 
+            this.btn_redis.Location = new System.Drawing.Point(9, 93);
+            this.btn_redis.Name = "btn_redis";
+            this.btn_redis.Size = new System.Drawing.Size(75, 23);
+            this.btn_redis.TabIndex = 5;
+            this.btn_redis.Text = "redis";
+            this.btn_redis.UseVisualStyleBackColor = true;
+            this.btn_redis.Click += new System.EventHandler(this.btn_redis_Click);
+            // 
+            // btn_rabbitmq
+            // 
+            this.btn_rabbitmq.Location = new System.Drawing.Point(109, 59);
+            this.btn_rabbitmq.Name = "btn_rabbitmq";
+            this.btn_rabbitmq.Size = new System.Drawing.Size(75, 23);
+            this.btn_rabbitmq.TabIndex = 4;
+            this.btn_rabbitmq.Text = "rabbitmq";
+            this.btn_rabbitmq.UseVisualStyleBackColor = true;
+            this.btn_rabbitmq.Click += new System.EventHandler(this.btn_rabbitmq_Click);
+            // 
             // btn_navi
             // 
-            this.btn_navi.Location = new System.Drawing.Point(9, 67);
+            this.btn_navi.Location = new System.Drawing.Point(9, 59);
             this.btn_navi.Name = "btn_navi";
             this.btn_navi.Size = new System.Drawing.Size(75, 23);
             this.btn_navi.TabIndex = 3;
@@ -259,7 +287,7 @@
             // 
             // btn_close_mysql
             // 
-            this.btn_close_mysql.Location = new System.Drawing.Point(109, 32);
+            this.btn_close_mysql.Location = new System.Drawing.Point(109, 20);
             this.btn_close_mysql.Name = "btn_close_mysql";
             this.btn_close_mysql.Size = new System.Drawing.Size(75, 23);
             this.btn_close_mysql.TabIndex = 1;
@@ -269,13 +297,33 @@
             // 
             // btn_start_mysql
             // 
-            this.btn_start_mysql.Location = new System.Drawing.Point(9, 32);
+            this.btn_start_mysql.Location = new System.Drawing.Point(9, 20);
             this.btn_start_mysql.Name = "btn_start_mysql";
             this.btn_start_mysql.Size = new System.Drawing.Size(75, 23);
             this.btn_start_mysql.TabIndex = 0;
             this.btn_start_mysql.Text = "启动服务";
             this.btn_start_mysql.UseVisualStyleBackColor = true;
             this.btn_start_mysql.Click += new System.EventHandler(this.btn_start_mysql_Click);
+            // 
+            // btn_auto
+            // 
+            this.btn_auto.Location = new System.Drawing.Point(9, 71);
+            this.btn_auto.Name = "btn_auto";
+            this.btn_auto.Size = new System.Drawing.Size(75, 23);
+            this.btn_auto.TabIndex = 3;
+            this.btn_auto.Text = "开机启动";
+            this.btn_auto.UseVisualStyleBackColor = true;
+            this.btn_auto.Click += new System.EventHandler(this.btn_auto_Click);
+            // 
+            // btn_del_auto
+            // 
+            this.btn_del_auto.Location = new System.Drawing.Point(109, 71);
+            this.btn_del_auto.Name = "btn_del_auto";
+            this.btn_del_auto.Size = new System.Drawing.Size(75, 23);
+            this.btn_del_auto.TabIndex = 4;
+            this.btn_del_auto.Text = "删除启动";
+            this.btn_del_auto.UseVisualStyleBackColor = true;
+            this.btn_del_auto.Click += new System.EventHandler(this.btn_del_auto_Click);
             // 
             // Form_ie
             // 
@@ -324,5 +372,9 @@
         private System.Windows.Forms.TextBox tbox_gw;
         private System.Windows.Forms.Button btn_remove;
         private System.Windows.Forms.Button btn_savegw;
+        private System.Windows.Forms.Button btn_rabbitmq;
+        private System.Windows.Forms.Button btn_redis;
+        private System.Windows.Forms.Button btn_auto;
+        private System.Windows.Forms.Button btn_del_auto;
     }
 }

@@ -13,9 +13,9 @@ using cotool.sysset;
 using cotool.game;
 using System.IO;
 using cotool.DirFile;
-using cotool.exam;
 using cotool.crack;
 using System.Diagnostics;
+using cotool.index;
 
 namespace cotool
 {
@@ -102,7 +102,10 @@ namespace cotool
 
         private void panel1_SizeChanged(object sender, EventArgs e)
         {
-            this.panel1.Controls[0].Size = this.panel1.Size;
+            if (this.panel1.Controls.Count > 0)//不加这个判断，自启动会报错，奇怪
+            {
+                this.panel1.Controls[0].Size = this.panel1.Size;
+            }
         }
 
         private void 网页内容提取ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -117,14 +120,6 @@ namespace cotool
         {
             this.panel1.Controls.Clear();
             Form_file form = new Form_file();
-            this.panel1.Controls.Add(form);
-            form.Show();
-        }
-
-        private void 政英数专ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.panel1.Controls.Clear();
-            Form_ks form = new Form_ks();
             this.panel1.Controls.Add(form);
             form.Show();
         }
@@ -146,6 +141,14 @@ namespace cotool
         private void 蚁剑ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             dd.exec_proc(@"O:\web安全软件\AntSword-Loader-v4.0.3-win32-x64\AntSword-Loader-v4.0.3-win32-x64\AntSword.exe");
+        }
+
+        private void 首页ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_index form = new Form_index();
+            this.panel1.Controls.Add(form);
+            form.Show();
         }
     }
 }

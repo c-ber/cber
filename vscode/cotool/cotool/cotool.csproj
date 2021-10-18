@@ -86,12 +86,6 @@
       <DependentUpon>Form_crack.cs</DependentUpon>
     </Compile>
     <Compile Include="DataDeal.cs" />
-    <Compile Include="exam\Form_ks.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="exam\Form_ks.Designer.cs">
-      <DependentUpon>Form_ks.cs</DependentUpon>
-    </Compile>
     <Compile Include="ExcelDeal.cs" />
     <Compile Include="DirFile\Form_file.cs">
       <SubType>UserControl</SubType>
@@ -110,6 +104,12 @@
     </Compile>
     <Compile Include="Form_dbtj.Designer.cs">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
+    </Compile>
+    <Compile Include="index\Form_index.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="index\Form_index.Designer.cs">
+      <DependentUpon>Form_index.cs</DependentUpon>
     </Compile>
     <Compile Include="sysset\mul.cs" />
     <Compile Include="web\Form_web.cs">
@@ -143,14 +143,14 @@
     <EmbeddedResource Include="DirFile\Form_file.resx">
       <DependentUpon>Form_file.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="exam\Form_ks.resx">
-      <DependentUpon>Form_ks.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form_dbtj.resx">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="index\Form_index.resx">
+      <DependentUpon>Form_index.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="web\Form_web.resx">
       <DependentUpon>Form_web.cs</DependentUpon>

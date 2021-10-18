@@ -34,6 +34,7 @@
             this.进程内存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.信息探测ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.子域名ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.蚁剑ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.系统设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.iE设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.游戏外挂ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,10 +45,8 @@
             this.批量改名ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.数据库统计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.安全统计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.考试ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.政英数专ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.蚁剑ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.首页ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -56,13 +55,13 @@
             this.menuStrip1.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.首页ToolStripMenuItem,
             this.nXToolStripMenuItem,
             this.系统设置ToolStripMenuItem,
             this.游戏外挂ToolStripMenuItem,
             this.网页功能ToolStripMenuItem,
             this.文件目录ToolStripMenuItem,
-            this.数据库统计ToolStripMenuItem,
-            this.考试ToolStripMenuItem});
+            this.数据库统计ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
@@ -83,7 +82,7 @@
             // 进程内存ToolStripMenuItem
             // 
             this.进程内存ToolStripMenuItem.Name = "进程内存ToolStripMenuItem";
-            this.进程内存ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.进程内存ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             this.进程内存ToolStripMenuItem.Text = "进程内存";
             this.进程内存ToolStripMenuItem.Click += new System.EventHandler(this.进程内存ToolStripMenuItem_Click);
             // 
@@ -92,7 +91,7 @@
             this.信息探测ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.子域名ToolStripMenuItem});
             this.信息探测ToolStripMenuItem.Name = "信息探测ToolStripMenuItem";
-            this.信息探测ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.信息探测ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             this.信息探测ToolStripMenuItem.Text = "信息探测";
             // 
             // 子域名ToolStripMenuItem
@@ -101,6 +100,13 @@
             this.子域名ToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.子域名ToolStripMenuItem.Text = "子域名";
             this.子域名ToolStripMenuItem.Click += new System.EventHandler(this.子域名ToolStripMenuItem_Click);
+            // 
+            // 蚁剑ToolStripMenuItem
+            // 
+            this.蚁剑ToolStripMenuItem.Name = "蚁剑ToolStripMenuItem";
+            this.蚁剑ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.蚁剑ToolStripMenuItem.Text = "蚁剑";
+            this.蚁剑ToolStripMenuItem.Click += new System.EventHandler(this.蚁剑ToolStripMenuItem_Click);
             // 
             // 系统设置ToolStripMenuItem
             // 
@@ -177,21 +183,6 @@
             this.安全统计ToolStripMenuItem.Text = "安全统计";
             this.安全统计ToolStripMenuItem.Click += new System.EventHandler(this.安全统计ToolStripMenuItem_Click);
             // 
-            // 考试ToolStripMenuItem
-            // 
-            this.考试ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.政英数专ToolStripMenuItem});
-            this.考试ToolStripMenuItem.Name = "考试ToolStripMenuItem";
-            this.考试ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
-            this.考试ToolStripMenuItem.Text = "考试";
-            // 
-            // 政英数专ToolStripMenuItem
-            // 
-            this.政英数专ToolStripMenuItem.Name = "政英数专ToolStripMenuItem";
-            this.政英数专ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
-            this.政英数专ToolStripMenuItem.Text = "政英数专";
-            this.政英数专ToolStripMenuItem.Click += new System.EventHandler(this.政英数专ToolStripMenuItem_Click);
-            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -205,12 +196,12 @@
             this.panel1.TabIndex = 1;
             this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
             // 
-            // 蚁剑ToolStripMenuItem
+            // 首页ToolStripMenuItem
             // 
-            this.蚁剑ToolStripMenuItem.Name = "蚁剑ToolStripMenuItem";
-            this.蚁剑ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.蚁剑ToolStripMenuItem.Text = "蚁剑";
-            this.蚁剑ToolStripMenuItem.Click += new System.EventHandler(this.蚁剑ToolStripMenuItem_Click);
+            this.首页ToolStripMenuItem.Name = "首页ToolStripMenuItem";
+            this.首页ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.首页ToolStripMenuItem.Text = "首页";
+            this.首页ToolStripMenuItem.Click += new System.EventHandler(this.首页ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -224,7 +215,7 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "通用工具        — — 编程征服软件世界";
+            this.Text = "通用工具        — — 编程改造世界";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -247,13 +238,12 @@
         private System.Windows.Forms.ToolStripMenuItem 网页内容提取ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 文件目录ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 批量改名ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 考试ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 政英数专ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem nXToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 进程内存ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 信息探测ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 子域名ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 蚁剑ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 首页ToolStripMenuItem;
     }
 }
 

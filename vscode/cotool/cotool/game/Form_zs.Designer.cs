@@ -31,12 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_zs));
             this.tb_playlist = new System.Windows.Forms.TextBox();
             this.dgv_yaoyao = new System.Windows.Forms.DataGridView();
-            this.tb_desc = new System.Windows.Forms.TextBox();
-            this.btn_input = new System.Windows.Forms.Button();
-            this.btn_submit = new System.Windows.Forms.Button();
-            this.btn_save = new System.Windows.Forms.Button();
-            this.btn_search = new System.Windows.Forms.Button();
-            this.tbx_id = new System.Windows.Forms.TextBox();
             this.tb_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.main_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ID = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -45,6 +39,12 @@
             this.level = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.score = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.game_id = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.tb_desc = new System.Windows.Forms.TextBox();
+            this.btn_input = new System.Windows.Forms.Button();
+            this.btn_submit = new System.Windows.Forms.Button();
+            this.btn_save = new System.Windows.Forms.Button();
+            this.btn_search = new System.Windows.Forms.Button();
+            this.tbx_id = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_yaoyao)).BeginInit();
             this.SuspendLayout();
             // 
@@ -57,7 +57,6 @@
             this.tb_playlist.Name = "tb_playlist";
             this.tb_playlist.Size = new System.Drawing.Size(104, 180);
             this.tb_playlist.TabIndex = 0;
-            this.tb_playlist.Text = "八神八神\r\n破碎的大地丶\r\n大肚子男人\r\n勇敢与勇气\r\ndq12qwe\r\n流浪诗人zxm灬灬\r\n拔吊无敌\r\n菜3菜\r\n鸳鸯戏水哦\r\n";
             this.tb_playlist.WordWrap = false;
             // 
             // dgv_yaoyao
@@ -79,65 +78,6 @@
             this.dgv_yaoyao.RowTemplate.Height = 30;
             this.dgv_yaoyao.Size = new System.Drawing.Size(640, 313);
             this.dgv_yaoyao.TabIndex = 1;
-            // 
-            // tb_desc
-            // 
-            this.tb_desc.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.tb_desc.Location = new System.Drawing.Point(202, 354);
-            this.tb_desc.Multiline = true;
-            this.tb_desc.Name = "tb_desc";
-            this.tb_desc.Size = new System.Drawing.Size(577, 59);
-            this.tb_desc.TabIndex = 2;
-            // 
-            // btn_input
-            // 
-            this.btn_input.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btn_input.Location = new System.Drawing.Point(113, 198);
-            this.btn_input.Name = "btn_input";
-            this.btn_input.Size = new System.Drawing.Size(20, 22);
-            this.btn_input.TabIndex = 3;
-            this.btn_input.Text = ">";
-            this.btn_input.UseVisualStyleBackColor = true;
-            this.btn_input.Click += new System.EventHandler(this.btn_input_Click);
-            // 
-            // btn_submit
-            // 
-            this.btn_submit.Location = new System.Drawing.Point(139, 354);
-            this.btn_submit.Name = "btn_submit";
-            this.btn_submit.Size = new System.Drawing.Size(57, 58);
-            this.btn_submit.TabIndex = 4;
-            this.btn_submit.Text = "评论";
-            this.btn_submit.UseVisualStyleBackColor = true;
-            this.btn_submit.Click += new System.EventHandler(this.btn_submit_Click);
-            // 
-            // btn_save
-            // 
-            this.btn_save.Location = new System.Drawing.Point(685, 4);
-            this.btn_save.Name = "btn_save";
-            this.btn_save.Size = new System.Drawing.Size(94, 28);
-            this.btn_save.TabIndex = 5;
-            this.btn_save.Text = "保存到数据库";
-            this.btn_save.UseVisualStyleBackColor = true;
-            this.btn_save.Click += new System.EventHandler(this.btn_save_Click);
-            // 
-            // btn_search
-            // 
-            this.btn_search.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btn_search.BackgroundImage")));
-            this.btn_search.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.btn_search.Location = new System.Drawing.Point(304, 3);
-            this.btn_search.Name = "btn_search";
-            this.btn_search.Size = new System.Drawing.Size(26, 26);
-            this.btn_search.TabIndex = 6;
-            this.btn_search.UseVisualStyleBackColor = true;
-            this.btn_search.Click += new System.EventHandler(this.btn_search_Click);
-            // 
-            // tbx_id
-            // 
-            this.tbx_id.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.tbx_id.Location = new System.Drawing.Point(139, 4);
-            this.tbx_id.Name = "tbx_id";
-            this.tbx_id.Size = new System.Drawing.Size(168, 26);
-            this.tbx_id.TabIndex = 7;
             // 
             // tb_id
             // 
@@ -198,6 +138,65 @@
             this.game_id.HeaderText = "游戏局ID";
             this.game_id.Name = "game_id";
             this.game_id.Visible = false;
+            // 
+            // tb_desc
+            // 
+            this.tb_desc.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.tb_desc.Location = new System.Drawing.Point(202, 354);
+            this.tb_desc.Multiline = true;
+            this.tb_desc.Name = "tb_desc";
+            this.tb_desc.Size = new System.Drawing.Size(577, 59);
+            this.tb_desc.TabIndex = 2;
+            // 
+            // btn_input
+            // 
+            this.btn_input.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btn_input.Location = new System.Drawing.Point(113, 198);
+            this.btn_input.Name = "btn_input";
+            this.btn_input.Size = new System.Drawing.Size(20, 22);
+            this.btn_input.TabIndex = 3;
+            this.btn_input.Text = ">";
+            this.btn_input.UseVisualStyleBackColor = true;
+            this.btn_input.Click += new System.EventHandler(this.btn_input_Click);
+            // 
+            // btn_submit
+            // 
+            this.btn_submit.Location = new System.Drawing.Point(139, 354);
+            this.btn_submit.Name = "btn_submit";
+            this.btn_submit.Size = new System.Drawing.Size(57, 58);
+            this.btn_submit.TabIndex = 4;
+            this.btn_submit.Text = "评论";
+            this.btn_submit.UseVisualStyleBackColor = true;
+            this.btn_submit.Click += new System.EventHandler(this.btn_submit_Click);
+            // 
+            // btn_save
+            // 
+            this.btn_save.Location = new System.Drawing.Point(685, 4);
+            this.btn_save.Name = "btn_save";
+            this.btn_save.Size = new System.Drawing.Size(94, 28);
+            this.btn_save.TabIndex = 5;
+            this.btn_save.Text = "保存到数据库";
+            this.btn_save.UseVisualStyleBackColor = true;
+            this.btn_save.Click += new System.EventHandler(this.btn_save_Click);
+            // 
+            // btn_search
+            // 
+            this.btn_search.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btn_search.BackgroundImage")));
+            this.btn_search.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btn_search.Location = new System.Drawing.Point(304, 3);
+            this.btn_search.Name = "btn_search";
+            this.btn_search.Size = new System.Drawing.Size(26, 26);
+            this.btn_search.TabIndex = 6;
+            this.btn_search.UseVisualStyleBackColor = true;
+            this.btn_search.Click += new System.EventHandler(this.btn_search_Click);
+            // 
+            // tbx_id
+            // 
+            this.tbx_id.Font = new System.Drawing.Font("宋体", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.tbx_id.Location = new System.Drawing.Point(139, 4);
+            this.tbx_id.Name = "tbx_id";
+            this.tbx_id.Size = new System.Drawing.Size(168, 26);
+            this.tbx_id.TabIndex = 7;
             // 
             // Form_zs
             // 
