@@ -16,6 +16,7 @@ using cotool.DirFile;
 using cotool.crack;
 using System.Diagnostics;
 using cotool.index;
+using cotool.tool;
 
 namespace cotool
 {
@@ -26,6 +27,7 @@ namespace cotool
             InitializeComponent();
         }
         DataDeal dd = new DataDeal();
+        ComTool ct = new ComTool();
         private void 安全统计ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.panel1.Controls.Clear();
@@ -83,12 +85,16 @@ namespace cotool
             get_vmwareip(ref listIP);
             if(listIP.Count >= 1)
             {
-                this.Text = this.Text + "    IP：";
+                this.Text = this.Text + "    IP:";
             }
             foreach (string ip in listIP)
             {
-                this.Text +=  "  "+ ip;
+                this.Text +=  " "+ ip;
             }
+            int debugday = 0;
+            String date = "今天：" + DateTime.Now.AddDays(debugday) + "  " + 
+                          ct.GetChineseDateTime(DateTime.Now.AddDays(debugday));
+            this.Text += "  " + date;
         }
 
         private void 真三玩家ToolStripMenuItem_Click(object sender, EventArgs e)
