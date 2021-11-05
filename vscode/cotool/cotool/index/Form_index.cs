@@ -16,6 +16,7 @@ using cotool.DirFile;
 using cotool.crack;
 using System.Diagnostics;
 using MySql.Data.MySqlClient;
+using cotool.tool;
 
 namespace cotool.index
 {
@@ -27,6 +28,9 @@ namespace cotool.index
         }
 
         string db_tablename = "t_everyday";
+        string db_tablename_hm = "t_everyday_hm";
+        tool.ComTool ct = new ComTool();
+
         Mysql mysql = null; //数据库连接
         DataTable db_table = new DataTable();//建立个数据表
 
@@ -84,8 +88,15 @@ namespace cotool.index
 
         private void Form_index_Load(object sender, EventArgs e)
         {
+            List<string> listIP = new List<string>();
+            ct.get_vmwareip(ref listIP);
+            if (!listIP[0].Equals("192.168.0.180"))
+            {
+                db_tablename = db_tablename_hm;
+            }
+
             //设置标题
-            if(!File.Exists(file_index))
+            if (!File.Exists(file_index))
             {
                 rtbox_main.Text = "乐观又不失去对客观环境的平静认知";
                 return;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +10,43 @@ namespace cotool.tool
 {
     class ComTool
     {
+
+        public void get_vmwareip(ref List<string> listIP)
+        {
+            ManagementClass mcNetworkAdapterConfig = new ManagementClass("Win32_NetworkAdapterConfiguration");
+            ManagementObjectCollection moc_NetworkAdapterConfig = mcNetworkAdapterConfig.GetInstances();
+            foreach (ManagementObject mo in moc_NetworkAdapterConfig)
+            {
+                string mServiceName = mo["ServiceName"] as string;
+
+                //过滤非真实的网卡  
+                if (!(bool)mo["IPEnabled"])
+                { continue; }
+                if (mServiceName.ToLower().Contains("vmnetadapter")
+                 || mServiceName.ToLower().Contains("vmware")
+                 || mServiceName.ToLower().Contains("ppoe")
+                 || mServiceName.ToLower().Contains("bthpan")
+                 || mServiceName.ToLower().Contains("tapvpn")
+                 || mServiceName.ToLower().Contains("ndisip")
+                 || mServiceName.ToLower().Contains("sinforvnic"))
+                {
+                    continue;
+                }
+
+                string[] mIPAddress = mo["IPAddress"] as string[];
+
+                if (mIPAddress != null)
+                {
+                    if (mIPAddress[0] != "0.0.0.0")
+                    {
+                        listIP.Add(mIPAddress[0]);
+                    }
+                }
+                mo.Dispose();
+            }
+            return;
+        }
+
         //C# 获取农历日期
 
         ///<summary>

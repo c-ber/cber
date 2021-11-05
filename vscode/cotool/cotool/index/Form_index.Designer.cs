@@ -41,7 +41,7 @@
             this.rtbox_main.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.rtbox_main.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.rtbox_main.ForeColor = System.Drawing.Color.Red;
-            this.rtbox_main.Location = new System.Drawing.Point(250, 42);
+            this.rtbox_main.Location = new System.Drawing.Point(250, 15);
             this.rtbox_main.Name = "rtbox_main";
             this.rtbox_main.Size = new System.Drawing.Size(295, 55);
             this.rtbox_main.TabIndex = 0;
@@ -63,9 +63,9 @@
             this.rtbox_content.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.rtbox_content.Font = new System.Drawing.Font("微软雅黑", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.rtbox_content.ForeColor = System.Drawing.Color.Red;
-            this.rtbox_content.Location = new System.Drawing.Point(89, 114);
+            this.rtbox_content.Location = new System.Drawing.Point(89, 76);
             this.rtbox_content.Name = "rtbox_content";
-            this.rtbox_content.Size = new System.Drawing.Size(649, 220);
+            this.rtbox_content.Size = new System.Drawing.Size(649, 284);
             this.rtbox_content.TabIndex = 2;
             this.rtbox_content.Text = "";
             // 
