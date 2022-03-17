@@ -88,32 +88,149 @@ namespace cotool.game
                 return null;
             }
         }
-    }
 
-    /// <summary>
-    /// 自定义class放前面会导致Form设计界面异常，不能出来
-    /// </summary>
-    public class CmdBody
-    {
-        public string cmd { get; set; }
-        public string id { get; set; }
-        public string num { get; set; }
-        public string temp1 { get; set; }
-        public string temp2 { get; set; }
-        public string name { get; set; }
-        public string flag { get; set; }
-    }
-
-    public class QQ_shuihu
-    {
-        public string tips { get; set; }
-
-        List<CmdBody> cmd_linelist = new List<CmdBody>();
-        public List<CmdBody> list
+        private void Form_qqsh_Load(object sender, EventArgs e)
         {
-            get { return cmd_linelist; }
-            set { cmd_linelist = value; }
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
+            openFileDialog.ShowDialog();
+            listView1.Items.Clear();
+            for (int i = 0; i < openFileDialog.FileNames.Length; i++)
+            {
+                string fileName = openFileDialog.FileNames[i].ToString();
+                try
+                {
+                    int num = 0;
+                    FileInfo fileInfo = new FileInfo(fileName);
+                    FileStream fileStream = fileInfo.OpenRead();
+                    byte[] array = new byte[fileStream.Length];
+                    fileStream.Read(array, 0, array.Length);
+                    fileStream.Close();
+                    MemoryStream memoryStream = new MemoryStream();
+                    memoryStream.Write(array, num, array.Length - num);
+                    ReqDefault reqDefault = new ReqDefault();
+                    memoryStream.Seek(0L, SeekOrigin.Begin);
+                    reqDefault.readExternal(memoryStream, (int)memoryStream.Length);
+                    if (reqDefault.head.cmd == 5644)
+                    {
+                        Req5644 req = new Req5644();
+                        memoryStream.Seek(0L, SeekOrigin.Begin);
+                        req.readExternal(memoryStream, (int)memoryStream.Length);
+                        PBoyCommunicator.decodePackage(memoryStream.ToArray());
+                        int num2 = 0;
+                        ListViewItem listViewItem = listView1.Items.Add(fileInfo.Name);
+                        listViewItem.SubItems.Add(string.Concat(req.head.cmd));
+                        listViewItem.SubItems.Add(string.Concat(req.activity_id));
+                        listViewItem.SubItems.Add(string.Concat(req.oper_id));
+                        listViewItem.SubItems.Add(string.Concat(req.val_1));
+                        listViewItem.SubItems.Add(string.Concat(req.val_2));
+                        listViewItem.SubItems.Add(string.Concat(req.val_3));
+                        listViewItem.SubItems.Add(string.Concat(req.val_4));
+                        listViewItem.SubItems.Add(string.Concat(req.val_5));
+                    }
+                    else if (reqDefault.head.cmd == 5682)
+                    {
+                        ReqMixTreasureMulti reqMixTreasureMulti = new ReqMixTreasureMulti();
+                        memoryStream.Seek(0L, SeekOrigin.Begin);
+                        reqMixTreasureMulti.readExternal(memoryStream, (int)memoryStream.Length);
+                        PBoyCommunicator.decodePackage(memoryStream.ToArray());
+                        int num2 = 0;
+                        ListViewItem listViewItem = listView1.Items.Add(fileInfo.Name);
+                        listViewItem.SubItems.Add(string.Concat(reqMixTreasureMulti.head.cmd));
+                        listViewItem.SubItems.Add(string.Concat(reqMixTreasureMulti.discount_element_id));
+                        TreaCondition treaCondition = (TreaCondition)reqMixTreasureMulti.treaConds[0];
+                        listViewItem.SubItems.Add(string.Concat(treaCondition.id));
+                        listViewItem.SubItems.Add(string.Concat(treaCondition.treasure_id));
+                        listViewItem.SubItems.Add(string.Concat(treaCondition.times));
+                    }
+                    else
+                    {
+                        ReqDefault reqDefault2 = new ReqDefault();
+                        memoryStream.Seek(0L, SeekOrigin.Begin);
+                        reqDefault2.readExternal(memoryStream, (int)memoryStream.Length);
+                        PBoyCommunicator.decodePackage(memoryStream.ToArray());
+                        int num2 = 0;
+                        ListViewItem listViewItem = listView1.Items.Add(fileInfo.Name);
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.head.cmd));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.type));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.num));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.temp1));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.temp2));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.temp3));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.temp4));
+                        listViewItem.SubItems.Add(string.Concat(reqDefault2.temp5));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string text = ex.Message + ex.StackTrace;
+                }
+            }
+        }
+
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append("{\"tips\":\"我的脚本\",\"list\":[\r\n");
+                for (int i = 0; i < listView1.Items.Count; i++)
+                {
+                    string text = listView1.Items[i].SubItems[0].Text;
+                    string text2 = listView1.Items[i].SubItems[1].Text;
+                    string text3 = listView1.Items[i].SubItems[2].Text;
+                    string text4 = listView1.Items[i].SubItems[3].Text;
+                    string text5 = listView1.Items[i].SubItems[4].Text;
+                    string text6 = listView1.Items[i].SubItems[5].Text;
+                    stringBuilder.Append("{\"cmd\":\"" + text2 + "\",\"id\":\"" + text3 + "\",\"num\":\"" + text4 + "\",\"temp1\":\"" + text5 + "\",\"temp2\":\"" + text6 + "\", \"name\":\"" + text + "\", \"flag\":\"1\" }");
+                    if (i < listView1.Items.Count - 1)
+                    {
+                        stringBuilder.Append(",\r\n");
+                    }
+                }
+                stringBuilder.Append("\r\n]}");
+                string data = stringBuilder.ToString();
+                textBox1.Text = data;
+                Clipboard.SetDataObject(data, copy: true);
+                MessageBox.Show("脚本已经拷贝到剪贴板，请打开脚本工具粘贴到空白处执行即可！");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+
+        /// <summary>
+        /// 自定义class放前面会导致Form设计界面异常，不能出来
+        /// </summary>
+        public class CmdBody
+        {
+            public string cmd { get; set; }
+            public string id { get; set; }
+            public string num { get; set; }
+            public string temp1 { get; set; }
+            public string temp2 { get; set; }
+            public string name { get; set; }
+            public string flag { get; set; }
+        }
+
+        public class QQ_shuihu
+        {
+            public string tips { get; set; }
+
+            List<CmdBody> cmd_linelist = new List<CmdBody>();
+            public List<CmdBody> list
+            {
+                get { return cmd_linelist; }
+                set { cmd_linelist = value; }
+            }
         }
     }
-
 }
