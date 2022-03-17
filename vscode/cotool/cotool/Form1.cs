@@ -121,5 +121,13 @@ namespace cotool
             this.panel1.Controls.Add(form);
             form.Show();
         }
+
+        private void qq水浒ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_qqsh form = new Form_qqsh();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
     }
 }

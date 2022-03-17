@@ -12,6 +12,8 @@ using cotool.web;
 using HtmlAgilityPack;
 using System.IO;
 using System.Threading;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 
 namespace cotool
 {
@@ -128,17 +130,60 @@ namespace cotool
             MessageBox.Show("完成");
         }
 
+
+        /// <summary>
+        /// 从网站上下载文件，保存到其他路径
+        /// </summary>
+        /// <param name="pdfFile">文件地址</param>
+        /// <param name="saveLoadFile">保存文件路径：D:\12221.pdf</param>
+        /// <returns></returns>
+        public void SaveRemoteFile(string url, string path)
+        {
+            try
+            {
+                var client = new WebClient();
+                System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                client.DownloadFile(url, path);
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(ex.Message);
+            }
+
+        }
+
         private void btn_downloud_Click(object sender, EventArgs e)
         {
+            int id_len = tbox_endid.Text.Trim().Length;
+            string format_D = "D" + id_len.ToString("D");//这里是决定格式化，拼接，比如 "D4"
             int startid = Int32.Parse(tbox_startid.Text);
             int endid = Int32.Parse(tbox_endid.Text);
             for (int i = startid; i <= endid; i++)
             {
-                string tmp = tbox_main.Text.Trim() + i.ToString("D4") + tbox_tail.Text;
-                string img = @"E:\share\cber\vscode\cotool\cotool\download\" + i.ToString("D4")+ ".jpg";
-                DownloadPicture(tmp, img, -1);
+                string tmp = tbox_main.Text.Trim() + i.ToString(format_D) + tbox_tail.Text;
+                string img = @"E:\share\cber\vscode\cotool\cotool\download\" + i.ToString(format_D) + tbox_tail.Text;
+                string file_type = tbox_tail.Text.Trim();
+                if (file_type.Contains("pdf"))
+                {
+                    SaveRemoteFile(tmp, img);
+                }
+                else
+                {
+                    DownloadPicture(tmp, img, -1);
+                }
             }
             MessageBox.Show("完成");
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ChromeOptions option = new ChromeOptions();
+            option.AddArgument("--incognito");
+            using (IWebDriver driver = new ChromeDriver(option))
+            {
+                driver.Navigate().GoToUrl("https://www.marxists.org/chinese/pdf/marx-engels/me2/me2-25.pdf");
+                System.Threading.Thread.Sleep(5000);//控制页面能维持多久
+            }
         }
     }
 }

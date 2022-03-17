@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.首页ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nXToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.进程内存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.信息探测ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,7 +47,7 @@
             this.数据库统计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.安全统计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.首页ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.qq水浒ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -68,6 +69,13 @@
             this.menuStrip1.Size = new System.Drawing.Size(796, 25);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
+            // 
+            // 首页ToolStripMenuItem
+            // 
+            this.首页ToolStripMenuItem.Name = "首页ToolStripMenuItem";
+            this.首页ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.首页ToolStripMenuItem.Text = "首页";
+            this.首页ToolStripMenuItem.Click += new System.EventHandler(this.首页ToolStripMenuItem_Click);
             // 
             // nXToolStripMenuItem
             // 
@@ -126,7 +134,8 @@
             // 游戏外挂ToolStripMenuItem
             // 
             this.游戏外挂ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.真三玩家ToolStripMenuItem});
+            this.真三玩家ToolStripMenuItem,
+            this.qq水浒ToolStripMenuItem});
             this.游戏外挂ToolStripMenuItem.Name = "游戏外挂ToolStripMenuItem";
             this.游戏外挂ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
             this.游戏外挂ToolStripMenuItem.Text = "游戏世界";
@@ -134,7 +143,7 @@
             // 真三玩家ToolStripMenuItem
             // 
             this.真三玩家ToolStripMenuItem.Name = "真三玩家ToolStripMenuItem";
-            this.真三玩家ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.真三玩家ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.真三玩家ToolStripMenuItem.Text = "真三玩家";
             this.真三玩家ToolStripMenuItem.Click += new System.EventHandler(this.真三玩家ToolStripMenuItem_Click);
             // 
@@ -196,12 +205,12 @@
             this.panel1.TabIndex = 1;
             this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
             // 
-            // 首页ToolStripMenuItem
+            // qq水浒ToolStripMenuItem
             // 
-            this.首页ToolStripMenuItem.Name = "首页ToolStripMenuItem";
-            this.首页ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
-            this.首页ToolStripMenuItem.Text = "首页";
-            this.首页ToolStripMenuItem.Click += new System.EventHandler(this.首页ToolStripMenuItem_Click);
+            this.qq水浒ToolStripMenuItem.Name = "qq水浒ToolStripMenuItem";
+            this.qq水浒ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.qq水浒ToolStripMenuItem.Text = "qq水浒";
+            this.qq水浒ToolStripMenuItem.Click += new System.EventHandler(this.qq水浒ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -244,6 +253,7 @@
         private System.Windows.Forms.ToolStripMenuItem 子域名ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 蚁剑ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 首页ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem qq水浒ToolStripMenuItem;
     }
 }
 

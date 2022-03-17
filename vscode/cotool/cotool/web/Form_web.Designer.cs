@@ -41,14 +41,15 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label_url = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btn_downloud = new System.Windows.Forms.Button();
-            this.tbox_main = new System.Windows.Forms.TextBox();
-            this.tbox_tail = new System.Windows.Forms.TextBox();
-            this.tbox_startid = new System.Windows.Forms.TextBox();
-            this.tbox_endid = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbox_endid = new System.Windows.Forms.TextBox();
+            this.tbox_startid = new System.Windows.Forms.TextBox();
+            this.tbox_tail = new System.Windows.Forms.TextBox();
+            this.tbox_main = new System.Windows.Forms.TextBox();
+            this.btn_downloud = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupbox_zhuye.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -188,58 +189,14 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "groupBox1";
             // 
-            // btn_downloud
+            // label7
             // 
-            this.btn_downloud.Location = new System.Drawing.Point(555, 59);
-            this.btn_downloud.Name = "btn_downloud";
-            this.btn_downloud.Size = new System.Drawing.Size(99, 23);
-            this.btn_downloud.TabIndex = 0;
-            this.btn_downloud.Text = "批量下载文件";
-            this.btn_downloud.UseVisualStyleBackColor = true;
-            this.btn_downloud.Click += new System.EventHandler(this.btn_downloud_Click);
-            // 
-            // tbox_main
-            // 
-            this.tbox_main.Location = new System.Drawing.Point(6, 20);
-            this.tbox_main.Multiline = true;
-            this.tbox_main.Name = "tbox_main";
-            this.tbox_main.Size = new System.Drawing.Size(765, 33);
-            this.tbox_main.TabIndex = 1;
-            this.tbox_main.Text = "https://ailoli.fun/zyk/H%E5%B7%A5%E5%8F%A3%E5%B0%8F%E5%AD%A6%E7%94%9F%E8%B5%9B%E9" +
-    "%AB%98/%E8%B6%B3%E6%8E%A7100%E5%BC%A0/sjhs.pw_";
-            // 
-            // tbox_tail
-            // 
-            this.tbox_tail.Location = new System.Drawing.Point(380, 61);
-            this.tbox_tail.Name = "tbox_tail";
-            this.tbox_tail.Size = new System.Drawing.Size(100, 21);
-            this.tbox_tail.TabIndex = 2;
-            this.tbox_tail.Text = ".jpg";
-            // 
-            // tbox_startid
-            // 
-            this.tbox_startid.Location = new System.Drawing.Point(71, 59);
-            this.tbox_startid.Name = "tbox_startid";
-            this.tbox_startid.Size = new System.Drawing.Size(65, 21);
-            this.tbox_startid.TabIndex = 3;
-            this.tbox_startid.Text = "0001";
-            // 
-            // tbox_endid
-            // 
-            this.tbox_endid.Location = new System.Drawing.Point(163, 59);
-            this.tbox_endid.Name = "tbox_endid";
-            this.tbox_endid.Size = new System.Drawing.Size(65, 21);
-            this.tbox_endid.TabIndex = 4;
-            this.tbox_endid.Text = "0110";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(333, 64);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(29, 12);
-            this.label5.TabIndex = 5;
-            this.label5.Text = "后缀";
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(140, 64);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(17, 12);
+            this.label7.TabIndex = 7;
+            this.label7.Text = "到";
             // 
             // label6
             // 
@@ -250,19 +207,73 @@
             this.label6.TabIndex = 6;
             this.label6.Text = "从";
             // 
-            // label7
+            // label5
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(140, 64);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(17, 12);
-            this.label7.TabIndex = 7;
-            this.label7.Text = "到";
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(333, 64);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(29, 12);
+            this.label5.TabIndex = 5;
+            this.label5.Text = "后缀";
+            // 
+            // tbox_endid
+            // 
+            this.tbox_endid.Location = new System.Drawing.Point(163, 59);
+            this.tbox_endid.Name = "tbox_endid";
+            this.tbox_endid.Size = new System.Drawing.Size(65, 21);
+            this.tbox_endid.TabIndex = 4;
+            this.tbox_endid.Text = "25";
+            // 
+            // tbox_startid
+            // 
+            this.tbox_startid.Location = new System.Drawing.Point(71, 59);
+            this.tbox_startid.Name = "tbox_startid";
+            this.tbox_startid.Size = new System.Drawing.Size(65, 21);
+            this.tbox_startid.TabIndex = 3;
+            this.tbox_startid.Text = "25";
+            // 
+            // tbox_tail
+            // 
+            this.tbox_tail.Location = new System.Drawing.Point(380, 61);
+            this.tbox_tail.Name = "tbox_tail";
+            this.tbox_tail.Size = new System.Drawing.Size(100, 21);
+            this.tbox_tail.TabIndex = 2;
+            this.tbox_tail.Text = ".pdf";
+            // 
+            // tbox_main
+            // 
+            this.tbox_main.Location = new System.Drawing.Point(6, 20);
+            this.tbox_main.Multiline = true;
+            this.tbox_main.Name = "tbox_main";
+            this.tbox_main.Size = new System.Drawing.Size(765, 33);
+            this.tbox_main.TabIndex = 1;
+            this.tbox_main.Text = "https://www.marxists.org/chinese/pdf/marx-engels/me2/me2-";
+            // 
+            // btn_downloud
+            // 
+            this.btn_downloud.Location = new System.Drawing.Point(555, 59);
+            this.btn_downloud.Name = "btn_downloud";
+            this.btn_downloud.Size = new System.Drawing.Size(99, 23);
+            this.btn_downloud.TabIndex = 0;
+            this.btn_downloud.Text = "批量下载文件";
+            this.btn_downloud.UseVisualStyleBackColor = true;
+            this.btn_downloud.Click += new System.EventHandler(this.btn_downloud_Click);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(558, 170);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 5;
+            this.button1.Text = "测试cele";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // Form_web
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupbox_zhuye);
             this.Name = "Form_web";
@@ -298,5 +309,6 @@
         private System.Windows.Forms.TextBox tbox_endid;
         private System.Windows.Forms.TextBox tbox_startid;
         private System.Windows.Forms.TextBox tbox_tail;
+        private System.Windows.Forms.Button button1;
     }
 }

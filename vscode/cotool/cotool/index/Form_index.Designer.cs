@@ -43,13 +43,13 @@
             this.rtbox_main.ForeColor = System.Drawing.Color.Red;
             this.rtbox_main.Location = new System.Drawing.Point(250, 15);
             this.rtbox_main.Name = "rtbox_main";
-            this.rtbox_main.Size = new System.Drawing.Size(295, 55);
+            this.rtbox_main.Size = new System.Drawing.Size(353, 35);
             this.rtbox_main.TabIndex = 0;
             this.rtbox_main.Text = "";
             // 
             // btn_savetext
             // 
-            this.btn_savetext.Location = new System.Drawing.Point(605, 366);
+            this.btn_savetext.Location = new System.Drawing.Point(568, 390);
             this.btn_savetext.Name = "btn_savetext";
             this.btn_savetext.Size = new System.Drawing.Size(75, 23);
             this.btn_savetext.TabIndex = 1;
@@ -61,17 +61,17 @@
             // 
             this.rtbox_content.BackColor = System.Drawing.Color.AliceBlue;
             this.rtbox_content.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.rtbox_content.Font = new System.Drawing.Font("微软雅黑", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.rtbox_content.Font = new System.Drawing.Font("微软雅黑", 13F);
             this.rtbox_content.ForeColor = System.Drawing.Color.Red;
-            this.rtbox_content.Location = new System.Drawing.Point(89, 76);
+            this.rtbox_content.Location = new System.Drawing.Point(56, 56);
             this.rtbox_content.Name = "rtbox_content";
-            this.rtbox_content.Size = new System.Drawing.Size(649, 284);
+            this.rtbox_content.Size = new System.Drawing.Size(688, 328);
             this.rtbox_content.TabIndex = 2;
             this.rtbox_content.Text = "";
             // 
             // btn_load
             // 
-            this.btn_load.Location = new System.Drawing.Point(89, 366);
+            this.btn_load.Location = new System.Drawing.Point(52, 390);
             this.btn_load.Name = "btn_load";
             this.btn_load.Size = new System.Drawing.Size(75, 23);
             this.btn_load.TabIndex = 3;
@@ -81,7 +81,7 @@
             // 
             // btn_savedb
             // 
-            this.btn_savedb.Location = new System.Drawing.Point(696, 366);
+            this.btn_savedb.Location = new System.Drawing.Point(659, 390);
             this.btn_savedb.Name = "btn_savedb";
             this.btn_savedb.Size = new System.Drawing.Size(75, 23);
             this.btn_savedb.TabIndex = 4;
