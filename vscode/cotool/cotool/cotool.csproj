@@ -129,6 +129,7 @@
     <Compile Include="game\Form_qqsh.Designer.cs">
       <DependentUpon>Form_qqsh.cs</DependentUpon>
     </Compile>
+    <Compile Include="game\msg.cs" />
     <Compile Include="index\Form_index.cs">
       <SubType>UserControl</SubType>
     </Compile>
