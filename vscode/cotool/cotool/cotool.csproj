@@ -49,6 +49,14 @@
     <Reference Include="HtmlAgilityPack">
       <HintPath>.\HtmlAgilityPack.dll</HintPath>
     </Reference>
+    <Reference Include="Jayrock.Json, Version=0.9.16530.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\jayrock-json.0.9.16530.1\lib\net40\Jayrock.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="log4net, Version=2.0.14.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.14\lib\net45\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Office.Interop.Excel.15.0.4795.1000\lib\net20\Microsoft.Office.Interop.Excel.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -74,6 +82,7 @@
     <Reference Include="System.Drawing.Design" />
     <Reference Include="System.Management" />
     <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -104,6 +113,12 @@
       <DependentUpon>Form_crack.cs</DependentUpon>
     </Compile>
     <Compile Include="DataDeal.cs" />
+    <Compile Include="DirFile\Form_code.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DirFile\Form_code.Designer.cs">
+      <DependentUpon>Form_code.cs</DependentUpon>
+    </Compile>
     <Compile Include="ExcelDeal.cs" />
     <Compile Include="DirFile\Form_file.cs">
       <SubType>UserControl</SubType>
@@ -123,6 +138,13 @@
     <Compile Include="Form_dbtj.Designer.cs">
       <DependentUpon>Form_dbtj.cs</DependentUpon>
     </Compile>
+    <Compile Include="game\cb_time.cs" />
+    <Compile Include="game\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="game\LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="game\Form_qqsh.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -130,6 +152,19 @@
       <DependentUpon>Form_qqsh.cs</DependentUpon>
     </Compile>
     <Compile Include="game\msg.cs" />
+    <Compile Include="game\Form_xhUpdate.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="game\Form_xhUpdate.Designer.cs">
+      <DependentUpon>Form_xhUpdate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="game\Tool_update.cs" />
+    <Compile Include="game\UpdateFinishedForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="game\UpdateFinishedForm.Designer.cs">
+      <DependentUpon>UpdateFinishedForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="index\Form_index.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -168,6 +203,9 @@
     <EmbeddedResource Include="DirFile\Form_file.resx">
       <DependentUpon>Form_file.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DirFile\Form_code.resx">
+      <DependentUpon>Form_code.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -176,6 +214,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="game\Form_qqsh.resx">
       <DependentUpon>Form_qqsh.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="game\LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="game\Form_xhUpdate.resx">
+      <DependentUpon>Form_xhUpdate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="game\UpdateFinishedForm.resx">
+      <DependentUpon>UpdateFinishedForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="index\Form_index.resx">
       <DependentUpon>Form_index.cs</DependentUpon>

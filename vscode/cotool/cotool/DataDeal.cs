@@ -273,6 +273,22 @@ namespace cotool
             return true;
         }
 
+        public bool get_file_content(string filepath, ArrayList linelist, Encoding encode)
+        {
+            StreamReader sr = new StreamReader(filepath, encode);
+            string line = "";
+            while (line != null)
+            {
+                line = sr.ReadLine();
+                if (line != null)
+                {
+                    linelist.Add(line);
+                }
+            }
+            sr.Close();
+            return true;
+        }
+
         /// <summary>
         /// 读取文件内容到sortedlist,注意删除重复的
         /// </summary>

@@ -129,5 +129,21 @@ namespace cotool
             this.panel1.Controls.Add(form);
             form.Show();
         }
+
+        private void 代码工具ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_code form = new Form_code();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
+
+        private void qqxh更新ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_xhUpdate form = new Form_xhUpdate();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
     }
 }
