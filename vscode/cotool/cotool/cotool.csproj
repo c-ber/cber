@@ -165,6 +165,12 @@
     <Compile Include="game\UpdateFinishedForm.Designer.cs">
       <DependentUpon>UpdateFinishedForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="game\xhLogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="game\xhLogForm.Designer.cs">
+      <DependentUpon>xhLogForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="index\Form_index.cs">
       <SubType>UserControl</SubType>
     </Compile>

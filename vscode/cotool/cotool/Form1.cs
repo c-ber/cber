@@ -145,5 +145,10 @@ namespace cotool
             this.panel1.Controls.Add(form);
             form.Show();
         }
+
+        private void 日志ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new xhLogForm().Show();
+        }
     }
 }

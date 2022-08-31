@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml;
+using MySql.Data.MySqlClient;
 
 namespace cotool.DirFile
 {
@@ -314,6 +316,147 @@ namespace cotool.DirFile
                 //并且符合一些特征，加ed，s，es，改y为ies，去e加ed类似
                 main_word_deal();
                 mysql.MySqlWriteDataTable("en_word", db_word);//批量块写入数据库
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                mysql.Dispose();
+            }
+            MessageBox.Show("完成了", "提示");
+        }
+
+
+        //将xml转为Datable  
+        public static DataTable XmlToDataTable(string xmlStr)
+        {
+            if (!string.IsNullOrEmpty(xmlStr))
+            {
+                StringReader StrStream = null;
+                XmlTextReader Xmlrdr = null;
+                try
+                {
+                    DataSet ds = new DataSet();
+                    //读取字符串中的信息  
+                    StrStream = new StringReader(xmlStr);
+                    //获取StrStream中的数据  
+                    Xmlrdr = new XmlTextReader(StrStream);
+                    //ds获取Xmlrdr中的数据                 
+                    ds.ReadXml(Xmlrdr);
+                    return ds.Tables[0];
+                }
+                catch (Exception e)
+                {
+                    return null;
+                }
+                finally
+                {
+                    //释放资源  
+                    if (Xmlrdr != null)
+                    {
+                        Xmlrdr.Close();
+                        StrStream.Close();
+                        StrStream.Dispose();
+                    }
+                }
+            }
+            return null;
+        }
+
+        //将datatable转为xml  
+        public static string DataTable2Xml(DataTable vTable)
+        {
+            if (null == vTable) return string.Empty;
+            if (string.IsNullOrEmpty(vTable.TableName))
+            {
+                vTable.TableName = "tbName";
+            }
+            StringWriter writer = new StringWriter();
+            vTable.WriteXml(writer);
+            string xmlstr = writer.ToString();
+            writer.Close();
+            return xmlstr;
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            //string[] col_name = { "multUse", "ShowTips" ,
+            //    "val2" , "val1", "SellTag", "Type","val6",
+            //    "val4","ClearTime","ShowMix","TypeTab","Desc",
+            //    "Name","StoneTower","hideInPack","Action","CanResolve",
+            //    "UsableInPack","AutoUse","Result","SellPrice","Id"};
+
+            //DataTable dt = new DataTable("t_qqsh_packet");
+            //dt.Columns.Add("multUse", typeof(string));
+            //dt.Columns.Add("ShowTips", typeof(string));
+
+            //dt.Columns.Add("val2", typeof(string));
+            //dt.Columns.Add("val1", typeof(string));
+            //dt.Columns.Add("SellTag", typeof(string));
+            //dt.Columns.Add("Type", typeof(string));
+            //dt.Columns.Add("val6", typeof(string));
+
+            //dt.Columns.Add("val4", typeof(string));
+            //dt.Columns.Add("ClearTime", typeof(string));
+            //dt.Columns.Add("ShowMix", typeof(string));
+            //dt.Columns.Add("TypeTab", typeof(string));
+            //dt.Columns.Add("Desc", typeof(string));
+
+            //dt.Columns.Add("Name", typeof(string));
+            //dt.Columns.Add("StoneTower", typeof(string));
+            //dt.Columns.Add("hideInPack", typeof(string));
+            //dt.Columns.Add("Action", typeof(string));
+            //dt.Columns.Add("CanResolve", typeof(string));
+
+            //dt.Columns.Add("UsableInPack", typeof(string));
+            //dt.Columns.Add("AutoUse", typeof(string));
+            //dt.Columns.Add("Result", typeof(string));
+            //dt.Columns.Add("SellPrice", typeof(string));
+            //dt.Columns.Add("Id", typeof(UInt64));
+
+
+            try
+            {
+                mysql = new Mysql(Mysql.connectstring);//打开数据库连接
+                mysql.ExecuteNonQuery("truncate  t_qqsh_packet");
+
+
+                XmlDocument xmldoc = new XmlDocument();
+                xmldoc.Load(@"D:\cber-exe\packItem.xml");
+                string text = xmldoc.InnerXml;
+
+                XmlNodeList topM = xmldoc.SelectNodes("//Item");
+                foreach (XmlElement element in topM)
+                {
+                    String packet_id = element.GetElementsByTagName("Id")[0].InnerText;
+                    string name = element.GetElementsByTagName("Name")[0].InnerText;
+                    string desc = element.GetElementsByTagName("Desc")[0].InnerText;
+
+                    MySqlParameter[] para = new MySqlParameter[3];
+
+                    para[0] = new MySqlParameter("@packet_id", MySqlDbType.String);
+                    para[0].Value = packet_id;   //第1项 Id
+
+                    para[1] = new MySqlParameter("@name", MySqlDbType.String);
+                    para[1].Value = name; //第2项 物品名称
+
+                    para[2] = new MySqlParameter("@desc", MySqlDbType.String);
+                    para[2].Value = desc;  //第3项 描述
+
+                    string sql = "INSERT INTO t_qqsh_packet(t_qqsh_packet.packet_id, t_qqsh_packet.name, t_qqsh_packet.desc) VALUES";
+                    sql += "(@packet_id, @name, @desc)";
+                    try
+                    {
+                        mysql.ExecuteNonQuery(sql, para);
+                    }
+                    catch(Exception ex)
+                    {
+
+                    }
+                }
+
             }
             catch (Exception ex)
             {

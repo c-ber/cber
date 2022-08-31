@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using Jayrock.Json.Conversion;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 
 namespace cotool.game
 {
@@ -864,10 +865,180 @@ namespace cotool.game
             string strtmp = "";
             for(int i = 0; i <  ms.Length;i++)
             {
-                strtmp += ms.ReadByte().ToString() + " ";
+                strtmp += ms.ReadByte().ToString("X2") + " ";
             }
             tbox_byte.Text = strtmp;
         }
+
+        private void btn_set_Click(object sender, EventArgs e)
+        {
+            btn_set.Enabled = false;
+            string qqlist = tbox_qqlist.Text.Trim();
+            string[] tmpbuf = qqlist.Split(',');
+            for(int i  = 0; i < tmpbuf.Length;i++)
+            {
+                string src_filepath = "D:/cber-exe/Debug/";
+                string qq = tmpbuf[i].Trim();
+                //cber 每个号，执行自己的ds脚本
+                string per_ds_filepath = src_filepath + qq + "/ds.txt";
+                if (Directory.Exists(src_filepath + qq))
+                {
+                    File.Copy(src_filepath + tbox_dsname.Text.Trim(), per_ds_filepath, overwrite: true);
+                }
+            }
+
+            btn_set.Enabled = true;
+        }
+
+        public static string week_filepath = @"00-new-config\weekend_flag.ini";
+
+        /// <summary>
+        /// 生成勋章兑换脚本
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_xz_Click(object sender, EventArgs e)
+        {
+            string cur_dir = @"D:\cber-exe\Debug\";
+            string content = IniHelper.Read(cur_dir + week_filepath, "month", "xz_baseid", "2");
+
+            uint baseid = uint.Parse(content);
+
+            string jiaoben =
+                "{\"tips\":\"我的脚本\",\"list\":[" + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50060177\",\"temp1\":\"10\",\"temp2\":\"0\", \"name\":\"req-5489-11购买铜币200\", \"flag\":\"1\" }," +Environment.NewLine+
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50067822\",\"temp1\":\"10\",\"temp2\":\"0\", \"name\":\"req-5489-12购买战功200\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50064799\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-13购买灵纹石30\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50065983\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-14购买灵纹石阴阳30\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000079\",\"temp1\":\"5\",\"temp2\":\"0\", \"name\":\"req-5489-15购买白色升阶丹50\", \"flag\":\"1\" }," + Environment.NewLine +
+
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000255\",\"temp1\":\"10\",\"temp2\":\"0\", \"name\":\"req-5489-21购买灵草100\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000033\",\"temp1\":\"10\",\"temp2\":\"0\", \"name\":\"req-5489-22购买玄铁石200\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50064981\",\"temp1\":\"2\",\"temp2\":\"0\", \"name\":\"req-5489-23购买护甲宝石50\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50064976\",\"temp1\":\"2\",\"temp2\":\"0\", \"name\":\"req-5489-24购买穿透宝石50\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"54000002\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-25购买修罗尘30\", \"flag\":\"1\" }," + Environment.NewLine +
+
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50010033\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-31购买大力丸50\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000263\",\"temp1\":\"5\",\"temp2\":\"0\", \"name\":\"req-5489-32购买阳炎符50\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000405\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-33购买不灭将魂15\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000370\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-34购买杀贼残卷15\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000085\",\"temp1\":\"5\",\"temp2\":\"0\", \"name\":\"req-5489-35购买强化石100\", \"flag\":\"1\" }," + Environment.NewLine +
+
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000216\",\"temp1\":\"2\",\"temp2\":\"0\", \"name\":\"req-5489-41购买紫皇牙50\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50061962\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-42购买1个金色冰魄碎片\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50063218\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-43购买1个金符碎片\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000243\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-44购买资质丹15\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + ((baseid++)+(baseid++)-baseid+1) + "\",\"num\":\"50020002\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-45购买高刷15\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"51000413\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-52购买霸下之力50\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + (baseid++) + "\",\"num\":\"50067126\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"req-5489-53购买5个迁寨令\", \"flag\":\"1\" }" + Environment.NewLine +
+"]}";
+            Clipboard.SetText(jiaoben);
+        }
+
+        private void btn_xl_Click(object sender, EventArgs e)
+        {
+            string cur_dir = @"D:\cber-exe\Debug\";
+            string content = IniHelper.Read(cur_dir + week_filepath, "month", "xiuluo_base", "2");
+
+            uint baseid = uint.Parse(content);
+            uint chen = baseid;
+            uint hun = baseid + 1;
+
+            string jiaoben =
+"{\"tips\":\"我的脚本\",\"list\":[" + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"128\",\"temp2\":\"0\", \"name\":\"128个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"64\",\"temp2\":\"0\", \"name\":\"64个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"32\",\"temp2\":\"0\", \"name\":\"32个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"16\",\"temp2\":\"0\", \"name\":\"16个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"8\",\"temp2\":\"0\", \"name\":\"8个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"4\",\"temp2\":\"0\", \"name\":\"4个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"2\",\"temp2\":\"0\", \"name\":\"2个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + hun + "\",\"num\":\"54000001\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"1个修罗魂石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + chen + "\",\"num\":\"54000002\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"1个修罗之尘\", \"flag\":\"1\" }" + Environment.NewLine +
+"]}";
+
+            Clipboard.SetText(jiaoben);
+        }
+    }
+
+    public class IniHelper
+    {
+        /// <summary>
+        /// 读取INI文件值
+        /// </summary>
+        /// <param name="section">节点名</param>
+        /// <param name="key">键</param>
+        /// <param name="def">未取到值时返回的默认值</param>
+        /// <param name="filePath">INI文件完整路径</param>
+        /// <returns>读取的值</returns>
+        public static string Read(string filePath, string section, string key, string def)
+        {
+            if (!File.Exists(filePath)) return def;
+            StringBuilder sb = new StringBuilder(1024);
+            GetPrivateProfileString(section, key, def, sb, 1024, filePath);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 写INI文件值
+        /// </summary>
+        /// <param name="section">欲在其中写入的节点名称</param>
+        /// <param name="key">欲设置的项名</param>
+        /// <param name="value">要写入的新字符串</param>
+        /// <param name="filePath">INI文件完整路径</param>
+        /// <returns>非零表示成功，零表示失败</returns>
+        public static int Write(string filePath, string section, string key, string value)
+        {
+            if (!File.Exists(filePath)) return 0;
+            return WritePrivateProfileString(section, key, value, filePath);
+        }
+
+        /// <summary>
+        /// 删除节
+        /// </summary>
+        /// <param name="section">节点名</param>
+        /// <param name="filePath">INI文件完整路径</param>
+        /// <returns>非零表示成功，零表示失败</returns>
+        public static int DeleteSection(string section, string filePath)
+        {
+            return Write(section, null, null, filePath);
+        }
+
+        /// <summary>
+        /// 删除键的值
+        /// </summary>
+        /// <param name="section">节点名</param>
+        /// <param name="key">键名</param>
+        /// <param name="filePath">INI文件完整路径</param>
+        /// <returns>非零表示成功，零表示失败</returns>
+        public static int DeleteKey(string section, string key, string filePath)
+        {
+            return Write(section, key, null, filePath);
+        }
+
+        /// <summary>
+        /// 为INI文件中指定的节点取得字符串
+        /// </summary>
+        /// <param name="lpAppName">欲在其中查找关键字的节点名称</param>
+        /// <param name="lpKeyName">欲获取的项名</param>
+        /// <param name="lpDefault">指定的项没有找到时返回的默认值</param>
+        /// <param name="lpReturnedString">指定一个字串缓冲区，长度至少为nSize</param>
+        /// <param name="nSize">指定装载到lpReturnedString缓冲区的最大字符数量</param>
+        /// <param name="lpFileName">INI文件完整路径</param>
+        /// <returns>复制到lpReturnedString缓冲区的字节数量，其中不包括那些NULL中止字符</returns>
+        [DllImport("kernel32")]
+        private static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
+
+        /// <summary>
+        /// 修改INI文件中内容
+        /// </summary>
+        /// <param name="lpApplicationName">欲在其中写入的节点名称</param>
+        /// <param name="lpKeyName">欲设置的项名</param>
+        /// <param name="lpString">要写入的新字符串</param>
+        /// <param name="lpFileName">INI文件完整路径</param>
+        /// <returns>非零表示成功，零表示失败</returns>
+        [DllImport("kernel32")]
+        private static extern int WritePrivateProfileString(string lpApplicationName, string lpKeyName, string lpString, string lpFileName);
     }
 
     public class Interface2

@@ -65,6 +65,13 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
+            this.btn_set = new System.Windows.Forms.Button();
+            this.lbl_src_ds = new System.Windows.Forms.Label();
+            this.lbl_dst_ds = new System.Windows.Forms.Label();
+            this.tbox_dsname = new System.Windows.Forms.TextBox();
+            this.tbox_qqlist = new System.Windows.Forms.TextBox();
+            this.btn_xz = new System.Windows.Forms.Button();
+            this.btn_xl = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -316,7 +323,7 @@
             // 
             this.btn_vip.Location = new System.Drawing.Point(3, 354);
             this.btn_vip.Name = "btn_vip";
-            this.btn_vip.Size = new System.Drawing.Size(106, 23);
+            this.btn_vip.Size = new System.Drawing.Size(69, 23);
             this.btn_vip.TabIndex = 7;
             this.btn_vip.Text = "模拟会员";
             this.btn_vip.UseVisualStyleBackColor = true;
@@ -390,10 +397,80 @@
             this.label6.Size = new System.Drawing.Size(0, 12);
             this.label6.TabIndex = 15;
             // 
+            // btn_set
+            // 
+            this.btn_set.Location = new System.Drawing.Point(712, 381);
+            this.btn_set.Name = "btn_set";
+            this.btn_set.Size = new System.Drawing.Size(75, 23);
+            this.btn_set.TabIndex = 16;
+            this.btn_set.Text = "设置ds文件";
+            this.btn_set.UseVisualStyleBackColor = true;
+            this.btn_set.Click += new System.EventHandler(this.btn_set_Click);
+            // 
+            // lbl_src_ds
+            // 
+            this.lbl_src_ds.AutoSize = true;
+            this.lbl_src_ds.Location = new System.Drawing.Point(492, 359);
+            this.lbl_src_ds.Name = "lbl_src_ds";
+            this.lbl_src_ds.Size = new System.Drawing.Size(29, 12);
+            this.lbl_src_ds.TabIndex = 17;
+            this.lbl_src_ds.Text = "源ds";
+            // 
+            // lbl_dst_ds
+            // 
+            this.lbl_dst_ds.AutoSize = true;
+            this.lbl_dst_ds.Location = new System.Drawing.Point(492, 386);
+            this.lbl_dst_ds.Name = "lbl_dst_ds";
+            this.lbl_dst_ds.Size = new System.Drawing.Size(35, 12);
+            this.lbl_dst_ds.TabIndex = 18;
+            this.lbl_dst_ds.Text = "q目录";
+            // 
+            // tbox_dsname
+            // 
+            this.tbox_dsname.Location = new System.Drawing.Point(527, 356);
+            this.tbox_dsname.Name = "tbox_dsname";
+            this.tbox_dsname.Size = new System.Drawing.Size(175, 21);
+            this.tbox_dsname.TabIndex = 19;
+            this.tbox_dsname.Text = "ds-测试.txt";
+            // 
+            // tbox_qqlist
+            // 
+            this.tbox_qqlist.Location = new System.Drawing.Point(527, 383);
+            this.tbox_qqlist.Name = "tbox_qqlist";
+            this.tbox_qqlist.Size = new System.Drawing.Size(175, 21);
+            this.tbox_qqlist.TabIndex = 20;
+            // 
+            // btn_xz
+            // 
+            this.btn_xz.Location = new System.Drawing.Point(3, 390);
+            this.btn_xz.Name = "btn_xz";
+            this.btn_xz.Size = new System.Drawing.Size(56, 23);
+            this.btn_xz.TabIndex = 21;
+            this.btn_xz.Text = "勋章";
+            this.btn_xz.UseVisualStyleBackColor = true;
+            this.btn_xz.Click += new System.EventHandler(this.btn_xz_Click);
+            // 
+            // btn_xl
+            // 
+            this.btn_xl.Location = new System.Drawing.Point(65, 390);
+            this.btn_xl.Name = "btn_xl";
+            this.btn_xl.Size = new System.Drawing.Size(44, 23);
+            this.btn_xl.TabIndex = 22;
+            this.btn_xl.Text = "修罗";
+            this.btn_xl.UseVisualStyleBackColor = true;
+            this.btn_xl.Click += new System.EventHandler(this.btn_xl_Click);
+            // 
             // Form_qqsh
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btn_xl);
+            this.Controls.Add(this.btn_xz);
+            this.Controls.Add(this.tbox_qqlist);
+            this.Controls.Add(this.tbox_dsname);
+            this.Controls.Add(this.lbl_dst_ds);
+            this.Controls.Add(this.lbl_src_ds);
+            this.Controls.Add(this.btn_set);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.btn_decrypt);
@@ -458,5 +535,12 @@
         private System.Windows.Forms.TextBox tbox_value;
         private System.Windows.Forms.TextBox tbox_byte;
         private System.Windows.Forms.Button btn_turn;
+        private System.Windows.Forms.Button btn_set;
+        private System.Windows.Forms.Label lbl_src_ds;
+        private System.Windows.Forms.Label lbl_dst_ds;
+        private System.Windows.Forms.TextBox tbox_dsname;
+        private System.Windows.Forms.TextBox tbox_qqlist;
+        private System.Windows.Forms.Button btn_xz;
+        private System.Windows.Forms.Button btn_xl;
     }
 }

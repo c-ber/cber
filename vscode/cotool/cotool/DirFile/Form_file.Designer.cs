@@ -41,9 +41,10 @@
             this.tbox_delhead = new System.Windows.Forms.TextBox();
             this.btn_delhead = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btn_root = new System.Windows.Forms.Button();
             this.cbox_year = new System.Windows.Forms.ComboBox();
             this.btn_en = new System.Windows.Forms.Button();
-            this.btn_root = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -160,6 +161,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "英语真题文本处理";
             // 
+            // btn_root
+            // 
+            this.btn_root.Location = new System.Drawing.Point(23, 68);
+            this.btn_root.Name = "btn_root";
+            this.btn_root.Size = new System.Drawing.Size(75, 23);
+            this.btn_root.TabIndex = 2;
+            this.btn_root.Text = "词汇总";
+            this.btn_root.UseVisualStyleBackColor = true;
+            this.btn_root.Click += new System.EventHandler(this.btn_root_Click);
+            // 
             // cbox_year
             // 
             this.cbox_year.FormattingEnabled = true;
@@ -190,20 +201,21 @@
             this.btn_en.UseVisualStyleBackColor = true;
             this.btn_en.Click += new System.EventHandler(this.btn_en_Click);
             // 
-            // btn_root
+            // button1
             // 
-            this.btn_root.Location = new System.Drawing.Point(23, 68);
-            this.btn_root.Name = "btn_root";
-            this.btn_root.Size = new System.Drawing.Size(75, 23);
-            this.btn_root.TabIndex = 2;
-            this.btn_root.Text = "词汇总";
-            this.btn_root.UseVisualStyleBackColor = true;
-            this.btn_root.Click += new System.EventHandler(this.btn_root_Click);
+            this.button1.Location = new System.Drawing.Point(562, 166);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(100, 23);
+            this.button1.TabIndex = 12;
+            this.button1.Text = "xml加载测试";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
             // Form_file
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.tbox_delhead);
@@ -242,5 +254,6 @@
         private System.Windows.Forms.Button btn_en;
         private System.Windows.Forms.ComboBox cbox_year;
         private System.Windows.Forms.Button btn_root;
+        private System.Windows.Forms.Button button1;
     }
 }
