@@ -215,6 +215,55 @@ namespace cotool.game
         }
 
 
+        void bulid_script_full()
+        {
+            try
+            {
+                string str_content = "";
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append("{\"tips\":\"我的脚本\",\"list\":[\r\n");
+                for (int i = 0; i < listView1.Items.Count; i++)
+                {
+                    string text = listView1.Items[i].SubItems[0].Text;
+                    string text2 = listView1.Items[i].SubItems[1].Text;
+                    string text3 = listView1.Items[i].SubItems[2].Text;
+                    string text4 = listView1.Items[i].SubItems[3].Text;
+                    string text5 = listView1.Items[i].SubItems[4].Text;
+                    string text6 = listView1.Items[i].SubItems[5].Text;
+                    string val1 = listView1.Items[i].SubItems[6].Text;
+                    string val2 = listView1.Items[i].SubItems[7].Text;
+                    string val3 = listView1.Items[i].SubItems[8].Text;
+                    str_content = "{\"cmd\":\"" + text2 + "\",\"id\":\"" + text3 + "\",\"num\":\"" + text4 + 
+                        "\",\"temp1\":\""  + text5 + 
+                        "\",\"temp2\":\"" + text6 +
+                        "\",\"val1\":\"" + val1 +
+                        "\",\"val2\":\"" + val2 +
+                        "\",\"val3\":\"" + val3 +
+                        "\", \"name\":\"" + text + "\", \"flag\":\"1\" }";
+                    stringBuilder.Append(str_content);
+                    if (i < listView1.Items.Count - 1)
+                    {
+                        stringBuilder.Append(",\r\n");
+                    }
+                }
+                stringBuilder.Append("\r\n]}");
+                string data = stringBuilder.ToString();
+                textBox1.Text = data;
+                Clipboard.SetDataObject(data, copy: true);
+                //MessageBox.Show("脚本已经拷贝到剪贴板，请打开脚本工具粘贴到空白处执行即可！");
+                //Clipboard.SetDataObject(listView1.Items[0].SubItems[2].Text, copy: true);//cber 临时
+                Clipboard.SetDataObject(str_content + ",", copy: true);//cber 临时
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        private void btn_full_Click(object sender, EventArgs e)
+        {
+            bulid_script_full();
+        }
+
         /// <summary>
         /// 自定义class放前面会导致Form设计界面异常，不能出来
         /// </summary>
@@ -788,6 +837,7 @@ namespace cotool.game
             stream.Close();
             stream1.Close();
             label5.Text = Convert.ToBase64String(inArray);
+            tbox_miwen.Text = Convert.ToBase64String(inArray);
         }
 
         private void btn_decrypt_Click(object sender, EventArgs e)
@@ -802,6 +852,7 @@ namespace cotool.game
             stream.Close();
             stream1.Close();
             label6.Text = Encoding.UTF8.GetString(buffer4);
+            tbox_pwd.Text = Encoding.UTF8.GetString(buffer4);
         }
 
         public string SetStrBlank_to_one(string text)
@@ -843,18 +894,21 @@ namespace cotool.game
         private void btn_return_Click(object sender, EventArgs e)
         {
             MyMemoryStream ms = new MyMemoryStream();
-            uint uin = uint.Parse(tbox_value.Text.Trim());
+            uint uin = 0;
+            
 
             switch (combox_func.SelectedIndex)
             {
                 case 0:
-                     WriteUtils.write_TYPE_UINT32(ms, uin);
+                    uin = uint.Parse(tbox_value.Text.Trim());
+                    WriteUtils.write_TYPE_UINT32(ms, uin);
                     tbox_value.Text = uin.ToString();
                     break;
                 case 1:
                     WriteUtils.write_TYPE_STRING(ms, tbox_value.Text.Trim());
                     break;
                 case 2:
+                    uin = uint.Parse(tbox_value.Text.Trim());
                     WriteUtils.write_TYPE_FIXED32_UINT(ms, uin);
                     tbox_value.Text = uin.ToString();
                     break;
@@ -959,6 +1013,26 @@ namespace cotool.game
 
             Clipboard.SetText(jiaoben);
         }
+
+        private void btn_qz_Click(object sender, EventArgs e)
+        {
+            string cur_dir = @"D:\cber-exe\Debug\";
+            string content = IniHelper.Read(cur_dir + week_filepath, "month", "qz_baseid", "2");
+
+            uint baseid = uint.Parse(content);
+            uint xts = baseid + 89;
+
+            string jiaoben =
+"{\"tips\":\"我的脚本\",\"list\":[" + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + xts + "\",\"num\":\"50060462\",\"temp1\":\"8\",\"temp2\":\"0\", \"name\":\"驱逐内丹兑换玄铁石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + xts + "\",\"num\":\"50060462\",\"temp1\":\"4\",\"temp2\":\"0\", \"name\":\"驱逐内丹兑换玄铁石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + xts + "\",\"num\":\"50060462\",\"temp1\":\"2\",\"temp2\":\"0\", \"name\":\"驱逐内丹兑换玄铁石\", \"flag\":\"1\" }," + Environment.NewLine +
+"{\"cmd\":\"5489\",\"id\":\"" + xts + "\",\"num\":\"50060462\",\"temp1\":\"1\",\"temp2\":\"0\", \"name\":\"驱逐内丹兑换玄铁石\", \"flag\":\"1\" }" + Environment.NewLine +
+"]}";
+
+            Clipboard.SetText(jiaoben);
+        }
+
     }
 
     public class IniHelper

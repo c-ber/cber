@@ -50,6 +50,7 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btn_full = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.combox_func = new System.Windows.Forms.ComboBox();
             this.btn_return = new System.Windows.Forms.Button();
@@ -72,6 +73,7 @@
             this.tbox_qqlist = new System.Windows.Forms.TextBox();
             this.btn_xz = new System.Windows.Forms.Button();
             this.btn_xl = new System.Windows.Forms.Button();
+            this.btn_qz = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -227,7 +229,7 @@
             // 
             this.button1.Location = new System.Drawing.Point(3, 235);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(106, 45);
+            this.button1.Size = new System.Drawing.Size(90, 45);
             this.button1.TabIndex = 5;
             this.button1.Text = "加载抓包文件";
             this.button1.UseVisualStyleBackColor = true;
@@ -235,9 +237,9 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(146, 235);
+            this.button2.Location = new System.Drawing.Point(99, 235);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(106, 45);
+            this.button2.Size = new System.Drawing.Size(70, 45);
             this.button2.TabIndex = 6;
             this.button2.Text = "生成脚本";
             this.button2.UseVisualStyleBackColor = true;
@@ -245,6 +247,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btn_full);
             this.groupBox2.Controls.Add(this.groupBox3);
             this.groupBox2.Controls.Add(this.button1);
             this.groupBox2.Controls.Add(this.listView1);
@@ -256,6 +259,16 @@
             this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "模拟脚本工具学习解析数据包";
+            // 
+            // btn_full
+            // 
+            this.btn_full.Location = new System.Drawing.Point(175, 235);
+            this.btn_full.Name = "btn_full";
+            this.btn_full.Size = new System.Drawing.Size(68, 45);
+            this.btn_full.TabIndex = 8;
+            this.btn_full.Text = "完整脚本";
+            this.btn_full.UseVisualStyleBackColor = true;
+            this.btn_full.Click += new System.EventHandler(this.btn_full_Click);
             // 
             // groupBox3
             // 
@@ -332,7 +345,7 @@
             // labe_mingwen
             // 
             this.labe_mingwen.AutoSize = true;
-            this.labe_mingwen.Location = new System.Drawing.Point(171, 359);
+            this.labe_mingwen.Location = new System.Drawing.Point(127, 359);
             this.labe_mingwen.Name = "labe_mingwen";
             this.labe_mingwen.Size = new System.Drawing.Size(29, 12);
             this.labe_mingwen.TabIndex = 8;
@@ -340,14 +353,14 @@
             // 
             // tbox_pwd
             // 
-            this.tbox_pwd.Location = new System.Drawing.Point(218, 356);
+            this.tbox_pwd.Location = new System.Drawing.Point(174, 356);
             this.tbox_pwd.Name = "tbox_pwd";
             this.tbox_pwd.Size = new System.Drawing.Size(177, 21);
             this.tbox_pwd.TabIndex = 9;
             // 
             // btn_crypt
             // 
-            this.btn_crypt.Location = new System.Drawing.Point(401, 356);
+            this.btn_crypt.Location = new System.Drawing.Point(357, 356);
             this.btn_crypt.Name = "btn_crypt";
             this.btn_crypt.Size = new System.Drawing.Size(75, 23);
             this.btn_crypt.TabIndex = 10;
@@ -357,7 +370,7 @@
             // 
             // btn_decrypt
             // 
-            this.btn_decrypt.Location = new System.Drawing.Point(401, 383);
+            this.btn_decrypt.Location = new System.Drawing.Point(357, 383);
             this.btn_decrypt.Name = "btn_decrypt";
             this.btn_decrypt.Size = new System.Drawing.Size(75, 23);
             this.btn_decrypt.TabIndex = 13;
@@ -367,7 +380,7 @@
             // 
             // tbox_miwen
             // 
-            this.tbox_miwen.Location = new System.Drawing.Point(218, 383);
+            this.tbox_miwen.Location = new System.Drawing.Point(174, 383);
             this.tbox_miwen.Name = "tbox_miwen";
             this.tbox_miwen.Size = new System.Drawing.Size(177, 21);
             this.tbox_miwen.TabIndex = 12;
@@ -375,7 +388,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(171, 386);
+            this.label4.Location = new System.Drawing.Point(127, 386);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(29, 12);
             this.label4.TabIndex = 11;
@@ -384,7 +397,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(511, 359);
+            this.label5.Location = new System.Drawing.Point(444, 359);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(0, 12);
             this.label5.TabIndex = 14;
@@ -392,7 +405,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(511, 388);
+            this.label6.Location = new System.Drawing.Point(444, 386);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(0, 12);
             this.label6.TabIndex = 15;
@@ -410,7 +423,7 @@
             // lbl_src_ds
             // 
             this.lbl_src_ds.AutoSize = true;
-            this.lbl_src_ds.Location = new System.Drawing.Point(492, 359);
+            this.lbl_src_ds.Location = new System.Drawing.Point(559, 361);
             this.lbl_src_ds.Name = "lbl_src_ds";
             this.lbl_src_ds.Size = new System.Drawing.Size(29, 12);
             this.lbl_src_ds.TabIndex = 17;
@@ -419,7 +432,7 @@
             // lbl_dst_ds
             // 
             this.lbl_dst_ds.AutoSize = true;
-            this.lbl_dst_ds.Location = new System.Drawing.Point(492, 386);
+            this.lbl_dst_ds.Location = new System.Drawing.Point(559, 386);
             this.lbl_dst_ds.Name = "lbl_dst_ds";
             this.lbl_dst_ds.Size = new System.Drawing.Size(35, 12);
             this.lbl_dst_ds.TabIndex = 18;
@@ -427,17 +440,17 @@
             // 
             // tbox_dsname
             // 
-            this.tbox_dsname.Location = new System.Drawing.Point(527, 356);
+            this.tbox_dsname.Location = new System.Drawing.Point(594, 356);
             this.tbox_dsname.Name = "tbox_dsname";
-            this.tbox_dsname.Size = new System.Drawing.Size(175, 21);
+            this.tbox_dsname.Size = new System.Drawing.Size(116, 21);
             this.tbox_dsname.TabIndex = 19;
             this.tbox_dsname.Text = "ds-测试.txt";
             // 
             // tbox_qqlist
             // 
-            this.tbox_qqlist.Location = new System.Drawing.Point(527, 383);
+            this.tbox_qqlist.Location = new System.Drawing.Point(594, 383);
             this.tbox_qqlist.Name = "tbox_qqlist";
-            this.tbox_qqlist.Size = new System.Drawing.Size(175, 21);
+            this.tbox_qqlist.Size = new System.Drawing.Size(116, 21);
             this.tbox_qqlist.TabIndex = 20;
             // 
             // btn_xz
@@ -460,10 +473,21 @@
             this.btn_xl.UseVisualStyleBackColor = true;
             this.btn_xl.Click += new System.EventHandler(this.btn_xl_Click);
             // 
+            // btn_qz
+            // 
+            this.btn_qz.Location = new System.Drawing.Point(78, 354);
+            this.btn_qz.Name = "btn_qz";
+            this.btn_qz.Size = new System.Drawing.Size(41, 23);
+            this.btn_qz.TabIndex = 23;
+            this.btn_qz.Text = "驱逐";
+            this.btn_qz.UseVisualStyleBackColor = true;
+            this.btn_qz.Click += new System.EventHandler(this.btn_qz_Click);
+            // 
             // Form_qqsh
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btn_qz);
             this.Controls.Add(this.btn_xl);
             this.Controls.Add(this.btn_xz);
             this.Controls.Add(this.tbox_qqlist);
@@ -542,5 +566,7 @@
         private System.Windows.Forms.TextBox tbox_qqlist;
         private System.Windows.Forms.Button btn_xz;
         private System.Windows.Forms.Button btn_xl;
+        private System.Windows.Forms.Button btn_qz;
+        private System.Windows.Forms.Button btn_full;
     }
 }

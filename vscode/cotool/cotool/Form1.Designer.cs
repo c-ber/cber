@@ -42,6 +42,7 @@
             this.真三玩家ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.qq水浒ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.qqxh更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.日志ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.网页功能ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.网页内容提取ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.文件目录ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -50,7 +51,7 @@
             this.数据库统计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.安全统计ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.日志ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.水浒国战ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -140,7 +141,8 @@
             this.真三玩家ToolStripMenuItem,
             this.qq水浒ToolStripMenuItem,
             this.qqxh更新ToolStripMenuItem,
-            this.日志ToolStripMenuItem});
+            this.日志ToolStripMenuItem,
+            this.水浒国战ToolStripMenuItem});
             this.游戏外挂ToolStripMenuItem.Name = "游戏外挂ToolStripMenuItem";
             this.游戏外挂ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
             this.游戏外挂ToolStripMenuItem.Text = "游戏世界";
@@ -165,6 +167,13 @@
             this.qqxh更新ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.qqxh更新ToolStripMenuItem.Text = "qqxh更新";
             this.qqxh更新ToolStripMenuItem.Click += new System.EventHandler(this.qqxh更新ToolStripMenuItem_Click);
+            // 
+            // 日志ToolStripMenuItem
+            // 
+            this.日志ToolStripMenuItem.Name = "日志ToolStripMenuItem";
+            this.日志ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.日志ToolStripMenuItem.Text = "日志";
+            this.日志ToolStripMenuItem.Click += new System.EventHandler(this.日志ToolStripMenuItem_Click);
             // 
             // 网页功能ToolStripMenuItem
             // 
@@ -232,12 +241,12 @@
             this.panel1.TabIndex = 1;
             this.panel1.SizeChanged += new System.EventHandler(this.panel1_SizeChanged);
             // 
-            // 日志ToolStripMenuItem
+            // 水浒国战ToolStripMenuItem
             // 
-            this.日志ToolStripMenuItem.Name = "日志ToolStripMenuItem";
-            this.日志ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.日志ToolStripMenuItem.Text = "日志";
-            this.日志ToolStripMenuItem.Click += new System.EventHandler(this.日志ToolStripMenuItem_Click);
+            this.水浒国战ToolStripMenuItem.Name = "水浒国战ToolStripMenuItem";
+            this.水浒国战ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.水浒国战ToolStripMenuItem.Text = "水浒国战";
+            this.水浒国战ToolStripMenuItem.Click += new System.EventHandler(this.水浒国战ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -284,6 +293,7 @@
         private System.Windows.Forms.ToolStripMenuItem 代码工具ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem qqxh更新ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 日志ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 水浒国战ToolStripMenuItem;
     }
 }
 

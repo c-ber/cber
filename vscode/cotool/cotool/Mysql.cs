@@ -13,7 +13,7 @@ namespace cotool
     {
         public static string connectstring = "server=192.168.0.180;user id=root;password=123456cb;database=spboot;SslMode=None";
         #region private
-        private bool m_AlreadyDispose = false;
+        public bool m_AlreadyDispose = false;
         private int m_CommandTimeout = 0;
         private string m_ConnStr;
 

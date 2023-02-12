@@ -150,5 +150,13 @@ namespace cotool
         {
             new xhLogForm().Show();
         }
+
+        private void 水浒国战ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.panel1.Controls.Clear();
+            Form_guozhan form = new Form_guozhan();
+            this.panel1.Controls.Add(form);
+            form.Show();
+        }
     }
 }

@@ -165,6 +165,12 @@
     <Compile Include="game\UpdateFinishedForm.Designer.cs">
       <DependentUpon>UpdateFinishedForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="game\Form_guozhan.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="game\Form_guozhan.Designer.cs">
+      <DependentUpon>Form_guozhan.cs</DependentUpon>
+    </Compile>
     <Compile Include="game\xhLogForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -229,6 +235,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="game\UpdateFinishedForm.resx">
       <DependentUpon>UpdateFinishedForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="game\Form_guozhan.resx">
+      <DependentUpon>Form_guozhan.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="index\Form_index.resx">
       <DependentUpon>Form_index.cs</DependentUpon>
