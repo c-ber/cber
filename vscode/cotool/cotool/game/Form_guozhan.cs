@@ -140,6 +140,62 @@ namespace cotool.game
             }
         }
 
+        private void btn_fenpei_Click(object sender, EventArgs e)
+        {
+            bool is_have_open_mysql = false; //每个函数加一个开关，是否打开过数据库，开了就要自己关闭
+            try
+            {
+                label6.Text = "";
+                if (mysql == null || mysql.m_AlreadyDispose)
+                {
+                    is_have_open_mysql = true;
+                    mysql = new Mysql(Mysql.connectstring);//打开数据库连接
+                }
+                //自定义大辽一个战力排行榜
+
+
+                //先分配大包
+                string bak_info = "大包：";
+                string sql = "select bp_name from t_qqsh_gz where date = '"+ cbox_date.Text + 
+                    "' and country = '大辽' and pos = "+
+                    "(select pos from t_qqsh_gz where country in (select DISTINCT diguo from t_qqsh_gz where country = '大辽' and date = '"
+                    + cbox_date.Text + "' order by country asc) and date = '"+ cbox_date.Text + "' and bp_id in ('14733','164688','104324'))";
+                DataTable dt = mysql.ExecuteDataTable("t_qqsh_sc", sql);
+                string dabao_name = dt.Rows[0][0].ToString().Trim();
+
+                bak_info = bak_info + dabao_name + Environment.NewLine;
+
+
+                sql = "select bp_name from t_qqsh_gz where date = '" + cbox_date.Text +
+                    "' and country = '大辽' and pos in " +
+                    "(select pos from t_qqsh_gz where country in (select DISTINCT diguo from t_qqsh_gz where country = '大辽' and date = '"
+                    + cbox_date.Text + "' order by country asc) and date = '" + cbox_date.Text +
+                    "' and bp_id in ('243263','97683','34874','10022', '198146', '49056', '65657'))";
+                dt = mysql.ExecuteDataTable("t_qqsh_sc", sql);
+                bak_info = bak_info + "中包：";
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    string zhongbao = dt.Rows[i][0].ToString().Trim();
+                    bak_info = bak_info + zhongbao + ' ';
+                }
+
+                Clipboard.SetText(bak_info);
+                label6.Text = "已复制：" + bak_info;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            finally
+            {
+                if (is_have_open_mysql)
+                {
+                    mysql.Dispose();//关闭数据库连接
+                }
+            }
+        }
+
         private void cbox_date_SelectedIndexChanged(object sender, EventArgs e)
         {
             bool is_have_open_mysql = false; //每个函数加一个开关，是否打开过数据库，开了就要自己关闭
@@ -227,5 +283,7 @@ namespace cotool.game
                 }
             }
         }
+
+       
     }
 }

@@ -45,6 +45,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.btn_build = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
+            this.btn_fenpei = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btn_show
@@ -215,10 +216,21 @@
             this.label6.Size = new System.Drawing.Size(0, 12);
             this.label6.TabIndex = 16;
             // 
+            // btn_fenpei
+            // 
+            this.btn_fenpei.Location = new System.Drawing.Point(486, 15);
+            this.btn_fenpei.Name = "btn_fenpei";
+            this.btn_fenpei.Size = new System.Drawing.Size(79, 23);
+            this.btn_fenpei.TabIndex = 17;
+            this.btn_fenpei.Text = "分配奖励";
+            this.btn_fenpei.UseVisualStyleBackColor = true;
+            this.btn_fenpei.Click += new System.EventHandler(this.btn_fenpei_Click);
+            // 
             // Form_guozhan
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btn_fenpei);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.btn_build);
             this.Controls.Add(this.label5);
@@ -263,5 +275,6 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btn_build;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Button btn_fenpei;
     }
 }
